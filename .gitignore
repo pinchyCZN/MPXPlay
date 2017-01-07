@@ -1,0 +1,11 @@
+*.lib
+*.err
+*.obj
+*.sbr
+*.ilk
+*.pch
+*.idb
+mpxplay.ncb
+mpxplay.plg
+*.pdb
+*.bsc
