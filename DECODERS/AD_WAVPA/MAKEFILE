@@ -1,0 +1,6 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -w3 -4r -s -oims -fp3 -fpi87 -i\wc\h
+
+
+lib_wavp.exe : BITS.OBJ FLOAT.OBJ METADATA.OBJ UNPACK.OBJ WORDS.OBJ WPUTILS.OBJ makefile

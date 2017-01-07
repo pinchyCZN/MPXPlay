@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -bt=DOS -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -i\wc\h -i..\ -i\wc\sws\include
+
+cd_drive.exe : diskdriv.obj drv_cd.obj drv_hd.obj drv_ftp.obj cd_mscd.obj makedos

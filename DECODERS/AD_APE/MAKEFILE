@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -w3 -mf -oim -s -5r -fp3 -fpi87 -i\wc\h -i..\..\
+
+apedec.exe : apeinfo.obj dec_new.obj dec_old.obj maclib.obj pred_new.obj pred_old.obj prepare.obj unbitbas.obj unbitnew.obj unbitold.obj makefile

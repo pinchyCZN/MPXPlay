@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -bt=DOS -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -i\wc\h -i..\
+
+deparser.exe : in_aac.obj in_ac3.obj in_ape.obj in_flac.obj in_mp3.obj in_mpc.obj in_wavpa.obj in_rawau.obj tagging.obj makedos

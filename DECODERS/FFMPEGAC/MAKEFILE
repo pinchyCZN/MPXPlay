@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -w3 -mf -oimr -s -5r -fp3 -fpi87 -i\wc\h
+
+AVCODEC.exe : BITSTREA.OBJ FLAC.OBJ GOLOMB.OBJ MEM.OBJ UTILS.OBJ WMADEC.OBJ FFT.OBJ MDCT.OBJ makefile

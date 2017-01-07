@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -bt=nt -w3 -mf -oims -s -5r -fp3 -fpi87 -i\wc\h -i..\
+
+au_out.exe : au_cards.obj dmairq.obj sc_wav.obj sc_null.obj sc_winds.obj sc_winwo.obj makewin

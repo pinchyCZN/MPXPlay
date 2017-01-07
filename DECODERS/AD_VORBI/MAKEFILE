@@ -1,0 +1,6 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -w3 -mf -oim -s -5r -fp3 -fpi87 -i\wc\h -dMPXPLAY
+
+
+dec_ogg.exe : BITWISE.obj BLOCK.obj CODEBOOK.obj FLOOR0.obj FLOOR1.obj FRAMING.obj INFO.obj MAPPING0.obj RES0.obj SHARBOOK.obj SYNTHESI.obj WINDOW.obj makefile

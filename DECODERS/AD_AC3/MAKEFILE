@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -w3 -mf -oimr -s -5r -fp3 -fpi87 -i\wc\h
+
+a52lib.exe : bit_allo.OBJ bitstrea.OBJ crc.OBJ downmix.obj imdct.obj parse.obj resample.obj makefile

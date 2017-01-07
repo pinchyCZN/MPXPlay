@@ -1,0 +1,53 @@
+some notes/requests to the source:
+
+1. You need an OpenWatcom v1.3 compiler to compile this source.
+   (You can compile Mpxplay with OW 1.9 too, but that's not tested too much yet. OW 1.4 and 1.5 are surely bad for Mpxplay.)
+   You can download it from the http://www.openwatcom.org/ftp
+
+   It has a windows installer (too).
+
+   Install the DOS-32 and/or WIN-32 part(s) of the compiler to C:\WC directory.
+   You have to get: 
+   for DOS:   C:\WC\BINW, C:\WC\H, C:\WC\LIB386, C:\WC\LIB386\DOS
+   for Win32: C:\WC\BINW, C:\WC\H, C:\WC\H\NT, C:\WC\LIB386, C:\WC\LIB386\NT
+   (if you've installed the Win32 host, then you get a C:\WC\BINNT too)
+
+   Add (C:\WC\BINNT and) C:\WC\BINW directory to the PATH
+   Add the fillowing variables to your system environment
+    (udender DOS and Win9x: write them in autoexec.bat, WinXP: ControlPanel->System->Advanced->Environment Variables):
+   SET WATCOM=C:\WC 
+   SET INCLUDE=c:\wc\h;c:\wc\h\nt
+   SET DOS4G=QUIET
+
+2. Extract the source (ie: MPXS157.ZIP) to C:\WC\MPXPLAY directory.
+   (note: you can compile Mpxplay in other directory too, but if you also want to compile the DLL plugins,
+    then make/compile the DOS version in C:\WC\MPXPLAY, and the WIN version in D:\WC\MPXPLAY directory)
+
+   Start in every directories: the W.BAT (common libraries) 
+   or WD.BAT (to compile the DOS version) or WW.BAT (to compile the Win32 version).
+   (first build the libraries in the subdirectories (au_cards,au_mixer,control,decoders,etc.)
+    then run WD or WW in the c:\wc\mpxplay dir last)
+
+   To make the DOS32A version (the WD.BAT makes the DOS4G version by default):
+   - remove (put "//" before) the MPXPLAY_LINK_DLLLOAD definition in newfunc\dll_load.h
+   - modify the "op stub" line in the MPXP_DOS.LNK (from stub_4g2.exe to dos32a.exe)
+   - execute (again) all WD.BAT files (in the subdirs too)
+
+3. To make the WATTCP library for Mpxplay (under DOS):
+    - install the Watcom C compiler (see 1.)
+    - extract the watt32-s library to c:\wc\wattcp
+    - SET WATT_ROOT=C:\WC\WATTCP
+    - CD C:\WC\WATTCP\SRC
+    - CONFIGUR.BAT WATCOM
+    - WMAKE -f WATCOM_F.MAK  (not watcom_l.mak !)
+    - you have to get a wattcpwf.lib in c:\wc\wattcp\lib
+   To compile Mpxplay with WATTCP:
+   - enable the "#define MPXPLAY_LINK_WATTCP32" line in mpxplay.ini (remove the '//')
+   - enable the "library \wc\wattcp\lib\wattcpwf.lib" line in mpxp_dos.lnk (remove the '#')
+   - (re)compile the source (conrol.lib,diskdriv.lib,playlist.lib)
+
+4. If you want to do major modifications (or to implement new functions), 
+   please ask me before...
+
+
+enjoy the program

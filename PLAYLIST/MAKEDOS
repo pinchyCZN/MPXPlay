@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -bt=DOS -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -i\wc\h -i..\
+
+playlist.exe : playlist.obj chkentry.obj diskfile.obj editlist.obj fileinfo.obj id3list.obj jukebox.obj loaddir.obj loadlist.obj loadsub.obj randlist.obj savelist.obj skiplist.obj sortlist.obj textconv.obj makedos

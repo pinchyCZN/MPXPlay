@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -bt=nt -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -i\wc\h -i..\
+
+demuxers.exe : in_asf.obj in_avi.obj in_mp4.obj in_ogg.obj in_wav.obj makewin

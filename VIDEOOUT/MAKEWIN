@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -bt=nt -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -i\wc\h -i..\
+
+videoout.exe : videoout.obj vo_vesa.obj makewin

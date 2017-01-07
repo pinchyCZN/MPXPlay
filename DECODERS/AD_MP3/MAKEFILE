@@ -1,0 +1,5 @@
+.erase
+.c.obj: .AUTODEPEND
+        wcc386 $[* -zq -w3 -mf -oilrm -s -5r -fp3 -fpi87 -i\wc\h -i..\..\
+
+mpxdec.exe : layer2.obj layer3.obj makefile
