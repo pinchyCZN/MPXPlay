@@ -558,7 +558,10 @@ void MIXER_resetallfunc(void)
 //--------------------------------------------------------------------
 //init all functions (if it has function_init)
 #ifdef MPXPLAY_LINK_DLLLOAD
+
+#ifndef WIN32
 #include <mem.h>
+#endif
 
 static void MIXER_load_plugins(void)
 {

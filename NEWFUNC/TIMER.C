@@ -689,9 +689,13 @@ void newfunc_newhandler08_close(void)
  }
  if(int08_timer_thread_handle) TerminateThread(int08_timer_thread_handle,0);
  if(int08_thread_handle) CloseHandle(int08_thread_handle);
+#ifndef WIN32
  if(handle_maincycle1)   CloseHandle(handle_maincycle1);
+#endif
  if(handle_maincycle2)   CloseHandle(handle_maincycle2);
+#ifndef WIN32
  if(int08_timer_thread_handle) CloseHandle(int08_timer_thread_handle);
+#endif
 }
 
 static unsigned long thread_maincycle_1(struct mainvars *mvp)

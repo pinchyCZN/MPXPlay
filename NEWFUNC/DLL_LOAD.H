@@ -17,7 +17,9 @@
 #ifndef mpxplay_dll_load_h
 #define mpxplay_dll_load_h
 
+#ifdef WIN32
 //#define MPXPLAY_LINK_DLLLOAD 1
+#endif
 
 #include <mpxplay.h>
 #include "newfunc.h"

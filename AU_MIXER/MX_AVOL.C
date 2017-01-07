@@ -18,7 +18,9 @@
 #include "newfunc\newfunc.h"
 #include "display\display.h"
 
+#ifndef WIN32
 #define USE_ASM_MX_AVOL 1
+#endif
 
 extern unsigned int crossfadepart;
 extern unsigned int refdisp;

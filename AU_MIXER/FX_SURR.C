@@ -14,8 +14,9 @@
 //**************************************************************************
 //function: proligic surround effect (for 2 channels only!)
 // based on libModPlug v0.8 (http://www.xmms-libmod.com)
-
+#ifndef WIN32
 #include <mem.h>
+#endif
 #include <float.h>
 #include "au_mixer\au_mixer.h"
 #include "newfunc\newfunc.h"

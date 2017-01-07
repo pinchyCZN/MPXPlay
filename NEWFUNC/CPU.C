@@ -92,7 +92,27 @@ void newfunc_cpu_init(void)
 }
 
 int asm_cpu_testcpuid(void);
+#ifdef WIN32
+int asm_cpu_testcpuid(void)
+{
+	__asm{
+	 pushad
+	 pushfd
+	 pop     eax
+	 mov     ecx, eax
+	 xor     eax, 0x200000
+	 push    eax
+	 popfd
+	 pushfd
+	 pop     eax
+	 cmp     eax, ecx
+	 popad
+	 setnz   al
+	 and     eax,1
+	}
+}
 
+#else
 #pragma aux asm_cpu_testcpuid=\
  "pushad"\
  "pushfd"\
@@ -108,9 +128,25 @@ int asm_cpu_testcpuid(void);
  "setnz   al"\
  "and     eax,1"\
  value[eax] modify[eax ecx];
+#endif //WIN32
 
 int asm_cpu_getcpuid(unsigned int eax_p,int *ebx_p,int *ecx_p,int *edx_p);
 
+#ifdef WIN32
+int asm_cpu_getcpuid(unsigned int eax_p,int *ebx_p,int *ecx_p,int *edx_p)
+{
+	__asm{
+		mov	eax,eax_p
+		cpuid
+		mov	edi,ebx_p
+		mov	[edi],ebx
+		mov	edi,ecx_p
+		mov	[edi],ecx
+		mov	edi,edx_p
+		mov	[edi],edx
+	}
+}
+#else
 #pragma aux asm_cpu_getcpuid=\
  "push ebx"\
  "push ecx"\
@@ -123,6 +159,7 @@ int asm_cpu_getcpuid(unsigned int eax_p,int *ebx_p,int *ecx_p,int *edx_p);
  "pop edi"\
  "mov [edi],ebx"\
  parm[eax][ebx][ecx][edx] value[eax] modify[ebx ecx edx edi];
+#endif //WIN32
 
 unsigned int pds_cpu_cpuid_test(void)
 {

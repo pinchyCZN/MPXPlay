@@ -31,10 +31,16 @@
 
 #if defined(WIN32) || defined(__WINDOWS_386__) || defined(__NT__)
 #define MPXPLAY_WIN32 1
+#define _WIN32_WINDOWS 0x0500
 #include <windows.h>
 #endif
 
+#ifdef _WINDOWS_
+
+#else
 #define MPXPLAY_LINK_FULL     1
+#endif
+
 #ifdef __DOS__
  //#define MPXPLAY_LINK_SWSCK32  1    // with SWSCK32 lib
  //#define MPXPLAY_LINK_WATTCP32 1    // with WATTCP32 lib

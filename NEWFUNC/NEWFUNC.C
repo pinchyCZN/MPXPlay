@@ -22,6 +22,43 @@ extern unsigned int oldposrow,intsoundconfig,intsoundcontrol;
 
 char DOS4GOPTIONS[] = "dos4g=StartupBanner:OFF\n"; // for DOS4G v2.xx
 
+#ifdef WIN32
+/*
+unsigned _dos_findfirst(const char *path,unsigned attr,struct find_t *buf )
+{
+	HANDLE ff;
+	WIN32_FIND_DATA wfd;
+	ff=FindFirstFile(path,&wfd);
+	if(ff==INVALID_HANDLE_VALUE)
+		return -1;
+	buf->attrib=wfd.dwFileAttributes;
+	strncpy(buf->name,wfd.cFileName,sizeof(buf->name));
+	buf->size=wfd.nFileSizeLow;
+	buf->wr_date=wfd.ftLastWriteTime.dwLowDateTime;
+	buf->wr_time=wfd.ftCreationTime.dwLowDateTime;
+	return ff;
+}
+unsigned _dos_findnext(struct find_t *result)
+{
+}
+*/
+unsigned _dos_getfileattr(const char *path,unsigned *attr)
+{
+	int a;
+	a=GetFileAttributes(path);
+	if(a==0xFFFFFFFF)
+		return -1;
+	*attr=a;
+	return 0;
+}
+unsigned _dos_setfileattr(const char *path,unsigned *attr)
+{
+	if(SetFileAttributes(path,*attr)==0)
+		return -1; //fail
+	else
+		return 0;
+}
+#endif
 //-------------------------------------------------------------------------
 //newfunc init & close
 

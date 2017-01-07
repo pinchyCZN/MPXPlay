@@ -222,6 +222,10 @@ extern void AU_writedata(struct mpxplay_audioout_info_s *);
   #define AU_CARDS_LINK_SBLIVE  1
   #define AU_CARDS_LINK_VIA82XX 1
  #endif
+ #ifdef AU_CARDS_LINK_WIN
+//  #define AU_CARDS_LINK_WINDSOUND 1
+  #define AU_CARDS_LINK_WINWAVOUT 1
+ #endif
 #endif
 
 #endif // au_cards_h

@@ -17,9 +17,28 @@
 #include "newfunc\newfunc.h"
 #include "control\control.h"
 
-//#ifdef __DOS__
+#ifdef WIN32
+unsigned int outp(DWORD port,DWORD val)
+{
+  __asm mov edx,port;
+  __asm mov eax,val;
+  __asm out dx,al;
+  return 0;
+}
+unsigned int inp(unsigned int portid)
+{
+  int value=0;
+  __asm mov edx,portid
+  __asm in al,dx
+  __asm mov value,eax
+  return value;
+}
  #define MPXPLAY_LINK_LCD 1
-//#endif
+#endif
+
+#ifdef __DOS__
+ #define MPXPLAY_LINK_LCD 1
+#endif
 
 #ifdef MPXPLAY_LINK_LCD
 
@@ -361,8 +380,11 @@ void mpxplay_display_lcd_loadini(mpxini_line_t *mpxini_lines,struct mpxini_part_
   return;
  }
 
+#ifdef WIN32
+ LCD_portnum=0x378;
+#else
  LCD_portnum=*((unsigned short *)&biosmem[biosaddr+(LCD_portnum-1)*2]);
-
+#endif
  if(!LCD_portnum){
   display_warning_message("Warning: Couldn't initialize LCD-port! (Is it enabled in bios?)");
   return;
@@ -526,9 +548,15 @@ void mpxplay_display_lcd_init(void)
 
 void mpxplay_display_lcd_close(void)
 {
+	char *close_str="MPXPLAY EXIT";
+	int i,len;
 #ifdef MPXPLAY_LINK_LCD
  if(LCD_portnum){
   LCD_hw_clear_display();
+  LCD_hw_gotoyx(0,0);
+  len=strlen(close_str);
+  for(i=0;i<len;i++)
+	LCD_hw_put_char(close_str[i]);
   LCD_hw_close();
  }
 #endif
@@ -684,6 +712,12 @@ static char *create_item_p_filename(struct mainvars *mvp)
 static char *create_item_p_pathname(struct mainvars *mvp)
 {
  pds_getpath_from_fullname(&strtmp[0],mvp->pei0->filename);
+ if(pds_strlen(strtmp)>LCD_rows)
+ {
+	 int i=pds_strlen(strtmp);
+	 pds_memcpy(strtmp,strtmp+i-LCD_rows,LCD_rows);
+	 strtmp[LCD_rows]=0;
+ }
  return (&strtmp[0]);
 }
 
@@ -779,7 +813,7 @@ static char *create_item_p_timepos(struct mainvars *mvp)
 
 static char *create_item_p_framepos(struct mainvars *mvp)
 {
- long cframe,index_pos;;
+ long cframe,index_pos;
  struct frame *frp=mvp->frp0;
 
  index_pos=frp->frameNum-frp->index_start;
@@ -1345,6 +1379,7 @@ void LCD_page_select(struct mainvars *mvp,int select)
 {
 #ifdef MPXPLAY_LINK_LCD
  if(LCD_portnum){
+	LCD_hw_init(); //reset for cold chip fix
   if(select<0){                 // skip 1 page
    if(++LCD_currpage>LCD_pages)
     LCD_currpage=0;

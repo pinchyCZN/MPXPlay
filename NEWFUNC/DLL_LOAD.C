@@ -19,11 +19,14 @@
 
 #ifdef MPXPLAY_LINK_DLLLOAD // defined in dll_load.h
 
-//#define DLLLOAD_DEBUG 1
+#define DLLLOAD_DEBUG 1
 
 #include <stdlib.h>
 #include <direct.h>
+
+#ifndef WIN32
 #include <i86.h>
+#endif
 
 #include "control\control.h"
 #include "playlist\playlist.h"
@@ -681,24 +684,59 @@ mpxp_int32_t asm_stackcall_proc_arg3(void *proc,void *data1,void *data2,void *da
 
 static mpxp_int32_t dllload_call_proc_stackbased_arg0(void *proc)
 {
+#ifdef WIN32
+	int value;
+	__asm{
+		mov	eax,proc
+		call eax
+		mov value,eax
+	}
+	return value;
+#else
 #pragma aux asm_stackcall_proc_arg0=\
  "call eax"\
  parm[eax] value[eax] modify[ebx ecx edx edi esi];
  return asm_stackcall_proc_arg0(proc);
+#endif //WIN32
 }
 
 static mpxp_int32_t dllload_call_proc_stackbased_arg1(void *proc,void *data)
 {
+#ifdef WIN32
+	int value;
+	__asm{
+		push data
+		mov	eax,proc
+		call eax
+		pop edx
+		mov value,eax
+	}
+	return value;
+#else
 #pragma aux asm_stackcall_proc_arg1=\
  "push edx"\
  "call eax"\
  "pop edx"\
  parm[eax][edx] value[eax] modify[ebx ecx edx edi esi];
  return asm_stackcall_proc_arg1(proc,data);
+#endif
 }
 
 static mpxp_int32_t dllload_call_proc_stackbased_arg2(void *proc,void *data1,void *data2)
 {
+#ifdef WIN32
+	int value;
+	__asm{
+		push data1
+		push data2
+		mov	eax,proc
+		call eax
+		pop edx
+		pop ebx
+		mov value,eax
+	}
+	return value;
+#else
 #pragma aux asm_stackcall_proc_arg2=\
  "push ebx"\
  "push edx"\
@@ -707,10 +745,26 @@ static mpxp_int32_t dllload_call_proc_stackbased_arg2(void *proc,void *data1,voi
  "pop ebx"\
  parm[eax][edx][ebx] value[eax] modify[ebx ecx edx edi esi];
  return asm_stackcall_proc_arg2(proc,data1,data2);
+#endif //WIN32
 }
 
 static mpxp_int32_t dllload_call_proc_stackbased_arg3(void *proc,void *data1,void *data2,void *data3)
 {
+#ifdef WIN32
+	int value;
+	__asm{
+		push data1
+		push data2
+		push data3
+		mov	eax,proc
+		call eax
+		pop edx
+		pop ebx
+		pop ecx
+		mov value,eax
+	}
+	return value;
+#else
 #pragma aux asm_stackcall_proc_arg3=\
  "push ecx"\
  "push ebx"\
@@ -721,6 +775,7 @@ static mpxp_int32_t dllload_call_proc_stackbased_arg3(void *proc,void *data1,voi
  "pop ecx"\
  parm[eax][edx][ebx][ecx] value[eax] modify[ebx ecx edx edi esi];
  return asm_stackcall_proc_arg3(proc,data1,data2,data3);
+#endif
 }
 
 long newfunc_dllload_winlib_callfunc(struct pds_win32dllcallfunc_t *func,void *data1,void *data2,void *data3)

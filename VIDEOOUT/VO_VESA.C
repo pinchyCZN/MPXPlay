@@ -16,7 +16,9 @@
 
 #include "newfunc\newfunc.h"
 #include "videoout.h"
+#ifndef WIN32
 #include <mem.h>
+#endif
 #include <string.h>
 
 #ifdef __DOS__

@@ -258,8 +258,37 @@ void mpxdec_layer2_init(void)
  }
 }
 
+#ifdef WIN32
+#define getbits_one(x) _getbits_one(loc_bitindex,loc_wordpointer,x)
+unsigned int _getbits_one(int *loc_bitindex,int *loc_wordpointer,int x)
+{
+	int val;
+ __asm{
+	mov  ebx,x
+	mov	 edi,loc_bitindex
+	mov  eax,[edi]
+	mov  ecx,eax
+	shr  eax,3
+	mov  edi,loc_wordpointer
+	mov	 edx,[edi]
+	add  eax,edx
+	mov  eax,dword ptr [eax]
+	and  ecx,7
+	bswap eax
+	shl  eax,cl
+	mov  cl,32
+	sub  cl,bl
+	shr  eax,cl
+	mov	 edi,loc_bitindex
+	mov  eax,[edi]
+	add  eax,ebx
+	mov	 [edi],eax
+ }
+ return val;
+}
+#else
 unsigned int getbits_one(int);
-
+#endif
 static void II_step_one(struct mp3_decoder_data *mp3d,unsigned int *bit_alloc,int *scale)
 {
  int sblimit  = mp3d->II_sblimit;
@@ -361,7 +390,11 @@ static void II_step_one(struct mp3_decoder_data *mp3d,unsigned int *bit_alloc,in
  mpxdec_bitindex=loc_bitindex;
 }
 
+#ifdef WIN32
+#define getbits_two(x) _getbits_one(loc_bitindex,loc_wordpointer,x)
+#else
 unsigned int getbits_two(int);
+#endif
 
 static void II_step_two(struct mp3_decoder_data *mp3d,unsigned int *bita,int *scale,hybridout_t *hout_i)
 {

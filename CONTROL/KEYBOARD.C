@@ -359,35 +359,64 @@ void *mpxplay_control_keyboard_get_topfunc(void)
 {
  return keyboard_top_func;
 }
-
+static unsigned short key_conversions[][2]=
+{
+{0x4F31,0x0231}, //shift 1 
+{0x5032,0x0332}, //shift 2 
+{0x5133,0x0433}, //shift 3 
+{0x4B34,0x0534}, //shift 4 
+{0x4C35,0x0635}, //shift 5 
+{0x4D36,0x0736}, //shift 6 
+{0x4737,0x0837}, //shift 7 
+{0x4838,0x0938}, //shift 8 
+{0x4939,0x0A39}, //shift 9 
+{0x5230,0x0B30}, //shift 0 
+{0x532E,0xFFFF}  //shift .
+};
+static int last_key=0,last_key_time=0,key_repeat=0;
 //--------------------------------------------------------------------------
 //called from mpxplay.c
 static void mpxplay_control_keyboard_maincheck(struct mainvars *mvp)
 {
- int iextkey;
-
- iextkey=mpxplay_control_keygroup_getnextfunc();
- if(iextkey!=-1){
-  keyboard_maincall(iextkey,mvp);
-  return;
- }
-
- if(pds_kbhit()){
-  unsigned int extkey=pds_extgetch();
-  while(pds_kbhit()){             // drop out (skip) the same keys...
-   if(pds_look_extgetch()!=extkey) // ... keep the different ones
-    break;
-   extkey=pds_extgetch();
-  }
-  if(!extkey || (extkey==0xffff))
-   return;
-  funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_KEYBOARD);
-  if(!keyboard_top_func)
-   if(mpxplay_control_keygroup_getgroup(extkey,mvp)>=0)
-    return;
-  keyboard_maincall(extkey,mvp);
-  return;
- }
+	int i,iextkey;
+	
+	iextkey=mpxplay_control_keygroup_getnextfunc();
+	if(iextkey!=-1){
+		keyboard_maincall(iextkey,mvp);
+		return;
+	}
+	if(pds_kbhit()){
+		unsigned int extkey=pds_extgetch();
+		while(pds_kbhit()){             // drop out (skip) the same keys...
+			if(pds_look_extgetch()!=extkey) // ... keep the different ones
+				break;
+			extkey=pds_extgetch();
+		}
+		for(i=0;i<sizeof(key_conversions)/(2*sizeof(short));i++)
+		{
+			if(key_conversions[i][0]==extkey)
+			{
+				extkey=key_conversions[i][1];
+				break;
+			}
+		}
+		if((extkey==last_key) && (extkey==0x0B30) && ((clock()-last_key_time)<500)) //'0'
+			key_repeat++;
+		else
+			key_repeat=0;
+		last_key=extkey;
+		last_key_time=clock();
+		if(key_repeat>=40)
+			extkey=0x011B;
+		if(!extkey || (extkey==0xffff))
+			return;
+		funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_KEYBOARD);
+		if(!keyboard_top_func)
+			if(mpxplay_control_keygroup_getgroup(extkey,mvp)>=0)
+				return;
+			keyboard_maincall(extkey,mvp);
+			return;
+	}
 }
 
 static void keyboard_maincall(unsigned int extkey,struct mainvars *mvp)

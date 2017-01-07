@@ -2242,7 +2242,8 @@ void draw_mousepos_text(unsigned int isbutton,char *text)
    color=CLH_INFOTEXTB;
   else
    color=CLH_INFOTEXT;
-  text[8]=0; // cut to window
+  if(strlen(text)>8)
+	text[8]=0; // cut to window
   clear_mousepos_text();
   pds_textdisplay_textxybk(color,CLB_INFOTEXT,dk[DK_MOUSEPOS].xpos,dk[DK_MOUSEPOS].ypos,text);
  }
@@ -2533,8 +2534,9 @@ static char *keycontrols_help_text="\
   alt-'+'/'-' - select/unselect files    J       - juke-box mode on/off\n\
                                         ctrl-'r' - reload dir/list\n\
  Display controls:                       Ins     - select entry\n\
-                                         F5/F8   - copy/del entry(s)\n\
-  A     - analyser on/off               ctrl-Ins - copy all to otherside\n\
+                                         F5/F8   - copy/del entry(s)\n"
+
+"  A     - analyser on/off               ctrl-Ins - copy all to otherside\n\
   T     - time mode select              ctrl-Del  - clear playlist\n\
  alt-F9  - 25/50 lines text mode        ctrl-F1-F4 - sort playlist\n\
  ctrl-F9 - full screen editor           ctrl-up/dn - shift entry\

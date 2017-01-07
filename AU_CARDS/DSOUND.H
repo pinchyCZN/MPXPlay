@@ -301,9 +301,9 @@ typedef const DSBCAPS *LPCDSBCAPS;
     {
         DWORD       dwSize;
         DWORD       dwFlags;
-        GUID        guidDSFXClass;
-        DWORD_PTR   dwReserved1;
-        DWORD_PTR   dwReserved2;
+        GUID		guidDSFXClass;
+        DWORD		dwReserved1;
+        DWORD		dwReserved2;
     } DSEFFECTDESC, *LPDSEFFECTDESC;
     typedef const DSEFFECTDESC *LPCDSEFFECTDESC;
 

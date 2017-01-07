@@ -35,6 +35,8 @@ typedef void (*memcpy_func_t)(void *addr_dest,void *addr_src,unsigned int len);
 static memcpy_func_t selected_memcpy_func=&pds_memcpy_x86;
 #endif // NEWFUNC_ASM
 
+#ifdef NEWFUNC_ASM
+
 void newfunc_memory_init(void)
 {
 #ifdef NEWFUNC_MEMORY_MMX
@@ -62,7 +64,7 @@ void newfunc_memory_init(void)
 #endif //NEWFUNC_MEMORY_MMX
 }
 
-#ifdef NEWFUNC_ASM
+
 
 void pds_memcpy(void *addr_dest,void *addr_src,unsigned int len)
 {

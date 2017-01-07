@@ -25,13 +25,43 @@
 
 #if defined(WIN32) || defined(__WINDOWS_386__) || defined(__NT__)
 #define MPXPLAY_WIN32 1
+#define _WIN32_WINDOWS 0x0500
 #include <windows.h>
 //!!! unstable (but usually works), rather we use 1 cpu only (by SetProcessAffinityMask) for all threads
 //#define MPXPLAY_USE_SMP 1
 #endif
 
-typedef long long      mpxp_int64_t;
-typedef unsigned long long mpxp_uint64_t;
+#ifdef WIN32
+//#define _dos_findfirst
+//#define _dos_findnext
+//#define _dos_setfileattr SetFileAttributes
+//#define _dos_getfileattr GetFileAttributes
+#define delay(x) Sleep(x)
+#define snprintf _snprintf
+#define _handle _file
+#define __far
+#define __interrupt
+#define S_IREAD        0x000400
+#define S_IWRITE       0x000200
+#define SH_COMPAT  _SH_DENYNO    /* compatibility mode   */
+#define F_OK    0       /*  Test for existence of file  */
+#define _A_VOLID 0x08 
+#define NAME_MAX   255
+struct find_t {
+    char            reserved[21];       /* reserved for use by DOS    */
+    char            attrib;             /* attribute byte for file    */
+    unsigned short  wr_time;            /* time of last write to file */
+    unsigned short  wr_date;            /* date of last write to file */
+    unsigned long   size;               /* length of file in bytes    */
+    char            name[NAME_MAX+1];   /* null-terminated filename   */
+};
+
+	typedef __int64      mpxp_int64_t;
+	typedef unsigned __int64 mpxp_uint64_t;
+#else //WIN32
+	typedef long long      mpxp_int64_t;
+	typedef unsigned long long mpxp_uint64_t;
+#endif //WIN32
 typedef long           mpxp_int32_t;
 typedef unsigned long  mpxp_uint32_t;
 typedef short          mpxp_int16_t;
@@ -652,6 +682,7 @@ extern void newfunc_newhandler08_close(void);
 
 static void mpxplay_debugf(FILE *fp,const char *format, ...)
 {
+ static FILE *flog=0;
  va_list ap;
  char sout[1024];
 
@@ -660,8 +691,14 @@ static void mpxplay_debugf(FILE *fp,const char *format, ...)
  va_end(ap);
 
  if(fp){
-  fprintf(fp,"%s\n",sout);
-  fflush(fp);
+  //if(flog==0)
+	//flog=fopen("c:\mpxlog.txt","a");
+  if(flog!=0)
+  {
+	fprintf(flog,"%s\n",sout);
+	fflush(flog);
+  }
+
  }else
 #ifdef MPXPLAY_USE_DEBUGMSG
   display_message(1,0,sout);

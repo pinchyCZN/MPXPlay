@@ -544,6 +544,22 @@ mpxp_int32_t asm_stackcall_proc(void *proc,void *data);
 
 static mpxp_int32_t winaspi_call_proc_stackbased(void *proc,void *data)
 {
+#ifdef WIN32
+	int value;
+	__asm
+	{
+	 cmp edx,0
+	 je nodata
+	 push edx
+	 call eax
+	 pop edx
+	 jmp end
+	 nodata:call eax
+	 end:
+	 mov value,eax
+	}
+	return value;
+#else
 //#if defined(__WATCOMC__)
 #pragma aux asm_stackcall_proc=\
  "cmp edx,0"\
@@ -562,6 +578,7 @@ static mpxp_int32_t winaspi_call_proc_stackbased(void *proc,void *data)
  else
   return (call_func_nodata)proc)();
 #endif*/
+#endif //WIN32
 }
 
 static mpxp_uint32_t winaspi_get_support_info(void)

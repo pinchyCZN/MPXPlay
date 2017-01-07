@@ -647,99 +647,99 @@ static void pds_lfn_findclose(struct pds_find_t *ffblk)
 }
 
 #endif
-
+/*
 unsigned int pds_findfirst(char *path,int attrib,struct pds_find_t *ffblk)
 {
- unsigned int result=1;
- ffblk->ff_data=NULL;
+	unsigned int result=1;
+	ffblk->ff_data=NULL;
 #ifdef __DOS__
- if(pds_filehand_check_entrance())
-  return result;
- pds_filehand_lock_entrance();
- if(is_lfn_support && (uselfn&USELFN_ENABLED))
-  result=pds_lfn_findfirst(path,attrib,ffblk);
- else
-  result=pds_dos_findfirst(path,attrib,ffblk);
- pds_filehand_unlock_entrance();
+	if(pds_filehand_check_entrance())
+		return result;
+	pds_filehand_lock_entrance();
+	if(is_lfn_support && (uselfn&USELFN_ENABLED))
+		result=pds_lfn_findfirst(path,attrib,ffblk);
+	else
+		result=pds_dos_findfirst(path,attrib,ffblk);
+	pds_filehand_unlock_entrance();
 #else
- {
-  struct find_t *fsblk=pds_calloc(1,sizeof(struct find_t));
-  if(!fsblk){
-   result=5; // ENOMEM
-   goto ff_end;
-  }
-  result=_dos_findfirst(path,attrib,fsblk);
-  if(result==0){
-   ffblk->attrib =fsblk->attrib;
-   pds_memcpy((void *)(&ffblk->fdate),(void *)(&fsblk->wr_time),sizeof(struct pds_fdate_t));
-   pds_memset((void *)(&ffblk->cdate),0,sizeof(struct pds_fdate_t));
-   pds_memset((void *)(&ffblk->adate),0,sizeof(struct pds_fdate_t));
-   ffblk->size   =fsblk->size;
-   pds_strcpy(ffblk->name,fsblk->name);
-  }else{
-   pds_free(fsblk);
-   fsblk=NULL;
-  }
-  ffblk->ff_data=fsblk;
- }
+	{
+		struct find_t *fsblk=pds_calloc(1,sizeof(struct find_t));
+		if(!fsblk){
+			result=5; // ENOMEM
+			goto ff_end;
+		}
+		result=_dos_findfirst(path,attrib,fsblk);
+		if(result==0){
+			ffblk->attrib =fsblk->attrib;
+			pds_memcpy((void *)(&ffblk->fdate),(void *)(&fsblk->wr_time),sizeof(struct pds_fdate_t));
+			pds_memset((void *)(&ffblk->cdate),0,sizeof(struct pds_fdate_t));
+			pds_memset((void *)(&ffblk->adate),0,sizeof(struct pds_fdate_t));
+			ffblk->size   =fsblk->size;
+			pds_strcpy(ffblk->name,fsblk->name);
+		}else{
+			pds_free(fsblk);
+			fsblk=NULL;
+		}
+		ffblk->ff_data=fsblk;
+	}
 ff_end:
 #endif
- funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_DISKACCESS);
- return result;
+	funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_DISKACCESS);
+	return result;
 }
 
 unsigned int pds_findnext(struct pds_find_t *ffblk)
 {
- unsigned int result=1;
+	unsigned int result=1;
 #ifdef __DOS__
- if(pds_filehand_check_entrance())
-  return result;
- pds_filehand_lock_entrance();
- if(is_lfn_support && (uselfn&USELFN_ENABLED))
-  result=pds_lfn_findnext(ffblk);
- else
-  result=pds_dos_findnext(ffblk);
- pds_filehand_unlock_entrance();
+	if(pds_filehand_check_entrance())
+		return result;
+	pds_filehand_lock_entrance();
+	if(is_lfn_support && (uselfn&USELFN_ENABLED))
+		result=pds_lfn_findnext(ffblk);
+	else
+		result=pds_dos_findnext(ffblk);
+	pds_filehand_unlock_entrance();
 #else
- struct find_t *fsblk=(struct find_t *)ffblk->ff_data;
- result=_dos_findnext(fsblk);
- if(result==0){
-  ffblk->attrib =fsblk->attrib;
-  pds_memcpy((void *)(&ffblk->fdate),(void *)(&fsblk->wr_time),sizeof(struct pds_fdate_t));
-  pds_memset((void *)(&ffblk->cdate),0,sizeof(struct pds_fdate_t));
-  pds_memset((void *)(&ffblk->adate),0,sizeof(struct pds_fdate_t));
-  ffblk->size   =fsblk->size;
-  pds_strcpy(ffblk->name,fsblk->name);
- }
+	struct find_t *fsblk=(struct find_t *)ffblk->ff_data;
+	result=_dos_findnext(fsblk);
+	if(result==0){
+		ffblk->attrib =fsblk->attrib;
+		pds_memcpy((void *)(&ffblk->fdate),(void *)(&fsblk->wr_time),sizeof(struct pds_fdate_t));
+		pds_memset((void *)(&ffblk->cdate),0,sizeof(struct pds_fdate_t));
+		pds_memset((void *)(&ffblk->adate),0,sizeof(struct pds_fdate_t));
+		ffblk->size   =fsblk->size;
+		pds_strcpy(ffblk->name,fsblk->name);
+	}
 #endif
- funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_DISKACCESS);
- return result;
+	funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_DISKACCESS);
+	return result;
 }
 
 void pds_findclose(struct pds_find_t *ffblk)
 {
 #ifdef __DOS__
- if(pds_filehand_check_entrance())
-  return;
- pds_filehand_lock_entrance();
- if(is_lfn_support && (uselfn&USELFN_ENABLED))
-  pds_lfn_findclose(ffblk);
- else
-  pds_dos_findclose(ffblk);
- pds_filehand_unlock_entrance();
+	if(pds_filehand_check_entrance())
+		return;
+	pds_filehand_lock_entrance();
+	if(is_lfn_support && (uselfn&USELFN_ENABLED))
+		pds_lfn_findclose(ffblk);
+	else
+		pds_dos_findclose(ffblk);
+	pds_filehand_unlock_entrance();
 #else
-  if(ffblk->ff_data){
-   #ifdef __WATCOMC__
-   _dos_findclose((struct find_t *)ffblk->ff_data);
-   #endif
-   pds_free(ffblk->ff_data);
-  }
+	if(ffblk->ff_data){
+#ifdef __WATCOMC__
+		_dos_findclose((struct find_t *)ffblk->ff_data);
 #endif
- ffblk->ff_data=NULL;
- funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_DISKACCESS);
+		pds_free(ffblk->ff_data);
+	}
+#endif
+	ffblk->ff_data=NULL;
+	funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_DISKACCESS);
 }
+*/
 
-/*
 #ifdef MPXPLAY_WIN32
 static void pds_filetime_to_dosdatetime(void *target,time_t src)
 {
@@ -857,7 +857,8 @@ void pds_findclose(struct pds_find_t *ffblk)
 #endif
  ffblk->ff_data=NULL;
  funcbit_enable(mpxplay_signal_events,MPXPLAY_SIGNALTYPE_DISKACCESS);
-}*/
+}
+
 
 mpxp_filesize_t pds_getfilesize(char *filename)
 {
