@@ -1,0 +1,70 @@
+#------------ Mpxplay main (root) files ----------------------------
+FILE mpxplay.obj
+FILE mpxinbuf.obj
+FILE in_file.obj
+
+#------------- Link config -----------------------------------------
+option osname='32-bit protected mode DOS'
+format os2 le
+
+#usually enough
+#option STACK=65535
+
+#recommended for DLL handling
+option STACK=262144
+
+#------------ Watcom C libraries -----------------------------------
+libpath %WATCOM%\lib386
+libpath %WATCOM%\lib386\dos
+
+#------------ Mpxplay libraries (sub-routines) ---------------------
+library au_cards\au_cards.lib
+library au_mixer\au_mixer.lib
+library control\control.lib
+library diskdriv\diskdriv.lib
+library display\display.lib
+library newfunc\newfunc.lib
+library playlist\playlist.lib
+library videoout\videoout.lib
+
+#decoders
+library decoders\decoders.lib
+library decoders\ad_aac\aacdec.lib
+library decoders\ad_ac3\a52dec.lib
+library decoders\ad_ape\apedec.lib
+library decoders\ad_mp3\mp3dec.lib
+library decoders\ad_mpc\mpcdec.lib
+library decoders\ad_vorbi\vorbis.lib
+library decoders\ad_wavpa\wavpack.lib
+library decoders\ffmpegac\avcodec.lib
+
+#containers
+library demuxers\demuxers.lib
+library demuxers\mp4ff\mp4ff.lib
+#library demuxers\ffmpegaf\avformat.lib
+
+#file->decoder parsers
+library deparser\deparser.lib
+
+#for SWSSOCK/TCPIP
+#library \wc\sws\lib\swsck32.lib
+#for WATTCP/TCPIP:
+#library \wc\wattcp\lib\wattcpwf.lib
+#for MIDAS sound system (au_card) (obsolete):
+# library midasdos.lib
+
+#------------ extenders/stubs --------------------------------------
+# DOS/32a :
+op stub=dos32a.exe
+
+# DOS4G v2.60 (for DLL handling):
+# op stub=stub_4g2.exe
+export DOS4GOPTIONS=_DOS4GOPTIONS
+
+# PMODE/W :
+# op stub=pmodew.exe
+
+# original Watcom's (with dos4gw.exe v1.97):
+# op stub=wstubq.exe
+
+#option map

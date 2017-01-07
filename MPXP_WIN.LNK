@@ -1,0 +1,52 @@
+#debug all
+#option symf=Mpxplay
+
+#------------ Mpxplay main (root) files ----------------------------
+FILE mpxplay.obj
+FILE mpxinbuf.obj
+FILE in_file.obj
+
+#------------- Link config -----------------------------------------
+option osname='Windows NT character-mode'
+format windows nt ^
+runtime console=4.0
+
+option STACK=262144
+
+#------------ Watcom C libraries -----------------------------------
+libpath %WATCOM%\lib386
+libpath %WATCOM%\lib386\nt
+libpath %WATCOM%\lib386\nt\directx
+library kernel32,user32,gdi32,advapi32,comdlg32,ole32,oleaut32,winspool,shell32,uuid,comctl32,winmm
+library mpr,dsound,wsock32
+
+#------------ Mpxplay libraries (sub-routines) ---------------------
+library au_cards\au_cards.lib
+library au_mixer\au_mixer.lib
+library control\control.lib
+library diskdriv\diskdriv.lib
+library display\display.lib
+library newfunc\newfunc.lib
+library playlist\playlist.lib
+library videoout\videoout.lib
+
+#decoders
+library decoders\decoders.lib
+library decoders\ad_aac\aacdec.lib
+library decoders\ad_ac3\a52dec.lib
+library decoders\ad_ape\apedec.lib
+library decoders\ad_mp3\mp3dec.lib
+library decoders\ad_mpc\mpcdec.lib
+library decoders\ad_vorbi\vorbis.lib
+library decoders\ad_wavpa\wavpack.lib
+library decoders\ffmpegac\avcodec.lib
+
+#containers
+library demuxers\demuxers.lib
+library demuxers\mp4ff\mp4ff.lib
+#library demuxers\ffmpegaf\avformat.lib
+
+#file->decoder parsers
+library deparser\deparser.lib
+
+#option map
