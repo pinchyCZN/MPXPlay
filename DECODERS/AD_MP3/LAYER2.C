@@ -270,11 +270,27 @@ unsigned int _getbits_one(int *loc_bitindex, int *loc_wordpointer, int x)
 {
 	int val;
 	__asm {
-		mov ebx, x mov edi, loc_bitindex mov eax,[edi]
-		mov ecx, eax shr eax, 3 mov edi, loc_wordpointer mov edx,[edi]
-		add eax, edx mov eax, dword ptr[eax]
-		and ecx, 7 bswap eax shl eax, cl mov cl, 32 sub cl, bl shr eax, cl mov edi, loc_bitindex mov eax,[edi]
-	add eax, ebx mov[edi], eax} return val;
+		mov ebx, x
+		mov edi, loc_bitindex
+		mov eax,[edi]
+		mov ecx, eax
+		shr eax, 3
+		mov edi, loc_wordpointer
+		mov edx,[edi]
+		add eax, edx
+		mov eax, dword ptr[eax]
+		and ecx, 7
+		bswap eax
+		shl eax, cl
+		mov cl, 32
+		sub cl, bl
+		shr eax, cl
+		mov edi, loc_bitindex
+		mov eax,[edi]
+		add eax, ebx
+		mov[edi], eax
+	}
+	return val;
 }
 #else
 unsigned int getbits_one(int);

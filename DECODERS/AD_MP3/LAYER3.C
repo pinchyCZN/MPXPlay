@@ -128,13 +128,6 @@ static unsigned int CRC_checkheader(unsigned long head, unsigned char *bsbufp, u
 //-----------------------------------------------------------------------
 //API
 
-void mpxdec_preinit(void)
-{
-	mpxdec_synth_init(65536);
-	mpxdec_layer2_init();
-	mpxdec_layer3_init();
-}
-
 struct mp3_decoder_data *mpxdec_init(void)
 {
 	struct mp3_decoder_data *mp3d;
@@ -595,6 +588,12 @@ void mpxdec_layer3_init(void)
 	mpxdec_l3mdct_init();
 }
 
+void mpxdec_preinit(void)
+{
+	mpxdec_synth_init(65536);
+	mpxdec_layer2_init();
+	mpxdec_layer3_init();
+}
 //--------------------------------------------------------------
 
 // number of bits must be between 1 and 24, you have to check this before calling

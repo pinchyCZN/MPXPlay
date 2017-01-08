@@ -707,7 +707,7 @@ static void mpxplay_debugf(FILE * fp, const char *format, ...)
 }
 
 #else
-#define mpxplay_debugf()
+#define mpxplay_debugf (void)sizeof
 #endif							// MPXPLAY_USE_DEBUGF
 
 #endif							// mpxplay_newfunc_h

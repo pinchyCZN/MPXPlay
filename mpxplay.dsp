@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="mpxplay" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 6.00
+# Microsoft Developer Studio Generated Build File, Format Version 60000
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
@@ -25,7 +25,7 @@ CFG=mpxplay - Win32 Debug
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=snCl.exe
+CPP=cl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "mpxplay - Win32 Release"
@@ -41,13 +41,13 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I ".\\" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=snLink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 
@@ -65,13 +65,13 @@ LINK32=snLink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "e:\DEV\MSVC_Projects\MPXPlay\vc6src\\" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I ".\\" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=snLink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Ws2_32.lib Mpr.lib Winmm.lib Dsound.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 
@@ -133,15 +133,15 @@ SOURCE=.\NEWFUNC\FPU.C
 # End Source File
 # Begin Source File
 
-SOURCE=.\NEWFUNC\KEYBRD.C
-# End Source File
-# Begin Source File
-
 SOURCE=.\NEWFUNC\MEMORY.C
 # End Source File
 # Begin Source File
 
 SOURCE=.\NEWFUNC\MIXED.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\NEWFUNC\N_KEYBOARD.C
 # End Source File
 # Begin Source File
 
@@ -583,8 +583,6 @@ SOURCE=.\DECODERS\AD_MP3\LAYER2.C
 
 !ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
 
-# PROP Exclude_From_Build 1
-
 !ENDIF 
 
 # End Source File
@@ -595,8 +593,6 @@ SOURCE=.\DECODERS\AD_MP3\LAYER3.C
 !IF  "$(CFG)" == "mpxplay - Win32 Release"
 
 !ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
-
-# PROP Exclude_From_Build 1
 
 !ENDIF 
 
@@ -670,8 +666,6 @@ SOURCE=.\DECODERS\AD_MP3.C
 !IF  "$(CFG)" == "mpxplay - Win32 Release"
 
 !ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
-
-# PROP Exclude_From_Build 1
 
 !ENDIF 
 
