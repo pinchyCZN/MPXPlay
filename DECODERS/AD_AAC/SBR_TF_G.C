@@ -37,134 +37,121 @@
 #include "sbr_synt.h"
 #include "sbr_tf_g.h"
 
-void envelope_time_border_vector(sbr_info *sbr, uint8_t ch)
+void envelope_time_border_vector(sbr_info * sbr, uint8_t ch)
 {
-    uint8_t l, border;
+	uint8_t l, border;
 
-    for (l = 0; l <= sbr->L_E[ch]; l++)
-    {
-        sbr->t_E[ch][l] = 0;
-    }
+	for(l = 0; l <= sbr->L_E[ch]; l++) {
+		sbr->t_E[ch][l] = 0;
+	}
 
-    sbr->t_E[ch][0] = sbr->rate * sbr->abs_bord_lead[ch];
-    sbr->t_E[ch][sbr->L_E[ch]] = sbr->rate * sbr->abs_bord_trail[ch];
+	sbr->t_E[ch][0] = sbr->rate * sbr->abs_bord_lead[ch];
+	sbr->t_E[ch][sbr->L_E[ch]] = sbr->rate * sbr->abs_bord_trail[ch];
 
-    switch (sbr->bs_frame_class[ch])
-    {
-    case FIXFIX:
-        switch (sbr->L_E[ch])
-        {
-        case 4:
-            sbr->t_E[ch][3] = sbr->rate * 12;
-            sbr->t_E[ch][2] = sbr->rate * 8;
-            sbr->t_E[ch][1] = sbr->rate * 4;
-            break;
-        case 2:
-            sbr->t_E[ch][1] = sbr->rate * 8;
-            break;
-        default:
-            break;
-        }
-        break;
+	switch (sbr->bs_frame_class[ch]) {
+	case FIXFIX:
+		switch (sbr->L_E[ch]) {
+		case 4:
+			sbr->t_E[ch][3] = sbr->rate * 12;
+			sbr->t_E[ch][2] = sbr->rate * 8;
+			sbr->t_E[ch][1] = sbr->rate * 4;
+			break;
+		case 2:
+			sbr->t_E[ch][1] = sbr->rate * 8;
+			break;
+		default:
+			break;
+		}
+		break;
 
-    case FIXVAR:
-        if (sbr->L_E[ch] > 1)
-        {
-            int8_t i = sbr->L_E[ch];
-            border = sbr->abs_bord_trail[ch];
+	case FIXVAR:
+		if(sbr->L_E[ch] > 1) {
+			int8_t i = sbr->L_E[ch];
+			border = sbr->abs_bord_trail[ch];
 
-            for (l = 0; l < (sbr->L_E[ch] - 1); l++)
-            {
-                border -= sbr->bs_rel_bord[ch][l];
-                sbr->t_E[ch][--i] = sbr->rate * border;
-            }
-        }
-        break;
+			for(l = 0; l < (sbr->L_E[ch] - 1); l++) {
+				border -= sbr->bs_rel_bord[ch][l];
+				sbr->t_E[ch][--i] = sbr->rate * border;
+			}
+		}
+		break;
 
-    case VARFIX:
-        if (sbr->L_E[ch] > 1)
-        {
-            int8_t i = 1;
-            border = sbr->abs_bord_lead[ch];
+	case VARFIX:
+		if(sbr->L_E[ch] > 1) {
+			int8_t i = 1;
+			border = sbr->abs_bord_lead[ch];
 
-            for (l = 0; l < (sbr->L_E[ch] - 1); l++)
-            {
-                border += sbr->bs_rel_bord[ch][l];
-                sbr->t_E[ch][i++] = sbr->rate * border;
-            }
-        }
-        break;
+			for(l = 0; l < (sbr->L_E[ch] - 1); l++) {
+				border += sbr->bs_rel_bord[ch][l];
+				sbr->t_E[ch][i++] = sbr->rate * border;
+			}
+		}
+		break;
 
-    case VARVAR:
-        if (sbr->bs_num_rel_0[ch])
-        {
-            int8_t i = 1;
-            border = sbr->abs_bord_lead[ch];
+	case VARVAR:
+		if(sbr->bs_num_rel_0[ch]) {
+			int8_t i = 1;
+			border = sbr->abs_bord_lead[ch];
 
-            for (l = 0; l < sbr->bs_num_rel_0[ch]; l++)
-            {
-                border += sbr->bs_rel_bord_0[ch][l];
-                sbr->t_E[ch][i++] = sbr->rate * border;
-            }
-        }
+			for(l = 0; l < sbr->bs_num_rel_0[ch]; l++) {
+				border += sbr->bs_rel_bord_0[ch][l];
+				sbr->t_E[ch][i++] = sbr->rate * border;
+			}
+		}
 
-        if (sbr->bs_num_rel_1[ch])
-        {
-            int8_t i = sbr->L_E[ch];
-            border = sbr->abs_bord_trail[ch];
+		if(sbr->bs_num_rel_1[ch]) {
+			int8_t i = sbr->L_E[ch];
+			border = sbr->abs_bord_trail[ch];
 
-            for (l = 0; l < sbr->bs_num_rel_1[ch]; l++)
-            {
-                border -= sbr->bs_rel_bord_1[ch][l];
-                sbr->t_E[ch][--i] = sbr->rate * border;
-            }
-        }
-        break;
-    }
+			for(l = 0; l < sbr->bs_num_rel_1[ch]; l++) {
+				border -= sbr->bs_rel_bord_1[ch][l];
+				sbr->t_E[ch][--i] = sbr->rate * border;
+			}
+		}
+		break;
+	}
 }
 
-void noise_floor_time_border_vector(sbr_info *sbr, uint8_t ch)
+void noise_floor_time_border_vector(sbr_info * sbr, uint8_t ch)
 {
-    sbr->t_Q[ch][0] = sbr->t_E[ch][0];
+	sbr->t_Q[ch][0] = sbr->t_E[ch][0];
 
-    if (sbr->L_E[ch] == 1)
-    {
-        sbr->t_Q[ch][1] = sbr->t_E[ch][1];
-        sbr->t_Q[ch][2] = 0;
-    } else {
-        uint8_t index = middleBorder(sbr, ch);
-        sbr->t_Q[ch][1] = sbr->t_E[ch][index];
-        sbr->t_Q[ch][2] = sbr->t_E[ch][sbr->L_E[ch]];
-    }
+	if(sbr->L_E[ch] == 1) {
+		sbr->t_Q[ch][1] = sbr->t_E[ch][1];
+		sbr->t_Q[ch][2] = 0;
+	} else {
+		uint8_t index = middleBorder(sbr, ch);
+		sbr->t_Q[ch][1] = sbr->t_E[ch][index];
+		sbr->t_Q[ch][2] = sbr->t_E[ch][sbr->L_E[ch]];
+	}
 }
 
-static uint8_t middleBorder(sbr_info *sbr, uint8_t ch)
+static uint8_t middleBorder(sbr_info * sbr, uint8_t ch)
 {
-    int8_t retval;
+	int8_t retval;
 
-    switch (sbr->bs_frame_class[ch])
-    {
-    case FIXFIX:
-        retval = sbr->L_E[ch]/2;
-        break;
-    case VARFIX:
-        if (sbr->bs_pointer[ch] == 0)
-            retval = 1;
-        else if (sbr->bs_pointer[ch] == 1)
-            retval = sbr->L_E[ch] - 1;
-        else
-            retval = sbr->bs_pointer[ch] - 1;
-        break;
-    case FIXVAR:
-    case VARVAR:
-        if (sbr->bs_pointer[ch] > 1)
-            retval = sbr->L_E[ch] + 1 - sbr->bs_pointer[ch];
-        else
-            retval = sbr->L_E[ch] - 1;
-        break;
-    }
+	switch (sbr->bs_frame_class[ch]) {
+	case FIXFIX:
+		retval = sbr->L_E[ch] / 2;
+		break;
+	case VARFIX:
+		if(sbr->bs_pointer[ch] == 0)
+			retval = 1;
+		else if(sbr->bs_pointer[ch] == 1)
+			retval = sbr->L_E[ch] - 1;
+		else
+			retval = sbr->bs_pointer[ch] - 1;
+		break;
+	case FIXVAR:
+	case VARVAR:
+		if(sbr->bs_pointer[ch] > 1)
+			retval = sbr->L_E[ch] + 1 - sbr->bs_pointer[ch];
+		else
+			retval = sbr->L_E[ch] - 1;
+		break;
+	}
 
-    return (retval > 0) ? retval : 0;
+	return (retval > 0) ? retval : 0;
 }
 
 

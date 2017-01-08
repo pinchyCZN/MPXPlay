@@ -35,65 +35,58 @@
    value. A suitable random number generator can be realized using one
    multiplication/accumulation per random value.
 */
-static INLINE void gen_rand_vector(real_t *spec, int16_t scale_factor, uint16_t size)
+static INLINE void gen_rand_vector(real_t * spec, int16_t scale_factor, uint16_t size)
 {
- uint32_t i;
- real_t energy = 0.0;
- real_t scale = 1.0/(real_t)size * ISQRT_MEAN_NRG;
+	uint32_t i;
+	real_t energy = 0.0;
+	real_t scale = 1.0 / (real_t) size * ISQRT_MEAN_NRG;
 
- for (i = 0; i < size; i++){
-  real_t tmp = scale*(real_t)(int32_t)random_int();
-  spec[i] = tmp;
-  energy += tmp*tmp;
- }
+	for(i = 0; i < size; i++) {
+		real_t tmp = scale * (real_t) (int32_t) random_int();
+		spec[i] = tmp;
+		energy += tmp * tmp;
+	}
 
- scale = 1.0/(real_t)sqrt(energy);
- scale *= (real_t)pow2(0.25 * scale_factor);
- //scale *= (real_t)pow(2.0, 0.25 * scale_factor);
- for (i = 0; i < size; i++){
-  spec[i] *= scale;
- }
+	scale = 1.0 / (real_t) sqrt(energy);
+	scale *= (real_t) pow2(0.25 * scale_factor);
+	//scale *= (real_t)pow(2.0, 0.25 * scale_factor);
+	for(i = 0; i < size; i++) {
+		spec[i] *= scale;
+	}
 }
 
-void pns_decode(ic_stream *ics_left, ic_stream *ics_right,
-                real_t *spec_left, real_t *spec_right, uint16_t frame_len,
-                uint8_t channel_pair)
+void pns_decode(ic_stream * ics_left, ic_stream * ics_right, real_t * spec_left, real_t * spec_right, uint16_t frame_len, uint8_t channel_pair)
 {
-    uint8_t g, sfb, b;
-    uint16_t size, offs;
+	uint8_t g, sfb, b;
+	uint16_t size, offs;
 
-    uint8_t group = 0;
-    uint16_t nshort = frame_len >> 3;
+	uint8_t group = 0;
+	uint16_t nshort = frame_len >> 3;
 
-    for (g = 0; g < ics_left->num_window_groups; g++)
-    {
-        /* Do perceptual noise substitution decoding */
-        for (b = 0; b < ics_left->window_group_length[g]; b++)
-        {
-            for (sfb = 0; sfb < ics_left->max_sfb; sfb++)
-            {
-                if (is_noise(ics_left, g, sfb))
-                {
-                    /* Simultaneous use of LTP and PNS is not prevented in the
-                       syntax. If both LTP, and PNS are enabled on the same
-                       scalefactor band, PNS takes precedence, and no prediction
-                       is applied to this band.
-                    */
-                    ics_left->ltp.long_used[sfb] = 0;
-                    ics_left->ltp2.long_used[sfb] = 0;
+	for(g = 0; g < ics_left->num_window_groups; g++) {
+		/* Do perceptual noise substitution decoding */
+		for(b = 0; b < ics_left->window_group_length[g]; b++) {
+			for(sfb = 0; sfb < ics_left->max_sfb; sfb++) {
+				if(is_noise(ics_left, g, sfb)) {
+					/* Simultaneous use of LTP and PNS is not prevented in the
+					   syntax. If both LTP, and PNS are enabled on the same
+					   scalefactor band, PNS takes precedence, and no prediction
+					   is applied to this band.
+					 */
+					ics_left->ltp.long_used[sfb] = 0;
+					ics_left->ltp2.long_used[sfb] = 0;
 
-                    /* For scalefactor bands coded using PNS the corresponding
-                       predictors are switched to "off".
-                    */
-                    ics_left->pred.prediction_used[sfb] = 0;
+					/* For scalefactor bands coded using PNS the corresponding
+					   predictors are switched to "off".
+					 */
+					ics_left->pred.prediction_used[sfb] = 0;
 
-                    offs = ics_left->swb_offset[sfb];
-                    size = ics_left->swb_offset[sfb+1] - offs;
+					offs = ics_left->swb_offset[sfb];
+					size = ics_left->swb_offset[sfb + 1] - offs;
 
-                    /* Generate random vector */
-                    gen_rand_vector(&spec_left[(group*nshort)+offs],
-                        ics_left->scale_factors[g][sfb], size);
-                }
+					/* Generate random vector */
+					gen_rand_vector(&spec_left[(group * nshort) + offs], ics_left->scale_factors[g][sfb], size);
+				}
 
 /* From the spec:
    If the same scalefactor band and group is coded by perceptual noise
@@ -108,40 +101,33 @@ void pns_decode(ic_stream *ics_left, ic_stream *ics_right,
    substitution in only one channel of a channel pair the setting of ms_used[]
    is not evaluated.
 */
-                if (channel_pair)
-                {
-                    if (is_noise(ics_right, g, sfb))
-                    {
-                        if (((ics_left->ms_mask_present == 1) &&
-                            (ics_left->ms_used[g][sfb])) ||
-                            (ics_left->ms_mask_present == 2))
-                        {
-                            uint16_t c;
+				if(channel_pair) {
+					if(is_noise(ics_right, g, sfb)) {
+						if(((ics_left->ms_mask_present == 1) && (ics_left->ms_used[g][sfb])) || (ics_left->ms_mask_present == 2)) {
+							uint16_t c;
 
-                            offs = ics_right->swb_offset[sfb];
-                            size = ics_right->swb_offset[sfb+1] - offs;
+							offs = ics_right->swb_offset[sfb];
+							size = ics_right->swb_offset[sfb + 1] - offs;
 
-                            for (c = 0; c < size; c++)
-                            {
-                                spec_right[(group*nshort) + offs + c] =
-                                    spec_left[(group*nshort) + offs + c];
-                            }
-                        } else /*if (ics_left->ms_mask_present == 0)*/ {
-                            ics_right->ltp.long_used[sfb] = 0;
-                            ics_right->ltp2.long_used[sfb] = 0;
-                            ics_right->pred.prediction_used[sfb] = 0;
+							for(c = 0; c < size; c++) {
+								spec_right[(group * nshort) + offs + c] = spec_left[(group * nshort) + offs + c];
+							}
+						} else {	/*if (ics_left->ms_mask_present == 0) */
 
-                            offs = ics_right->swb_offset[sfb];
-                            size = ics_right->swb_offset[sfb+1] - offs;
+							ics_right->ltp.long_used[sfb] = 0;
+							ics_right->ltp2.long_used[sfb] = 0;
+							ics_right->pred.prediction_used[sfb] = 0;
 
-                            /* Generate random vector */
-                            gen_rand_vector(&spec_right[(group*nshort)+offs],
-                                ics_right->scale_factors[g][sfb], size);
-                        }
-                    }
-                }
-            } /* sfb */
-            group++;
-        } /* b */
-    } /* g */
+							offs = ics_right->swb_offset[sfb];
+							size = ics_right->swb_offset[sfb + 1] - offs;
+
+							/* Generate random vector */
+							gen_rand_vector(&spec_right[(group * nshort) + offs], ics_right->scale_factors[g][sfb], size);
+						}
+					}
+				}
+			}					/* sfb */
+			group++;
+		}						/* b */
+	}							/* g */
 }

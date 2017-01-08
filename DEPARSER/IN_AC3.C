@@ -20,36 +20,36 @@
 
 #ifdef MPXPLAY_LINK_INFILE_AC3
 
-static int INAC3_infile_open(struct mpxplay_filehand_buffered_func_s *fbfs,void *fbds,char *filename,struct mpxplay_infile_info_s *miis)
+static int INAC3_infile_open(struct mpxplay_filehand_buffered_func_s *fbfs, void *fbds, char *filename, struct mpxplay_infile_info_s *miis)
 {
- int retcode;
+	int retcode;
 
- retcode=INRAWAU_infile_open(fbfs,fbds,filename,miis);
- if(retcode!=MPXPLAY_ERROR_INFILE_OK)
-  return retcode;
+	retcode = INRAWAU_infile_open(fbfs, fbds, filename, miis);
+	if(retcode != MPXPLAY_ERROR_INFILE_OK)
+		return retcode;
 
- miis->audio_stream->wave_id=MPXPLAY_WAVEID_AC3;
- miis->longname="DolbyAC3";
+	miis->audio_stream->wave_id = MPXPLAY_WAVEID_AC3;
+	miis->longname = "DolbyAC3";
 
- return MPXPLAY_ERROR_INFILE_OK;
+	return MPXPLAY_ERROR_INFILE_OK;
 }
 
-struct mpxplay_infile_func_s IN_AC3_funcs={
- (MPXPLAY_TAGTYPE_PUT_SUPPORT(MPXPLAY_TAGTYPE_ID3V1|MPXPLAY_TAGTYPE_APETAG)
- |MPXPLAY_TAGTYPE_PUT_PRIMARY(MPXPLAY_TAGTYPE_APETAG)),
- NULL,
- NULL,
- &INAC3_infile_open,
- &INAC3_infile_open,
- &INAC3_infile_open,
- &INRAWAU_infile_close,
- &INRAWAU_infile_decode,
- &INRAWAU_fseek,
- NULL,
- NULL,
- NULL,
- NULL,
- {"AC3",NULL}
+struct mpxplay_infile_func_s IN_AC3_funcs = {
+	(MPXPLAY_TAGTYPE_PUT_SUPPORT(MPXPLAY_TAGTYPE_ID3V1 | MPXPLAY_TAGTYPE_APETAG)
+	 | MPXPLAY_TAGTYPE_PUT_PRIMARY(MPXPLAY_TAGTYPE_APETAG)),
+	NULL,
+	NULL,
+	&INAC3_infile_open,
+	&INAC3_infile_open,
+	&INAC3_infile_open,
+	&INRAWAU_infile_close,
+	&INRAWAU_infile_decode,
+	&INRAWAU_fseek,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	{"AC3", NULL}
 };
 
-#endif // MPXPLAY_LINK_INFILE_AC3
+#endif							// MPXPLAY_LINK_INFILE_AC3

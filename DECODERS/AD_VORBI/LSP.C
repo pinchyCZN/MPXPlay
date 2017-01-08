@@ -32,21 +32,18 @@
 // #define LSP_ASM 1 // faster, but FPU rounding/precision different
 #endif
 
-static float half=0.5f,two=2.0f,four=4.0f;
+static float half = 0.5f, two = 2.0f, four = 4.0f;
 
 #ifdef LSP_ASM
 
-static float log2_10_d20=0.166096404744368f; // log2(10)/20 (log2(10)=log(10)/log(2))
+static float log2_10_d20 = 0.166096404744368f;	// log2(10)/20 (log2(10)=log(10)/log(2))
 
-void asm_lsp2curve(ogg_double_t *,ogg_double_t *,ogg_double_t *,int);
+void asm_lsp2curve(ogg_double_t *, ogg_double_t *, ogg_double_t *, int);
 
-void vorbis_lsp_to_curve(ogg_double_t *curve,ogg_double_t *lsp,
-			 ogg_double_t *map_cos,
-			 int n,int m,
-			 ogg_double_t amp,ogg_double_t ampoffset)
+void vorbis_lsp_to_curve(ogg_double_t * curve, ogg_double_t * lsp, ogg_double_t * map_cos, int n, int m, ogg_double_t amp, ogg_double_t ampoffset)
 {
- int n_save;
- float *lsp_save;
+	int n_save;
+	float *lsp_save;
 
 #pragma aux asm_lsp2curve=\
  "mov dword ptr n_save,ecx"\
@@ -127,57 +124,54 @@ void vorbis_lsp_to_curve(ogg_double_t *curve,ogg_double_t *lsp,
  "jb back3"\
  parm[eax][edx][ebx][ecx] modify[eax ebx ecx edx edi esi];
 
- asm_lsp2curve(curve,lsp,map_cos,n);
+	asm_lsp2curve(curve, lsp, map_cos, n);
 }
 
 #else
 
-void vorbis_lsp_to_curve(ogg_double_t *curve,ogg_double_t *lsp,
-			 ogg_double_t *map_cos,
-			 int n,int m,
-			 ogg_double_t amp,ogg_double_t ampoffset)
+void vorbis_lsp_to_curve(ogg_double_t * curve, ogg_double_t * lsp, ogg_double_t * map_cos, int n, int m, ogg_double_t amp, ogg_double_t ampoffset)
 {
- int i;
- ogg_double_t *lspp=lsp;
+	int i;
+	ogg_double_t *lspp = lsp;
 
- i=m;
- do{
-  *lspp++=cos(*lspp)*two;
- }while(--i);
+	i = m;
+	do {
+		*lspp++ = cos(*lspp) * two;
+	} while(--i);
 
- i=0;
- do{
-  unsigned long mci;
-  unsigned int j=m>>1;
-  ogg_double_t p=half;
-  ogg_double_t q=half;
+	i = 0;
+	do {
+		unsigned long mci;
+		unsigned int j = m >> 1;
+		ogg_double_t p = half;
+		ogg_double_t q = half;
 
-  lspp=lsp;
-  do{
-   q *= *map_cos-lspp[0];
-   p *= *map_cos-lspp[1];
-   lspp+=2;
-  }while(--j);
+		lspp = lsp;
+		do {
+			q *= *map_cos - lspp[0];
+			p *= *map_cos - lspp[1];
+			lspp += 2;
+		} while(--j);
 
-  if(m&1){
-   q*=(*map_cos-lspp[0]);
-   q*=q;
-   p*=p*(four - (*map_cos * *map_cos));
-  }else{
-   q*=q*(two + *map_cos);
-   p*=p*(two - *map_cos);
-  }
+		if(m & 1) {
+			q *= (*map_cos - lspp[0]);
+			q *= q;
+			p *= p * (four - (*map_cos * *map_cos));
+		} else {
+			q *= q * (two + *map_cos);
+			p *= p * (two - *map_cos);
+		}
 
-  q=fromdB(amp/sqrt(p+q)-ampoffset);
+		q = fromdB(amp / sqrt(p + q) - ampoffset);
 
-  mci=*((unsigned long *)map_cos);
-  do{
-   *curve++ *=q;
-   map_cos++;
-   i++;
-  }while(*((unsigned long *)map_cos)==mci); // x86 specific code
+		mci = *((unsigned long *)map_cos);
+		do {
+			*curve++ *= q;
+			map_cos++;
+			i++;
+		} while(*((unsigned long *)map_cos) == mci);	// x86 specific code
 
- }while(i<n);
+	} while(i < n);
 }
 
 #endif

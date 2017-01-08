@@ -21,54 +21,54 @@
 
 //#define NEWFUNC_MEMORY_MMX 1 // use mmx based memcpy
 
-static void pds_memcpy_x86(void *addr_dest,void *addr_src,unsigned int len);
+static void pds_memcpy_x86(void *addr_dest, void *addr_src, unsigned int len);
 
 #ifdef NEWFUNC_MEMORY_MMX
 //#define NEWFUNC_MEMORY_SSE 1 // doesn't work properly on my Athlon XP
-static void pds_memcpy_mmx_1(void *addr_dest,void *addr_src,unsigned int len);
-static void pds_memcpy_mmx_3dnow(void *addr_dest,void *addr_src,unsigned int len);
-static void pds_memcpy_mmx_ext(void *addr_dest,void *addr_src,unsigned int len);
-static void pds_memcpy_sse(void *addr_dest,void *addr_src,unsigned int len);
-#endif // NEWFUNC_MEMORY_MMX
+static void pds_memcpy_mmx_1(void *addr_dest, void *addr_src, unsigned int len);
+static void pds_memcpy_mmx_3dnow(void *addr_dest, void *addr_src, unsigned int len);
+static void pds_memcpy_mmx_ext(void *addr_dest, void *addr_src, unsigned int len);
+static void pds_memcpy_sse(void *addr_dest, void *addr_src, unsigned int len);
+#endif							// NEWFUNC_MEMORY_MMX
 
-typedef void (*memcpy_func_t)(void *addr_dest,void *addr_src,unsigned int len);
-static memcpy_func_t selected_memcpy_func=&pds_memcpy_x86;
-#endif // NEWFUNC_ASM
+typedef void (*memcpy_func_t) (void *addr_dest, void *addr_src, unsigned int len);
+static memcpy_func_t selected_memcpy_func = &pds_memcpy_x86;
+#endif							// NEWFUNC_ASM
 
 #ifdef NEWFUNC_ASM
 
 void newfunc_memory_init(void)
 {
 #ifdef NEWFUNC_MEMORY_MMX
- int cap_mm;
+	int cap_mm;
 
- newfunc_cpu_init();
+	newfunc_cpu_init();
 
- cap_mm=mpxplay_cpu_capables_mm;
+	cap_mm = mpxplay_cpu_capables_mm;
 
- // speed order (slowest first, fastest last)
- if(cap_mm&CPU_X86_MMCAP_MMX){
-  selected_memcpy_func=&pds_memcpy_mmx_1;
- }
- if(cap_mm&CPU_X86_MMCAP_3DNOW){
-  selected_memcpy_func=&pds_memcpy_mmx_3dnow;
- }
- if(cap_mm&CPU_X86_MMCAP_MMXEXT){
-  selected_memcpy_func=&pds_memcpy_mmx_ext;
- }
+	// speed order (slowest first, fastest last)
+	if(cap_mm & CPU_X86_MMCAP_MMX) {
+		selected_memcpy_func = &pds_memcpy_mmx_1;
+	}
+	if(cap_mm & CPU_X86_MMCAP_3DNOW) {
+		selected_memcpy_func = &pds_memcpy_mmx_3dnow;
+	}
+	if(cap_mm & CPU_X86_MMCAP_MMXEXT) {
+		selected_memcpy_func = &pds_memcpy_mmx_ext;
+	}
 #ifdef NEWFUNC_MEMORY_SSE
- if(cap_mm&CPU_X86_MMCAP_SSE){
-  selected_memcpy_func=&pds_memcpy_sse;
- }
-#endif //NEWFUNC_MEMORY_SSE
-#endif //NEWFUNC_MEMORY_MMX
+	if(cap_mm & CPU_X86_MMCAP_SSE) {
+		selected_memcpy_func = &pds_memcpy_sse;
+	}
+#endif							//NEWFUNC_MEMORY_SSE
+#endif							//NEWFUNC_MEMORY_MMX
 }
 
 
 
-void pds_memcpy(void *addr_dest,void *addr_src,unsigned int len)
+void pds_memcpy(void *addr_dest, void *addr_src, unsigned int len)
 {
- (selected_memcpy_func)(addr_dest,addr_src,len);
+	(selected_memcpy_func) (addr_dest, addr_src, len);
 }
 
 // !!! overwrites the original memcpy and memset
@@ -80,9 +80,9 @@ void pds_memcpy(void *addr_dest,void *addr_src,unsigned int len)
 
 //------------------------------------------------------------------
 
-void asm_memcpy_x86(void *,void *,unsigned int);
+void asm_memcpy_x86(void *, void *, unsigned int);
 
-static void pds_memcpy_x86(void *addr_dest,void *addr_src,unsigned int len)
+static void pds_memcpy_x86(void *addr_dest, void *addr_src, unsigned int len)
 {
 #pragma aux asm_memcpy_x86=\
  "cld"\
@@ -95,16 +95,16 @@ static void pds_memcpy_x86(void *addr_dest,void *addr_src,unsigned int len)
  "and ecx,3"\
  "rep movsb"\
  parm[eax][edx][ebx] modify[ecx edi esi];
- asm_memcpy_x86(addr_dest,addr_src,len);
+	asm_memcpy_x86(addr_dest, addr_src, len);
 }
 
 #ifdef NEWFUNC_MEMORY_MMX
 
-void asm_memcpy_mmx_1(void *,void *,unsigned int);
+void asm_memcpy_mmx_1(void *, void *, unsigned int);
 
-static void pds_memcpy_mmx_1(void *addr_dest,void *addr_src,unsigned int len)
+static void pds_memcpy_mmx_1(void *addr_dest, void *addr_src, unsigned int len)
 {
- #pragma aux asm_memcpy_mmx_1=\
+#pragma aux asm_memcpy_mmx_1=\
  "cld"\
  "mov esi,edx"\
  "mov edi,eax"\
@@ -152,14 +152,14 @@ static void pds_memcpy_mmx_1(void *addr_dest,void *addr_src,unsigned int len)
   "rep movsb"\
  "end:"\
  parm[eax][edx][ebx] modify[eax ebx ecx edx edi esi];
- asm_memcpy_mmx_1(addr_dest,addr_src,len);
+	asm_memcpy_mmx_1(addr_dest, addr_src, len);
 }
 
-void asm_memcpy_mmx_3dnow(void *,void *,unsigned int);
+void asm_memcpy_mmx_3dnow(void *, void *, unsigned int);
 
-static void pds_memcpy_mmx_3dnow(void *addr_dest,void *addr_src,unsigned int len)
+static void pds_memcpy_mmx_3dnow(void *addr_dest, void *addr_src, unsigned int len)
 {
- #pragma aux asm_memcpy_mmx_3dnow=\
+#pragma aux asm_memcpy_mmx_3dnow=\
  "cld"\
  "mov esi,edx"\
  "mov edi,eax"\
@@ -208,14 +208,14 @@ static void pds_memcpy_mmx_3dnow(void *addr_dest,void *addr_src,unsigned int len
   "rep movsb"\
  "end:"\
  parm[eax][edx][ebx] modify[eax ebx ecx edx edi esi];
- asm_memcpy_mmx_3dnow(addr_dest,addr_src,len);
+	asm_memcpy_mmx_3dnow(addr_dest, addr_src, len);
 }
 
-void asm_memcpy_mmx_ext(void *,void *,unsigned int);
+void asm_memcpy_mmx_ext(void *, void *, unsigned int);
 
-static void pds_memcpy_mmx_ext(void *addr_dest,void *addr_src,unsigned int len)
+static void pds_memcpy_mmx_ext(void *addr_dest, void *addr_src, unsigned int len)
 {
- #pragma aux asm_memcpy_mmx_ext=\
+#pragma aux asm_memcpy_mmx_ext=\
  "cld"\
  "mov esi,edx"\
  "mov edi,eax"\
@@ -265,13 +265,13 @@ static void pds_memcpy_mmx_ext(void *addr_dest,void *addr_src,unsigned int len)
   "rep movsb"\
  "end:"\
  parm[eax][edx][ebx] modify[eax ebx ecx edx edi esi];
- asm_memcpy_mmx_ext(addr_dest,addr_src,len);
+	asm_memcpy_mmx_ext(addr_dest, addr_src, len);
 }
 
 #ifdef NEWFUNC_MEMORY_SSE
-void asm_memcpy_sse(void *,void *,unsigned int);
+void asm_memcpy_sse(void *, void *, unsigned int);
 
-static void pds_memcpy_sse(void *addr_dest,void *addr_src,unsigned int len)
+static void pds_memcpy_sse(void *addr_dest, void *addr_src, unsigned int len)
 {
 #pragma aux asm_memcpy_sse=\
  "cld"\
@@ -331,17 +331,17 @@ static void pds_memcpy_sse(void *addr_dest,void *addr_src,unsigned int len)
   "rep movsb"\
  "end:"\
  parm[eax][edx][ebx] modify[eax ebx ecx edx edi esi];
- asm_memcpy_sse(addr_dest,addr_src,len);
+	asm_memcpy_sse(addr_dest, addr_src, len);
 }
-#endif //NEWFUNC_MEMORY_SSE
+#endif							//NEWFUNC_MEMORY_SSE
 
-#endif //NEWFUNC_MEMORY_MMX
+#endif							//NEWFUNC_MEMORY_MMX
 
 //------------------------------------------------------------------
 
-void asm_memset(void *,int,unsigned int);
+void asm_memset(void *, int, unsigned int);
 
-void pds_memset(void *addr,int num,unsigned int len)
+void pds_memset(void *addr, int num, unsigned int len)
 {
 #pragma aux asm_memset=\
  "cld"\
@@ -357,42 +357,42 @@ void pds_memset(void *addr,int num,unsigned int len)
  "and ecx,3"\
  "rep stosb"\
  parm[eax][edx][ebx] modify[eax ecx edx edi];
- asm_memset(addr,num,len);
+	asm_memset(addr, num, len);
 }
 
-void asm_qmemreset(void *,unsigned int);
+void asm_qmemreset(void *, unsigned int);
 
-void pds_qmemreset(void *addr,unsigned int len)
+void pds_qmemreset(void *addr, unsigned int len)
 {
- #pragma aux asm_qmemreset=\
+#pragma aux asm_qmemreset=\
  "cld"\
  "mov edi,eax"\
  "mov ecx,edx"\
  "xor eax,eax"\
  "rep stosd"\
  parm[eax][edx] modify[eax ecx edi];
- asm_qmemreset(addr,len);
+	asm_qmemreset(addr, len);
 }
 
-void asm_qmemcpy(void *,void *,unsigned int);
+void asm_qmemcpy(void *, void *, unsigned int);
 
-void pds_qmemcpy(void *addr_dest,void *addr_src,unsigned int len)
+void pds_qmemcpy(void *addr_dest, void *addr_src, unsigned int len)
 {
- #pragma aux asm_qmemcpy=\
+#pragma aux asm_qmemcpy=\
  "cld"\
  "mov edi,eax"\
  "mov esi,edx"\
  "mov ecx,ebx"\
  "rep movsd"\
  parm[eax][edx][ebx] modify[ecx edi esi];
- asm_qmemcpy(addr_dest,addr_src,len);
+	asm_qmemcpy(addr_dest, addr_src, len);
 }
 
-void asm_qmemcpyr(void *,void *,unsigned int);
+void asm_qmemcpyr(void *, void *, unsigned int);
 
-void pds_qmemcpyr(void *addr_dest,void *addr_src,unsigned int len)
+void pds_qmemcpyr(void *addr_dest, void *addr_src, unsigned int len)
 {
- #pragma aux asm_qmemcpyr=\
+#pragma aux asm_qmemcpyr=\
  "std"\
  "mov edi,eax"\
  "mov esi,edx"\
@@ -404,7 +404,7 @@ void pds_qmemcpyr(void *addr_dest,void *addr_src,unsigned int len)
  "rep movsd"\
  "cld"\
  parm[eax][edx][ebx] modify[ebx ecx edi esi];
- asm_qmemcpyr(addr_dest,addr_src,len);
+	asm_qmemcpyr(addr_dest, addr_src, len);
 }
 
 /*void asm_memxch(char *,char *,unsigned int);
@@ -452,89 +452,95 @@ void pds_memxch(char *addr1,char *addr2,unsigned int len)
  }
 }*/
 
-#endif // NEWFUNC_ASM
+#endif							// NEWFUNC_ASM
 
-void pds_memxch(char *addr1,char *addr2,unsigned int len)
+void pds_memxch(char *addr1, char *addr2, unsigned int len)
 {
- while(len--){
-  char tmp1=*addr1,tmp2=*addr2;
-  *addr1=tmp2;
-  *addr2=tmp1;
-  addr1++;addr2++;
- }
+	while(len--) {
+		char tmp1 = *addr1, tmp2 = *addr2;
+		*addr1 = tmp2;
+		*addr2 = tmp1;
+		addr1++;
+		addr2++;
+	}
 }
 
-void pds_mem_reverse(char *addr,unsigned int len)
+void pds_mem_reverse(char *addr, unsigned int len)
 {
- char *end;
- if(!addr || (len<2))
-  return;
- end=addr+len-1;
- len>>=1;
- do{
-  char c=*addr;
-  *addr=*end;
-  *end=c;
-  addr++;end--;
- }while(--len);
+	char *end;
+	if(!addr || (len < 2))
+		return;
+	end = addr + len - 1;
+	len >>= 1;
+	do {
+		char c = *addr;
+		*addr = *end;
+		*end = c;
+		addr++;
+		end--;
+	} while(--len);
 }
 
 #ifdef MPXPLAY_USE_SMP
 
-void pds_smp_memcpy(char *addr_dest,char *addr_src,unsigned int len)
+void pds_smp_memcpy(char *addr_dest, char *addr_src, unsigned int len)
 {
- unsigned int i=len>>2;
- LONG *ad=(LONG *)addr_dest,*as=(LONG *)addr_src;
- while(i){
-  funcbit_smp_value_put(ad[0],as[0]);
-  ad++;as++;i--;
- }
- if((len>=4) && (len&3)){
-  addr_dest+=len-4;
-  addr_src+=len-4;
-  funcbit_smp_value_put(addr_dest[0],*((LONG*)addr_src));
- }
+	unsigned int i = len >> 2;
+	LONG *ad = (LONG *) addr_dest, *as = (LONG *) addr_src;
+	while(i) {
+		funcbit_smp_value_put(ad[0], as[0]);
+		ad++;
+		as++;
+		i--;
+	}
+	if((len >= 4) && (len & 3)) {
+		addr_dest += len - 4;
+		addr_src += len - 4;
+		funcbit_smp_value_put(addr_dest[0], *((LONG *) addr_src));
+	}
 }
 
-void pds_smp_memxch(char *addr1,char *addr2,unsigned int len)
+void pds_smp_memxch(char *addr1, char *addr2, unsigned int len)
 {
- unsigned int i=(len+3)>>2; // !!! 4 bytes boundary
- LONG *a1=(LONG *)addr1,*a2=(LONG *)addr2;
- while(i){
-  LONG value1=*a1;
-  funcbit_smp_value_put(a1[0],*a2);
-  funcbit_smp_value_put(a2[0],value1);
-  a1++;a2++;
-  i--;
- }
- /*if((len>=4) && (len&3)){
-  LONG value1;
-  addr1+=len-4;
-  addr2+=len-4;
-  value1=*((LONG *)addr1);
-  funcbit_smp_value_put(addr1,(LONG*)addr2);
-  funcbit_smp_value_put(addr2,value1);
- }*/
+	unsigned int i = (len + 3) >> 2;	// !!! 4 bytes boundary
+	LONG *a1 = (LONG *) addr1, *a2 = (LONG *) addr2;
+	while(i) {
+		LONG value1 = *a1;
+		funcbit_smp_value_put(a1[0], *a2);
+		funcbit_smp_value_put(a2[0], value1);
+		a1++;
+		a2++;
+		i--;
+	}
+	/*if((len>=4) && (len&3)){
+	   LONG value1;
+	   addr1+=len-4;
+	   addr2+=len-4;
+	   value1=*((LONG *)addr1);
+	   funcbit_smp_value_put(addr1,(LONG*)addr2);
+	   funcbit_smp_value_put(addr2,value1);
+	   } */
 }
 
-void pds_smp_memset(char *addr,int value,unsigned int len)
+void pds_smp_memset(char *addr, int value, unsigned int len)
 {
- unsigned int i=len>>2;
- LONG *ad=(LONG *)addr;
- LONG val=value;
- val|=(val<<8);
- val|=(val<<16);
- while(i){
-  funcbit_smp_value_put(ad[0],val);
-  ad++;i--;
- }
- if((len>=4) && (len&3)){
-  addr+=len-4;
-  funcbit_smp_value_put(addr[0],val);
- }
+	unsigned int i = len >> 2;
+	LONG *ad = (LONG *) addr;
+	LONG val = value;
+	val |= (val << 8);
+	val |= (val << 16);
+	while(i) {
+		funcbit_smp_value_put(ad[0], val);
+		ad++;
+		i--;
+	}
+	if((len >= 4) && (len & 3)) {
+		addr += len - 4;
+		funcbit_smp_value_put(addr[0], val);
+	}
 }
 
-#endif // MPXPLAY_USE_SMP
+#endif							// MPXPLAY_USE_SMP
 
 #include <malloc.h>
 
@@ -543,51 +549,51 @@ void pds_smp_memset(char *addr,int value,unsigned int len)
 // can be different (more safe) than the normal malloc
 void *pds_malloc(unsigned int bufsize)
 {
- //unsigned int intsoundcntrl_save;
- void *bufptr;
- if(!bufsize)
-  return NULL;
- //MPXPLAY_INTSOUNDDECODER_DISALLOW;
- //_disable();
- bufptr=malloc(bufsize);
- //_enable();
- //MPXPLAY_INTSOUNDDECODER_ALLOW;
- return bufptr;
+	//unsigned int intsoundcntrl_save;
+	void *bufptr;
+	if(!bufsize)
+		return NULL;
+	//MPXPLAY_INTSOUNDDECODER_DISALLOW;
+	//_disable();
+	bufptr = malloc(bufsize);
+	//_enable();
+	//MPXPLAY_INTSOUNDDECODER_ALLOW;
+	return bufptr;
 }
 
-void *pds_calloc(unsigned int nitems,unsigned int itemsize)
+void *pds_calloc(unsigned int nitems, unsigned int itemsize)
 {
- //unsigned int intsoundcntrl_save;
- void *bufptr;
- if(!nitems || !itemsize)
-  return NULL;
- //MPXPLAY_INTSOUNDDECODER_DISALLOW;
- //_disable();
- bufptr=calloc(nitems,itemsize);
- //_enable();
- //MPXPLAY_INTSOUNDDECODER_ALLOW;
- return bufptr;
+	//unsigned int intsoundcntrl_save;
+	void *bufptr;
+	if(!nitems || !itemsize)
+		return NULL;
+	//MPXPLAY_INTSOUNDDECODER_DISALLOW;
+	//_disable();
+	bufptr = calloc(nitems, itemsize);
+	//_enable();
+	//MPXPLAY_INTSOUNDDECODER_ALLOW;
+	return bufptr;
 }
 
-void *pds_realloc(void *bufptr,unsigned int bufsize)
+void *pds_realloc(void *bufptr, unsigned int bufsize)
 {
- //unsigned int intsoundcntrl_save;
- //MPXPLAY_INTSOUNDDECODER_DISALLOW;
- //_disable();
- bufptr=realloc(bufptr,bufsize);
- //_enable();
- //MPXPLAY_INTSOUNDDECODER_ALLOW;
- return bufptr;
+	//unsigned int intsoundcntrl_save;
+	//MPXPLAY_INTSOUNDDECODER_DISALLOW;
+	//_disable();
+	bufptr = realloc(bufptr, bufsize);
+	//_enable();
+	//MPXPLAY_INTSOUNDDECODER_ALLOW;
+	return bufptr;
 }
 
 void pds_free(void *bufptr)
 {
- //unsigned int intsoundcntrl_save;
- if(bufptr){
-  //MPXPLAY_INTSOUNDDECODER_DISALLOW;
-  //_disable();
-  free(bufptr);
-  //_enable();
-  //MPXPLAY_INTSOUNDDECODER_ALLOW;
- }
+	//unsigned int intsoundcntrl_save;
+	if(bufptr) {
+		//MPXPLAY_INTSOUNDDECODER_DISALLOW;
+		//_disable();
+		free(bufptr);
+		//_enable();
+		//MPXPLAY_INTSOUNDDECODER_ALLOW;
+	}
 }

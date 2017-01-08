@@ -25,9 +25,9 @@
 #include "ogg.h"
 #include "codebook.h"
 
-#ifdef CODEBOOK_ASM // in codebook.h
+#ifdef CODEBOOK_ASM				// in codebook.h
 
-long vorbis_book_inline_decode(const decode_aux *t,oggpack_buffer *b);
+long vorbis_book_inline_decode(const decode_aux * t, oggpack_buffer * b);
 //for maximum t->tab_maxlen+25 huffbits
 //(I assume/hope that the huffbits are never more than 32 bits)
 
@@ -91,9 +91,9 @@ long vorbis_book_inline_decode(const decode_aux *t,oggpack_buffer *b);
  "vbd_end:"\
 parm[edi][esi] value[eax] modify[eax ebx ecx edx edi esi];
 
-long vorbis_book_decode(const decode_aux *t,oggpack_buffer *b)
+long vorbis_book_decode(const decode_aux * t, oggpack_buffer * b)
 {
- return vorbis_book_inline_decode(t,b);
+	return vorbis_book_inline_decode(t, b);
 }
 
 // C version of the asm routine (don't use this)
@@ -138,44 +138,44 @@ long vorbis_book_decode(const decode_aux *t,oggpack_buffer *b)
 
 #else
 
-long vorbis_book_decode(const decode_aux *t,oggpack_buffer *b)
+long vorbis_book_decode(const decode_aux * t, oggpack_buffer * b)
 {
- ogg_uint32_t bitstore;
- ogg_int32_t ptr,leftbits;
- ogg_int16_t *ptr0p,*ptr1p;
+	ogg_uint32_t bitstore;
+	ogg_int32_t ptr, leftbits;
+	ogg_int16_t *ptr0p, *ptr1p;
 
- leftbits=oggpack_inline_leftbits(b);
- if(leftbits<=t->tab_maxlen){
-  if(leftbits<=0)
-   return -1;
-  ptr=0;
- }else
-  ogg_uint32_t lok=oggpack_inline_look24noc(b,t->tab_maxlen),adv;
-  ptr=t->tab_ptr[lok];
-  adv=t->tab_codelen[lok];
-  oggpack_inline_adv(b,adv);
-  if(ptr<=0)
-   return (-ptr);
-  leftbits-=adv;
- }
+	leftbits = oggpack_inline_leftbits(b);
+	if(leftbits <= t->tab_maxlen) {
+		if(leftbits <= 0)
+			return -1;
+		ptr = 0;
+	} else
+		ogg_uint32_t lok = oggpack_inline_look24noc(b, t->tab_maxlen), adv;
+	ptr = t->tab_ptr[lok];
+	adv = t->tab_codelen[lok];
+	oggpack_inline_adv(b, adv);
+	if(ptr <= 0)
+		return (-ptr);
+	leftbits -= adv;
+}
 
  // I assume/hope that the huffbits are never more than t->tab_maxlen+32
- bitstore=oggpack_inline_look32(b,(leftbits>32)? 32:leftbits);
- ptr0p=t->ptr0;
- ptr1p=t->ptr1;
- do{
-  if(bitstore&1)
-   ptr=ptr1p[ptr];
-  else
-   ptr=ptr0p[ptr];
-  bitstore>>=1;
-  if(!(--leftbits))
-   break;
- }while(ptr>0);
+bitstore = oggpack_inline_look32(b, (leftbits > 32) ? 32 : leftbits);
+ptr0p = t->ptr0;
+ptr1p = t->ptr1;
+do {
+	if(bitstore & 1)
+		ptr = ptr1p[ptr];
+	else
+		ptr = ptr0p[ptr];
+	bitstore >>= 1;
+	if(!(--leftbits))
+		break;
+} while(ptr > 0);
 
- oggpack_inline_setleft(b,leftbits);
+oggpack_inline_setleft(b, leftbits);
 
- return(-ptr);
+return (-ptr);
 }
 
 #define vorbis_book_inline_decode(t,b) vorbis_book_decode(t,b)
@@ -184,254 +184,288 @@ long vorbis_book_decode(const decode_aux *t,oggpack_buffer *b)
 
 //--------------------------------------------------------------------------
 //res0
-long vorbis_book_decodevs_add(codebook *book,ogg_double_t *a0,oggpack_buffer *b,int n)
+long vorbis_book_decodevs_add(codebook * book, ogg_double_t * a0, oggpack_buffer * b, int n)
 {
- const ogg_float_t *bookvallist=book->valuelist;
- const decode_aux *bookdectree=book->decode_tree;
- const unsigned int bookdim=book->dim;
- const unsigned int step=n/bookdim;
- unsigned int i,j;
+	const ogg_float_t *bookvallist = book->valuelist;
+	const decode_aux *bookdectree = book->decode_tree;
+	const unsigned int bookdim = book->dim;
+	const unsigned int step = n / bookdim;
+	unsigned int i, j;
 
- i=step;
- do{
-  ogg_float_t *t;
-  ogg_double_t *a;
-  long entry=vorbis_book_inline_decode(bookdectree,b);
-  if(entry<0)
-   return(entry);
-  t=(ogg_float_t *)(bookvallist+entry*bookdim);
-  a=a0++;
-  j=bookdim;
-  do{
-   a[0] += *t++;
-   a+=step;
-  }while(--j);
- }while(--i);
- return(0);
+	i = step;
+	do {
+		ogg_float_t *t;
+		ogg_double_t *a;
+		long entry = vorbis_book_inline_decode(bookdectree, b);
+		if(entry < 0)
+			return (entry);
+		t = (ogg_float_t *) (bookvallist + entry * bookdim);
+		a = a0++;
+		j = bookdim;
+		do {
+			a[0] += *t++;
+			a += step;
+		} while(--j);
+	} while(--i);
+	return (0);
 }
 
-long vorbis_book_decodevs_set(codebook *book,ogg_double_t *a0,oggpack_buffer *b,int n)
+long vorbis_book_decodevs_set(codebook * book, ogg_double_t * a0, oggpack_buffer * b, int n)
 {
- const ogg_float_t *bookvallist=book->valuelist;
- const decode_aux *bookdectree=book->decode_tree;
- const unsigned int bookdim=book->dim;
- const unsigned int step=n/bookdim;
- unsigned int i,j;
+	const ogg_float_t *bookvallist = book->valuelist;
+	const decode_aux *bookdectree = book->decode_tree;
+	const unsigned int bookdim = book->dim;
+	const unsigned int step = n / bookdim;
+	unsigned int i, j;
 
- i=step;
- do{
-  ogg_float_t *t;
-  ogg_double_t *a;
-  long entry=vorbis_book_inline_decode(bookdectree,b);
-  if(entry<0)
-   return(entry);
-  t=(ogg_float_t *)(bookvallist+entry*bookdim);
-  a=a0++;
-  j=bookdim;
-  do{
-   a[0] = *t++;
-   a+=step;
-  }while(--j);
- }while(--i);
- return(0);
+	i = step;
+	do {
+		ogg_float_t *t;
+		ogg_double_t *a;
+		long entry = vorbis_book_inline_decode(bookdectree, b);
+		if(entry < 0)
+			return (entry);
+		t = (ogg_float_t *) (bookvallist + entry * bookdim);
+		a = a0++;
+		j = bookdim;
+		do {
+			a[0] = *t++;
+			a += step;
+		} while(--j);
+	} while(--i);
+	return (0);
 }
 
 //-----------------------------------------------------------------------
 //res1
-long vorbis_book_decodev_add(codebook *book,ogg_double_t *a,oggpack_buffer *b,int n)
+long vorbis_book_decodev_add(codebook * book, ogg_double_t * a, oggpack_buffer * b, int n)
 {
- const ogg_float_t *bookvallist=book->valuelist;
- const decode_aux *bookdectree=book->decode_tree;
- const unsigned int bookdim=book->dim;
+	const ogg_float_t *bookvallist = book->valuelist;
+	const decode_aux *bookdectree = book->decode_tree;
+	const unsigned int bookdim = book->dim;
 
- if(bookdim>8){
-  do{
-   ogg_float_t *t;
-   long entry=vorbis_book_inline_decode(bookdectree,b),j;
-   if(entry<0)
-    return(entry);
-   t=(ogg_float_t *)(bookvallist+(entry*bookdim));
-   j=bookdim;
-   n-=j;
-   do{
-    *a++ += *t++;
-   }while(--j);
-  }while(n>0);
- }else{
-  do{
-   ogg_float_t *t;
-   long entry=vorbis_book_inline_decode(bookdectree,b);
-   if(entry<0)
-    return(entry);
-   t=(ogg_float_t *)(bookvallist+(entry*bookdim));
-   switch(bookdim){
-    case 8:a[7] += t[7];
-    case 7:a[6] += t[6];
-    case 6:a[5] += t[5];
-    case 5:a[4] += t[4];
-    case 4:a[3] += t[3];
-    case 3:a[2] += t[2];
-    case 2:a[1] += t[1];
-    case 1:a[0] += t[0];
-    case 0:break;
-   }
-   a+=bookdim;
-   n-=bookdim;
-  }while(n>0);
- }
- return(0);
+	if(bookdim > 8) {
+		do {
+			ogg_float_t *t;
+			long entry = vorbis_book_inline_decode(bookdectree, b), j;
+			if(entry < 0)
+				return (entry);
+			t = (ogg_float_t *) (bookvallist + (entry * bookdim));
+			j = bookdim;
+			n -= j;
+			do {
+				*a++ += *t++;
+			} while(--j);
+		} while(n > 0);
+	} else {
+		do {
+			ogg_float_t *t;
+			long entry = vorbis_book_inline_decode(bookdectree, b);
+			if(entry < 0)
+				return (entry);
+			t = (ogg_float_t *) (bookvallist + (entry * bookdim));
+			switch (bookdim) {
+			case 8:
+				a[7] += t[7];
+			case 7:
+				a[6] += t[6];
+			case 6:
+				a[5] += t[5];
+			case 5:
+				a[4] += t[4];
+			case 4:
+				a[3] += t[3];
+			case 3:
+				a[2] += t[2];
+			case 2:
+				a[1] += t[1];
+			case 1:
+				a[0] += t[0];
+			case 0:
+				break;
+			}
+			a += bookdim;
+			n -= bookdim;
+		} while(n > 0);
+	}
+	return (0);
 }
 
-long vorbis_book_decodev_set(codebook *book,ogg_double_t *a,oggpack_buffer *b,int n)
+long vorbis_book_decodev_set(codebook * book, ogg_double_t * a, oggpack_buffer * b, int n)
 {
- const ogg_float_t *bookvallist=book->valuelist;
- const decode_aux *bookdectree=book->decode_tree;
- const unsigned int bookdim=book->dim;
+	const ogg_float_t *bookvallist = book->valuelist;
+	const decode_aux *bookdectree = book->decode_tree;
+	const unsigned int bookdim = book->dim;
 
- if(bookdim>8){
-  do{
-   ogg_float_t *t;
-   long entry=vorbis_book_inline_decode(bookdectree,b),j;
-   if(entry<0)
-    return(entry);
-   t=(ogg_float_t *)(bookvallist+(entry*bookdim));
-   j=bookdim;
-   n-=j;
-   do{
-    *a++ = *t++;
-   }while(--j);
-  }while(n>0);
- }else{
-  do{
-   ogg_float_t *t;
-   long entry=vorbis_book_inline_decode(bookdectree,b);
-   if(entry<0)
-    return(entry);
-   t=(ogg_float_t *)(bookvallist+(entry*bookdim));
-   switch(bookdim){
-    case 8:a[7] = t[7];
-    case 7:a[6] = t[6];
-    case 6:a[5] = t[5];
-    case 5:a[4] = t[4];
-    case 4:a[3] = t[3];
-    case 3:a[2] = t[2];
-    case 2:a[1] = t[1];
-    case 1:a[0] = t[0];
-    case 0:break;
-   }
-   a+=bookdim;
-   n-=bookdim;
-  }while(n>0);
- }
- return(0);
+	if(bookdim > 8) {
+		do {
+			ogg_float_t *t;
+			long entry = vorbis_book_inline_decode(bookdectree, b), j;
+			if(entry < 0)
+				return (entry);
+			t = (ogg_float_t *) (bookvallist + (entry * bookdim));
+			j = bookdim;
+			n -= j;
+			do {
+				*a++ = *t++;
+			} while(--j);
+		} while(n > 0);
+	} else {
+		do {
+			ogg_float_t *t;
+			long entry = vorbis_book_inline_decode(bookdectree, b);
+			if(entry < 0)
+				return (entry);
+			t = (ogg_float_t *) (bookvallist + (entry * bookdim));
+			switch (bookdim) {
+			case 8:
+				a[7] = t[7];
+			case 7:
+				a[6] = t[6];
+			case 6:
+				a[5] = t[5];
+			case 5:
+				a[4] = t[4];
+			case 4:
+				a[3] = t[3];
+			case 3:
+				a[2] = t[2];
+			case 2:
+				a[1] = t[1];
+			case 1:
+				a[0] = t[0];
+			case 0:
+				break;
+			}
+			a += bookdim;
+			n -= bookdim;
+		} while(n > 0);
+	}
+	return (0);
 }
 
 //------------------------------------------------------------------------
 //res2
-long vorbis_book_decodevv_add(codebook *book,ogg_double_t **a,long offset,int ch,
-			      oggpack_buffer *b,int n)
+long vorbis_book_decodevv_add(codebook * book, ogg_double_t ** a, long offset, int ch, oggpack_buffer * b, int n)
 {
- const unsigned int bookdim=book->dim;
- const ogg_float_t *bookvallist=book->valuelist;
- const decode_aux *bookdectree=book->decode_tree;
- unsigned int i;
+	const unsigned int bookdim = book->dim;
+	const ogg_float_t *bookvallist = book->valuelist;
+	const decode_aux *bookdectree = book->decode_tree;
+	unsigned int i;
 
- if((ch==2) && (bookdim<=8) && !(bookdim&1)){
-  ogg_double_t *al=a[0]+(offset>>1),*ar=a[1]+(offset>>1);
-  const unsigned int bd2=bookdim>>1;
-  do{
-   ogg_float_t *t;
-   long entry=vorbis_book_inline_decode(bookdectree,b);
-   if(entry<0)
-    return(entry);
-   t=(ogg_float_t *)(bookvallist+(entry*bookdim));
-   switch(bookdim){
-    case 8:ar[3] += t[7];
-    case 7:al[3] += t[6];
-    case 6:ar[2] += t[5];
-    case 5:al[2] += t[4];
-    case 4:ar[1] += t[3];
-    case 3:al[1] += t[2];
-    case 2:ar[0] += t[1];
-    case 1:al[0] += t[0];
-    case 0:break;
-   }
-   al+=bd2;
-   ar+=bd2;
-   n-=bookdim;
-  }while(n>0);
- }else{
-  unsigned int chptr=0;
-  for(i=offset/ch;i<(offset+n)/ch;){
-   long entry = vorbis_book_inline_decode(bookdectree,b);
-   if(entry<0)
-    return(entry);
-   {
-    const ogg_float_t *t = bookvallist+entry*bookdim;
-    unsigned int j=bookdim;
-    do{
-     a[chptr++][i] += *t++;
-     if(chptr==ch){
-      chptr=0;
-      i++;
-     }
-    }while(--j);
-   }
-  }
- }
- return(0);
+	if((ch == 2) && (bookdim <= 8) && !(bookdim & 1)) {
+		ogg_double_t *al = a[0] + (offset >> 1), *ar = a[1] + (offset >> 1);
+		const unsigned int bd2 = bookdim >> 1;
+		do {
+			ogg_float_t *t;
+			long entry = vorbis_book_inline_decode(bookdectree, b);
+			if(entry < 0)
+				return (entry);
+			t = (ogg_float_t *) (bookvallist + (entry * bookdim));
+			switch (bookdim) {
+			case 8:
+				ar[3] += t[7];
+			case 7:
+				al[3] += t[6];
+			case 6:
+				ar[2] += t[5];
+			case 5:
+				al[2] += t[4];
+			case 4:
+				ar[1] += t[3];
+			case 3:
+				al[1] += t[2];
+			case 2:
+				ar[0] += t[1];
+			case 1:
+				al[0] += t[0];
+			case 0:
+				break;
+			}
+			al += bd2;
+			ar += bd2;
+			n -= bookdim;
+		} while(n > 0);
+	} else {
+		unsigned int chptr = 0;
+		for(i = offset / ch; i < (offset + n) / ch;) {
+			long entry = vorbis_book_inline_decode(bookdectree, b);
+			if(entry < 0)
+				return (entry);
+			{
+				const ogg_float_t *t = bookvallist + entry * bookdim;
+				unsigned int j = bookdim;
+				do {
+					a[chptr++][i] += *t++;
+					if(chptr == ch) {
+						chptr = 0;
+						i++;
+					}
+				} while(--j);
+			}
+		}
+	}
+	return (0);
 }
 
-long vorbis_book_decodevv_set(codebook *book,ogg_double_t **a,long offset,int ch,
-			      oggpack_buffer *b,int n)
+long vorbis_book_decodevv_set(codebook * book, ogg_double_t ** a, long offset, int ch, oggpack_buffer * b, int n)
 {
- const unsigned int bookdim=book->dim;
- const ogg_float_t *bookvallist=book->valuelist;
- const decode_aux *bookdectree=book->decode_tree;
- unsigned int i;
+	const unsigned int bookdim = book->dim;
+	const ogg_float_t *bookvallist = book->valuelist;
+	const decode_aux *bookdectree = book->decode_tree;
+	unsigned int i;
 
- if((ch==2) && (bookdim<=8) && !(bookdim&1)){
-  ogg_double_t *al=a[0]+(offset>>1),*ar=a[1]+(offset>>1);
-  const unsigned int bdp2=bookdim>>1;
-  do{
-   ogg_float_t *t;
-   long entry=vorbis_book_inline_decode(bookdectree,b);
-   if(entry<0)
-    return(entry);
-   t=(ogg_float_t *)(bookvallist+(entry*bookdim));
-   switch(bookdim){
-    case 8:ar[3] = t[7];
-    case 7:al[3] = t[6];
-    case 6:ar[2] = t[5];
-    case 5:al[2] = t[4];
-    case 4:ar[1] = t[3];
-    case 3:al[1] = t[2];
-    case 2:ar[0] = t[1];
-    case 1:al[0] = t[0];
-    case 0:break;
-   }
-   al+=bdp2;
-   ar+=bdp2;
-   n-=bookdim;
-  }while(n>0);
- }else{
-  unsigned int chptr=0;
-  for(i=offset/ch;i<(offset+n)/ch;){
-   long entry = vorbis_book_inline_decode(bookdectree,b);
-   if(entry<0)
-    return(entry);
-   {
-    const ogg_float_t *t = bookvallist+entry*bookdim;
-    unsigned int j=bookdim;
-    do{
-     a[chptr++][i] = *t++;
-     if(chptr==ch){
-      chptr=0;
-      i++;
-     }
-    }while(--j);
-   }
-  }
- }
- return(0);
+	if((ch == 2) && (bookdim <= 8) && !(bookdim & 1)) {
+		ogg_double_t *al = a[0] + (offset >> 1), *ar = a[1] + (offset >> 1);
+		const unsigned int bdp2 = bookdim >> 1;
+		do {
+			ogg_float_t *t;
+			long entry = vorbis_book_inline_decode(bookdectree, b);
+			if(entry < 0)
+				return (entry);
+			t = (ogg_float_t *) (bookvallist + (entry * bookdim));
+			switch (bookdim) {
+			case 8:
+				ar[3] = t[7];
+			case 7:
+				al[3] = t[6];
+			case 6:
+				ar[2] = t[5];
+			case 5:
+				al[2] = t[4];
+			case 4:
+				ar[1] = t[3];
+			case 3:
+				al[1] = t[2];
+			case 2:
+				ar[0] = t[1];
+			case 1:
+				al[0] = t[0];
+			case 0:
+				break;
+			}
+			al += bdp2;
+			ar += bdp2;
+			n -= bookdim;
+		} while(n > 0);
+	} else {
+		unsigned int chptr = 0;
+		for(i = offset / ch; i < (offset + n) / ch;) {
+			long entry = vorbis_book_inline_decode(bookdectree, b);
+			if(entry < 0)
+				return (entry);
+			{
+				const ogg_float_t *t = bookvallist + entry * bookdim;
+				unsigned int j = bookdim;
+				do {
+					a[chptr++][i] = *t++;
+					if(chptr == ch) {
+						chptr = 0;
+						i++;
+					}
+				} while(--j);
+			}
+		}
+	}
+	return (0);
 }

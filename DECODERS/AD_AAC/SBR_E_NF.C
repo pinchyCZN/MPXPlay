@@ -35,184 +35,155 @@
 #include "sbr_synt.h"
 #include "sbr_e_nf.h"
 
-void extract_envelope_data(sbr_info *sbr, uint8_t ch)
+void extract_envelope_data(sbr_info * sbr, uint8_t ch)
 {
-    uint8_t l, k;
+	uint8_t l, k;
 
-    for (l = 0; l < sbr->L_E[ch]; l++)
-    {
-        if (sbr->bs_df_env[ch][l] == 0)
-        {
-            for (k = 1; k < sbr->n[sbr->f[ch][l]]; k++)
-            {
-                sbr->E[ch][k][l] = sbr->E[ch][k - 1][l] + sbr->E[ch][k][l];
-            }
+	for(l = 0; l < sbr->L_E[ch]; l++) {
+		if(sbr->bs_df_env[ch][l] == 0) {
+			for(k = 1; k < sbr->n[sbr->f[ch][l]]; k++) {
+				sbr->E[ch][k][l] = sbr->E[ch][k - 1][l] + sbr->E[ch][k][l];
+			}
 
-        } else { /* bs_df_env == 1 */
+		} else {				/* bs_df_env == 1 */
 
-            uint8_t g = (l == 0) ? sbr->f_prev[ch] : sbr->f[ch][l-1];
-            int16_t E_prev;
+			uint8_t g = (l == 0) ? sbr->f_prev[ch] : sbr->f[ch][l - 1];
+			int16_t E_prev;
 
-            if (sbr->f[ch][l] == g)
-            {
-                for (k = 0; k < sbr->n[sbr->f[ch][l]]; k++)
-                {
-                    if (l == 0)
-                        E_prev = sbr->E_prev[ch][k];
-                    else
-                        E_prev = sbr->E[ch][k][l - 1];
+			if(sbr->f[ch][l] == g) {
+				for(k = 0; k < sbr->n[sbr->f[ch][l]]; k++) {
+					if(l == 0)
+						E_prev = sbr->E_prev[ch][k];
+					else
+						E_prev = sbr->E[ch][k][l - 1];
 
-                    sbr->E[ch][k][l] = E_prev + sbr->E[ch][k][l];
-                }
+					sbr->E[ch][k][l] = E_prev + sbr->E[ch][k][l];
+				}
 
-            } else if ((g == 1) && (sbr->f[ch][l] == 0)) {
-                uint8_t i;
+			} else if((g == 1) && (sbr->f[ch][l] == 0)) {
+				uint8_t i;
 
-                for (k = 0; k < sbr->n[sbr->f[ch][l]]; k++)
-                {
-                    for (i = 0; i < sbr->N_high; i++)
-                    {
-                        if (sbr->f_table_res[HI_RES][i] == sbr->f_table_res[LO_RES][k])
-                        {
-                            if (l == 0)
-                                E_prev = sbr->E_prev[ch][i];
-                            else
-                                E_prev = sbr->E[ch][i][l - 1];
+				for(k = 0; k < sbr->n[sbr->f[ch][l]]; k++) {
+					for(i = 0; i < sbr->N_high; i++) {
+						if(sbr->f_table_res[HI_RES][i] == sbr->f_table_res[LO_RES][k]) {
+							if(l == 0)
+								E_prev = sbr->E_prev[ch][i];
+							else
+								E_prev = sbr->E[ch][i][l - 1];
 
-                            sbr->E[ch][k][l] = E_prev + sbr->E[ch][k][l];
-                        }
-                    }
-                }
+							sbr->E[ch][k][l] = E_prev + sbr->E[ch][k][l];
+						}
+					}
+				}
 
-            } else if ((g == 0) && (sbr->f[ch][l] == 1)) {
-                uint8_t i;
+			} else if((g == 0) && (sbr->f[ch][l] == 1)) {
+				uint8_t i;
 
-                for (k = 0; k < sbr->n[sbr->f[ch][l]]; k++)
-                {
-                    for (i = 0; i < sbr->N_low; i++)
-                    {
-                        if ((sbr->f_table_res[LO_RES][i] <= sbr->f_table_res[HI_RES][k]) &&
-                            (sbr->f_table_res[HI_RES][k] < sbr->f_table_res[LO_RES][i + 1]))
-                        {
-                            if (l == 0)
-                                E_prev = sbr->E_prev[ch][i];
-                            else
-                                E_prev = sbr->E[ch][i][l - 1];
+				for(k = 0; k < sbr->n[sbr->f[ch][l]]; k++) {
+					for(i = 0; i < sbr->N_low; i++) {
+						if((sbr->f_table_res[LO_RES][i] <= sbr->f_table_res[HI_RES][k]) && (sbr->f_table_res[HI_RES][k] < sbr->f_table_res[LO_RES][i + 1])) {
+							if(l == 0)
+								E_prev = sbr->E_prev[ch][i];
+							else
+								E_prev = sbr->E[ch][i][l - 1];
 
-                            sbr->E[ch][k][l] = E_prev + sbr->E[ch][k][l];
-                        }
-                    }
-                }
-            }
-        }
-    }
+							sbr->E[ch][k][l] = E_prev + sbr->E[ch][k][l];
+						}
+					}
+				}
+			}
+		}
+	}
 
 }
 
-void extract_noise_floor_data(sbr_info *sbr, uint8_t ch)
+void extract_noise_floor_data(sbr_info * sbr, uint8_t ch)
 {
-    uint8_t l, k;
+	uint8_t l, k;
 
-    for (l = 0; l < sbr->L_Q[ch]; l++)
-    {
-        if (sbr->bs_df_noise[ch][l] == 0)
-        {
-            for (k = 1; k < sbr->N_Q; k++)
-            {
-                sbr->Q[ch][k][l] = sbr->Q[ch][k][l] + sbr->Q[ch][k-1][l];
-            }
-        } else {
-            if (l == 0)
-            {
-                for (k = 0; k < sbr->N_Q; k++)
-                {
-                    sbr->Q[ch][k][l] = sbr->Q_prev[ch][k] + sbr->Q[ch][k][0];
-                }
-            } else {
-                for (k = 0; k < sbr->N_Q; k++)
-                {
-                    sbr->Q[ch][k][l] = sbr->Q[ch][k][l - 1] + sbr->Q[ch][k][l];
-                }
-            }
-        }
-    }
+	for(l = 0; l < sbr->L_Q[ch]; l++) {
+		if(sbr->bs_df_noise[ch][l] == 0) {
+			for(k = 1; k < sbr->N_Q; k++) {
+				sbr->Q[ch][k][l] = sbr->Q[ch][k][l] + sbr->Q[ch][k - 1][l];
+			}
+		} else {
+			if(l == 0) {
+				for(k = 0; k < sbr->N_Q; k++) {
+					sbr->Q[ch][k][l] = sbr->Q_prev[ch][k] + sbr->Q[ch][k][0];
+				}
+			} else {
+				for(k = 0; k < sbr->N_Q; k++) {
+					sbr->Q[ch][k][l] = sbr->Q[ch][k][l - 1] + sbr->Q[ch][k][l];
+				}
+			}
+		}
+	}
 
 }
 
 /* FIXME: pow() not needed */
-void envelope_noise_dequantisation(sbr_info *sbr, uint8_t ch)
+void envelope_noise_dequantisation(sbr_info * sbr, uint8_t ch)
 {
-    if (sbr->bs_coupling == 0)
-    {
-        uint8_t l, k;
-        real_t amp = (sbr->amp_res[ch]) ? 1.0 : 0.5;
+	if(sbr->bs_coupling == 0) {
+		uint8_t l, k;
+		real_t amp = (sbr->amp_res[ch]) ? 1.0 : 0.5;
 
-        for (l = 0; l < sbr->L_E[ch]; l++)
-        {
-            for (k = 0; k < sbr->n[sbr->f[ch][l]]; k++)
-            {
-                /* +6 for the *64 */
-                sbr->E_orig[ch][k][l] = pow(2, sbr->E[ch][k][l]*amp + 6);
-            }
-        }
+		for(l = 0; l < sbr->L_E[ch]; l++) {
+			for(k = 0; k < sbr->n[sbr->f[ch][l]]; k++) {
+				/* +6 for the *64 */
+				sbr->E_orig[ch][k][l] = pow(2, sbr->E[ch][k][l] * amp + 6);
+			}
+		}
 
-        for (l = 0; l < sbr->L_Q[ch]; l++)
-        {
-            for (k = 0; k < sbr->N_Q; k++)
-            {
-                if (sbr->Q[ch][k][l] < 0 || sbr->Q[ch][k][l] > 30)
-                    sbr->Q_orig[ch][k][l] = 0;
-                else {
-                    sbr->Q_orig[ch][k][l] = pow(2, NOISE_FLOOR_OFFSET - sbr->Q[ch][k][l]);
-                }
-            }
-        }
-    }
+		for(l = 0; l < sbr->L_Q[ch]; l++) {
+			for(k = 0; k < sbr->N_Q; k++) {
+				if(sbr->Q[ch][k][l] < 0 || sbr->Q[ch][k][l] > 30)
+					sbr->Q_orig[ch][k][l] = 0;
+				else {
+					sbr->Q_orig[ch][k][l] = pow(2, NOISE_FLOOR_OFFSET - sbr->Q[ch][k][l]);
+				}
+			}
+		}
+	}
 }
 
-void unmap_envelope_noise(sbr_info *sbr)
+void unmap_envelope_noise(sbr_info * sbr)
 {
-    uint8_t l, k;
-    real_t amp0 = (sbr->amp_res[0]) ? 1.0 : 0.5;
-    real_t amp1 = (sbr->amp_res[1]) ? 1.0 : 0.5;
+	uint8_t l, k;
+	real_t amp0 = (sbr->amp_res[0]) ? 1.0 : 0.5;
+	real_t amp1 = (sbr->amp_res[1]) ? 1.0 : 0.5;
 
-    for (l = 0; l < sbr->L_E[0]; l++)
-    {
-        for (k = 0; k < sbr->n[sbr->f[0][l]]; k++)
-        {
-            real_t l_temp, r_temp;
+	for(l = 0; l < sbr->L_E[0]; l++) {
+		for(k = 0; k < sbr->n[sbr->f[0][l]]; k++) {
+			real_t l_temp, r_temp;
 
-            /* +6: * 64 ; +1: * 2 */
-            l_temp = pow(2, sbr->E[0][k][l]*amp0 + 7);
-            /* UN_MAP removed: (x / 4096) same as (x >> 12) */
-            r_temp = pow(2, sbr->E[1][k][l]*amp1 - 12);
+			/* +6: * 64 ; +1: * 2 */
+			l_temp = pow(2, sbr->E[0][k][l] * amp0 + 7);
+			/* UN_MAP removed: (x / 4096) same as (x >> 12) */
+			r_temp = pow(2, sbr->E[1][k][l] * amp1 - 12);
 
 
-            sbr->E_orig[1][k][l] = l_temp / (1.0 + r_temp);
-            sbr->E_orig[0][k][l] = MUL(r_temp, sbr->E_orig[1][k][l]);
+			sbr->E_orig[1][k][l] = l_temp / (1.0 + r_temp);
+			sbr->E_orig[0][k][l] = MUL(r_temp, sbr->E_orig[1][k][l]);
 
-        }
-    }
-    for (l = 0; l < sbr->L_Q[0]; l++)
-    {
-        for (k = 0; k < sbr->N_Q; k++)
-        {
-            if ((sbr->Q[0][k][l] < 0 || sbr->Q[0][k][l] > 30) ||
-                (sbr->Q[1][k][l] < 0 || sbr->Q[1][k][l] > 30))
-            {
-                sbr->Q_orig[0][k][l] = 0;
-                sbr->Q_orig[1][k][l] = 0;
-            } else {
-                real_t l_temp, r_temp;
+		}
+	}
+	for(l = 0; l < sbr->L_Q[0]; l++) {
+		for(k = 0; k < sbr->N_Q; k++) {
+			if((sbr->Q[0][k][l] < 0 || sbr->Q[0][k][l] > 30) || (sbr->Q[1][k][l] < 0 || sbr->Q[1][k][l] > 30)) {
+				sbr->Q_orig[0][k][l] = 0;
+				sbr->Q_orig[1][k][l] = 0;
+			} else {
+				real_t l_temp, r_temp;
 
-                l_temp = pow(2.0, NOISE_FLOOR_OFFSET - sbr->Q[0][k][l] + 1);
-                r_temp = pow(2.0, sbr->Q[1][k][l] - 12);
+				l_temp = pow(2.0, NOISE_FLOOR_OFFSET - sbr->Q[0][k][l] + 1);
+				r_temp = pow(2.0, sbr->Q[1][k][l] - 12);
 
-                sbr->Q_orig[1][k][l] = l_temp / (1.0 + r_temp);
-                sbr->Q_orig[0][k][l] = MUL(r_temp, sbr->Q_orig[1][k][l]);
-            }
-        }
-    }
+				sbr->Q_orig[1][k][l] = l_temp / (1.0 + r_temp);
+				sbr->Q_orig[0][k][l] = MUL(r_temp, sbr->Q_orig[1][k][l]);
+			}
+		}
+	}
 }
 
 #endif

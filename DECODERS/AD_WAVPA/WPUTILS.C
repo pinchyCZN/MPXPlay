@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////
-//			     **** WAVPACK ****				  //
-//		    Hybrid Lossless Wavefile Compressor			  //
-//		Copyright (c) 1998 - 2004 Conifer Software.		  //
-//			    All Rights Reserved.			  //
+//               **** WAVPACK ****                //
+//          Hybrid Lossless Wavefile Compressor           //
+//      Copyright (c) 1998 - 2004 Conifer Software.       //
+//              All Rights Reserved.              //
 //      Distributed under the BSD Software License (see license.txt)      //
 ////////////////////////////////////////////////////////////////////////////
 
@@ -22,13 +22,14 @@
 
 ///////////////////////////// local table storage ////////////////////////////
 
-static const ulong sample_rates [] = { 6000, 8000, 9600, 11025, 12000, 16000, 22050,
-    24000, 32000, 44100, 48000, 64000, 88200, 96000, 192000 };
+static const ulong sample_rates[] = { 6000, 8000, 9600, 11025, 12000, 16000, 22050,
+	24000, 32000, 44100, 48000, 64000, 88200, 96000, 192000
+};
 
 ///////////////////////////// executable code ////////////////////////////////
 
-static ulong read_next_header (read_stream infile, void *streamhand, WavpackHeader *wphdr);
-	
+static ulong read_next_header(read_stream infile, void *streamhand, WavpackHeader * wphdr);
+
 // This function reads data from the specified stream in search of a valid
 // WavPack 4.0 audio block. If this fails in 1 megabyte (or an invalid or
 // unsupported WavPack block is encountered) then an appropriate message is
@@ -44,71 +45,69 @@ static ulong read_next_header (read_stream infile, void *streamhand, WavpackHead
 // large integer or floating point files (but always provides at least 24 bits
 // of resolution).
 
-WavpackContext *WavpackOpenFileInput(WavpackContext *wpc, read_stream infile, void *streamhand, char *error)
+WavpackContext *WavpackOpenFileInput(WavpackContext * wpc, read_stream infile, void *streamhand, char *error)
 {
-    WavpackStream *wps=&wpc->stream;
-    ulong bcount;
+	WavpackStream *wps = &wpc->stream;
+	ulong bcount;
 
-    CLEAR (*wpc);
+	CLEAR(*wpc);
 
-    wpc->infile = infile;
-    wpc->streamhand = streamhand;
+	wpc->infile = infile;
+	wpc->streamhand = streamhand;
 
-    wpc->total_samples = DATA_INVALID;
-    wpc->norm_offset = 0;
-    wpc->open_flags = 0;
+	wpc->total_samples = DATA_INVALID;
+	wpc->norm_offset = 0;
+	wpc->open_flags = 0;
 
-    // open the source file for reading and store the size
+	// open the source file for reading and store the size
 
-    while (!wps->wphdr.block_samples) {
+	while(!wps->wphdr.block_samples) {
 
-	bcount = read_next_header (wpc->infile, wpc->streamhand, &wps->wphdr);
+		bcount = read_next_header(wpc->infile, wpc->streamhand, &wps->wphdr);
 
-	if (bcount == DATA_INVALID) {
-	    strcpy (error, "not compatible with this version of WavPack file!");
-	    return NULL;
+		if(bcount == DATA_INVALID) {
+			strcpy(error, "not compatible with this version of WavPack file!");
+			return NULL;
+		}
+
+		if((wps->wphdr.flags & UNKNOWN_FLAGS) || wps->wphdr.version < 0x402 || wps->wphdr.version > 0x40f) {
+			strcpy(error, "not compatible with this version of WavPack file!");
+			return NULL;
+		}
+
+		if(wps->wphdr.block_samples && wps->wphdr.total_samples != DATA_INVALID)
+			wpc->total_samples = wps->wphdr.total_samples;
+
+		if(!unpack_init(wpc)) {
+			strcpy(error, wpc->error_message[0] ? wpc->error_message : "not compatible with this version of WavPack file!");
+
+			return NULL;
+		}
 	}
 
-	if ((wps->wphdr.flags & UNKNOWN_FLAGS) || wps->wphdr.version < 0x402 || wps->wphdr.version > 0x40f) {
-	    strcpy (error, "not compatible with this version of WavPack file!");
-	    return NULL;
+	wpc->config.flags &= ~0xff;
+	wpc->config.flags |= wps->wphdr.flags & 0xff;
+	wpc->config.bytes_per_sample = (wps->wphdr.flags & BYTES_STORED) + 1;
+	wpc->config.float_norm_exp = wps->float_norm_exp;
+
+	wpc->config.bits_per_sample = (wpc->config.bytes_per_sample * 8) - ((wps->wphdr.flags & SHIFT_MASK) >> SHIFT_LSB);
+
+	if(!wpc->config.sample_rate) {
+		if(!wps || !wps->wphdr.block_samples || (wps->wphdr.flags & SRATE_MASK) == SRATE_MASK)
+			wpc->config.sample_rate = 44100;
+		else
+			wpc->config.sample_rate = sample_rates[(wps->wphdr.flags & SRATE_MASK) >> SRATE_LSB];
 	}
 
-	if (wps->wphdr.block_samples && wps->wphdr.total_samples != DATA_INVALID)
-	    wpc->total_samples = wps->wphdr.total_samples;
-
-	if (!unpack_init (wpc)) {
-	    strcpy (error, wpc->error_message [0] ? wpc->error_message :
-		"not compatible with this version of WavPack file!");
-
-	    return NULL;
+	if(!wpc->config.num_channels) {
+		wpc->config.num_channels = (wps->wphdr.flags & MONO_FLAG) ? 1 : 2;
+		wpc->config.channel_mask = 0x5 - wpc->config.num_channels;
 	}
-    }
 
-    wpc->config.flags &= ~0xff;
-    wpc->config.flags |= wps->wphdr.flags & 0xff;
-    wpc->config.bytes_per_sample = (wps->wphdr.flags & BYTES_STORED) + 1;
-    wpc->config.float_norm_exp = wps->float_norm_exp;
+	if(!(wps->wphdr.flags & FINAL_BLOCK))
+		wpc->reduced_channels = (wps->wphdr.flags & MONO_FLAG) ? 1 : 2;
 
-    wpc->config.bits_per_sample = (wpc->config.bytes_per_sample * 8) -
-	((wps->wphdr.flags & SHIFT_MASK) >> SHIFT_LSB);
-
-    if (!wpc->config.sample_rate) {
-	if (!wps || !wps->wphdr.block_samples || (wps->wphdr.flags & SRATE_MASK) == SRATE_MASK)
-	    wpc->config.sample_rate = 44100;
-	else
-	    wpc->config.sample_rate = sample_rates [(wps->wphdr.flags & SRATE_MASK) >> SRATE_LSB];
-    }
-
-    if (!wpc->config.num_channels) {
-	wpc->config.num_channels = (wps->wphdr.flags & MONO_FLAG) ? 1 : 2;
-	wpc->config.channel_mask = 0x5 - wpc->config.num_channels;
-    }
-
-    if (!(wps->wphdr.flags & FINAL_BLOCK))
-	wpc->reduced_channels = (wps->wphdr.flags & MONO_FLAG) ? 1 : 2;
-
-    return wpc;
+	return wpc;
 }
 
 // This function obtains general information about an open file and returns
@@ -120,30 +119,30 @@ WavpackContext *WavpackOpenFileInput(WavpackContext *wpc, read_stream infile, vo
 // MODE_HIGH:  file was created in "high" mode (information only)
 // MODE_FAST:  file was created in "fast" mode (information only)
 
-int WavpackGetMode (WavpackContext *wpc)
+int WavpackGetMode(WavpackContext * wpc)
 {
-    int mode = 0;
+	int mode = 0;
 
-    if (wpc) {
-	if (wpc->config.flags & CONFIG_HYBRID_FLAG)
-	    mode |= MODE_HYBRID;
-	else if (!(wpc->config.flags & CONFIG_LOSSY_MODE))
-	    mode |= MODE_LOSSLESS;
+	if(wpc) {
+		if(wpc->config.flags & CONFIG_HYBRID_FLAG)
+			mode |= MODE_HYBRID;
+		else if(!(wpc->config.flags & CONFIG_LOSSY_MODE))
+			mode |= MODE_LOSSLESS;
 
-	if (wpc->lossy_blocks)
-	    mode &= ~MODE_LOSSLESS;
+		if(wpc->lossy_blocks)
+			mode &= ~MODE_LOSSLESS;
 
-	if (wpc->config.flags & CONFIG_FLOAT_DATA)
-	    mode |= MODE_FLOAT;
+		if(wpc->config.flags & CONFIG_FLOAT_DATA)
+			mode |= MODE_FLOAT;
 
-	if (wpc->config.flags & CONFIG_HIGH_FLAG)
-	    mode |= MODE_HIGH;
+		if(wpc->config.flags & CONFIG_HIGH_FLAG)
+			mode |= MODE_HIGH;
 
-	if (wpc->config.flags & CONFIG_FAST_FLAG)
-	    mode |= MODE_FAST;
-    }
+		if(wpc->config.flags & CONFIG_FAST_FLAG)
+			mode |= MODE_FAST;
+	}
 
-    return mode;
+	return mode;
 }
 
 // Unpack the specified number of samples from the current file position.
@@ -156,127 +155,125 @@ int WavpackGetMode (WavpackContext *wpc)
 // of samples unpacked is returned, which should be equal to the number
 // requested unless the end of fle is encountered or an error occurs.
 
-ulong WavpackUnpackSamples (WavpackContext *wpc, long *buffer, ulong samples)
+ulong WavpackUnpackSamples(WavpackContext * wpc, long *buffer, ulong samples)
 {
-    WavpackStream *wps = &wpc->stream;
-    ulong bcount, samples_unpacked = 0, samples_to_unpack;
-    int num_channels = wpc->config.num_channels;
+	WavpackStream *wps = &wpc->stream;
+	ulong bcount, samples_unpacked = 0, samples_to_unpack;
+	int num_channels = wpc->config.num_channels;
 
-    while (samples) {
-	if (!wps->wphdr.block_samples || !(wps->wphdr.flags & INITIAL_BLOCK) ||
-	    wps->sample_index >= wps->wphdr.block_index + wps->wphdr.block_samples) {
-		bcount = read_next_header (wpc->infile, wpc->streamhand, &wps->wphdr);
+	while(samples) {
+		if(!wps->wphdr.block_samples || !(wps->wphdr.flags & INITIAL_BLOCK) || wps->sample_index >= wps->wphdr.block_index + wps->wphdr.block_samples) {
+			bcount = read_next_header(wpc->infile, wpc->streamhand, &wps->wphdr);
 
-		if (bcount == DATA_INVALID)
-		    break;
+			if(bcount == DATA_INVALID)
+				break;
 
-		if (wps->wphdr.version < 0x402 || wps->wphdr.version > 0x40f) {
-		    strcpy (wpc->error_message, "not compatible with this version of WavPack file!");
-		    break;
+			if(wps->wphdr.version < 0x402 || wps->wphdr.version > 0x40f) {
+				strcpy(wpc->error_message, "not compatible with this version of WavPack file!");
+				break;
+			}
+
+			if(!wps->wphdr.block_samples || wps->sample_index == wps->wphdr.block_index || wps->sample_index == DATA_INVALID)
+				if(!unpack_init(wpc))
+					break;
 		}
 
-		if (!wps->wphdr.block_samples || wps->sample_index == wps->wphdr.block_index || wps->sample_index==DATA_INVALID)
-		    if (!unpack_init (wpc))
+		if(!wps->wphdr.block_samples || !(wps->wphdr.flags & INITIAL_BLOCK) || wps->sample_index >= wps->wphdr.block_index + wps->wphdr.block_samples)
+			continue;
+
+		if(wps->sample_index < wps->wphdr.block_index) {
+			samples_to_unpack = wps->wphdr.block_index - wps->sample_index;
+
+			if(samples_to_unpack > samples)
+				samples_to_unpack = samples;
+
+			wps->sample_index += samples_to_unpack;
+			samples_unpacked += samples_to_unpack;
+			samples -= samples_to_unpack;
+
+			if(wpc->reduced_channels)
+				samples_to_unpack *= wpc->reduced_channels;
+			else
+				samples_to_unpack *= num_channels;
+
+			while(samples_to_unpack--)
+				*buffer++ = 0;
+
+			continue;
+		}
+
+		samples_to_unpack = wps->wphdr.block_index + wps->wphdr.block_samples - wps->sample_index;
+
+		if(samples_to_unpack > samples)
+			samples_to_unpack = samples;
+
+		unpack_samples(wpc, buffer, samples_to_unpack);
+
+		if(wpc->reduced_channels)
+			buffer += samples_to_unpack * wpc->reduced_channels;
+		else
+			buffer += samples_to_unpack * num_channels;
+
+		samples_unpacked += samples_to_unpack;
+		samples -= samples_to_unpack;
+
+		if(wps->sample_index == wps->wphdr.block_index + wps->wphdr.block_samples) {
+			if(check_crc_error(wpc))
+				wpc->crc_errors++;
+		}
+
+		if(wps->sample_index == wpc->total_samples)
 			break;
 	}
 
-	if (!wps->wphdr.block_samples || !(wps->wphdr.flags & INITIAL_BLOCK) ||
-	    wps->sample_index >= wps->wphdr.block_index + wps->wphdr.block_samples)
-		continue;
-
-	if (wps->sample_index < wps->wphdr.block_index) {
-	    samples_to_unpack = wps->wphdr.block_index - wps->sample_index;
-
-	    if (samples_to_unpack > samples)
-		samples_to_unpack = samples;
-
-	    wps->sample_index += samples_to_unpack;
-	    samples_unpacked += samples_to_unpack;
-	    samples -= samples_to_unpack;
-
-	    if (wpc->reduced_channels)
-		samples_to_unpack *= wpc->reduced_channels;
-	    else
-		samples_to_unpack *= num_channels;
-
-	    while (samples_to_unpack--)
-		*buffer++ = 0;
-
-	    continue;
-	}
-
-	samples_to_unpack = wps->wphdr.block_index + wps->wphdr.block_samples - wps->sample_index;
-
-	if (samples_to_unpack > samples)
-	    samples_to_unpack = samples;
-
-	unpack_samples (wpc, buffer, samples_to_unpack);
-
-	if (wpc->reduced_channels)
-	    buffer += samples_to_unpack * wpc->reduced_channels;
-	else
-	    buffer += samples_to_unpack * num_channels;
-
-	samples_unpacked += samples_to_unpack;
-	samples -= samples_to_unpack;
-
-	if (wps->sample_index == wps->wphdr.block_index + wps->wphdr.block_samples) {
-	    if (check_crc_error (wpc))
-		wpc->crc_errors++;
-	}
-
-	if (wps->sample_index == wpc->total_samples)
-	    break;
-    }
-
-    return samples_unpacked;
+	return samples_unpacked;
 }
 
 // Get total number of samples contained in the WavPack file, or -1 if unknown
 
-ulong WavpackGetNumSamples (WavpackContext *wpc)
+ulong WavpackGetNumSamples(WavpackContext * wpc)
 {
-    return (wpc)? wpc->total_samples : DATA_INVALID;
+	return (wpc) ? wpc->total_samples : DATA_INVALID;
 }
 
 // Get the current sample index position, or -1 if unknown
 
-ulong WavpackGetSampleIndex (WavpackContext *wpc)
+ulong WavpackGetSampleIndex(WavpackContext * wpc)
 {
-    if (wpc)
-	return wpc->stream.sample_index;
+	if(wpc)
+		return wpc->stream.sample_index;
 
-    return DATA_INVALID;
+	return DATA_INVALID;
 }
 
 // Get the number of errors encountered so far
 
-int WavpackGetNumErrors (WavpackContext *wpc)
+int WavpackGetNumErrors(WavpackContext * wpc)
 {
-    return wpc ? wpc->crc_errors : 0;
+	return wpc ? wpc->crc_errors : 0;
 }
 
 // return TRUE if any uncorrected lossy blocks were actually written or read
 
-int WavpackLossyBlocks (WavpackContext *wpc)
+int WavpackLossyBlocks(WavpackContext * wpc)
 {
-    return wpc ? wpc->lossy_blocks : 0;
+	return wpc ? wpc->lossy_blocks : 0;
 }
 
 // Returns the sample rate of the specified WavPack file
 
-ulong WavpackGetSampleRate (WavpackContext *wpc)
+ulong WavpackGetSampleRate(WavpackContext * wpc)
 {
-    return wpc ? wpc->config.sample_rate : 44100;
+	return wpc ? wpc->config.sample_rate : 44100;
 }
 
 // Returns the number of channels of the specified WavPack file. Note that
 // this is the actual number of channels contained in the file, but this
 // version can only decode the first two.
 
-int WavpackGetNumChannels (WavpackContext *wpc)
+int WavpackGetNumChannels(WavpackContext * wpc)
 {
-    return wpc ? wpc->config.num_channels : 2;
+	return wpc ? wpc->config.num_channels : 2;
 }
 
 // Returns the actual number of valid bits per sample contained in the
@@ -287,9 +284,9 @@ int WavpackGetNumChannels (WavpackContext *wpc)
 // into longs, but are left justified in the number of bytes used by the
 // original data.
 
-int WavpackGetBitsPerSample (WavpackContext *wpc)
+int WavpackGetBitsPerSample(WavpackContext * wpc)
 {
-    return wpc ? wpc->config.bits_per_sample : 16;
+	return wpc ? wpc->config.bits_per_sample : 16;
 }
 
 // Returns the number of bytes used for each sample (1 to 4) in the original
@@ -297,9 +294,9 @@ int WavpackGetBitsPerSample (WavpackContext *wpc)
 // audio data is returned in the LOWER bytes of the long buffer and must be
 // left-shifted 8, 16, or 24 bits if normalized longs are required.
 
-int WavpackGetBytesPerSample (WavpackContext *wpc)
+int WavpackGetBytesPerSample(WavpackContext * wpc)
 {
-    return wpc ? wpc->config.bytes_per_sample : 2;
+	return wpc ? wpc->config.bytes_per_sample : 2;
 }
 
 // This function will return the actual number of channels decoded from the
@@ -307,12 +304,12 @@ int WavpackGetBytesPerSample (WavpackContext *wpc)
 // will always be 1 or 2). Normally, this will be the front left and right
 // channels of a multi-channel file.
 
-int WavpackGetReducedChannels (WavpackContext *wpc)
+int WavpackGetReducedChannels(WavpackContext * wpc)
 {
-    if (wpc)
-	return wpc->reduced_channels ? wpc->reduced_channels : wpc->config.num_channels;
-    else
-	return 2;
+	if(wpc)
+		return wpc->reduced_channels ? wpc->reduced_channels : wpc->config.num_channels;
+	else
+		return 2;
 }
 
 // Read from current file position until a valid 32-byte WavPack 4.0 header is
@@ -321,56 +318,54 @@ int WavpackGetReducedChannels (WavpackContext *wpc)
 // to indicate the error. No additional bytes are read past the header and it
 // is returned in the processor's native endian mode. Seeking is not required.
 
-static ulong read_next_header (read_stream infile, void *streamhand, WavpackHeader *wphdr)
+static ulong read_next_header(read_stream infile, void *streamhand, WavpackHeader * wphdr)
 {
-    char buffer [sizeof (*wphdr)], *sp = buffer + sizeof (*wphdr), *ep = sp;
-    ulong bytes_skipped = 0;
-    int bleft;
+	char buffer[sizeof(*wphdr)], *sp = buffer + sizeof(*wphdr), *ep = sp;
+	ulong bytes_skipped = 0;
+	int bleft;
 
-    while (1) {
-	if (sp < ep) {
-	    bleft = ep - sp;
-	    memcpy (buffer, sp, bleft);
+	while(1) {
+		if(sp < ep) {
+			bleft = ep - sp;
+			memcpy(buffer, sp, bleft);
+		} else
+			bleft = 0;
+
+		if(infile(streamhand, buffer + bleft, sizeof(*wphdr) - bleft) != (long)sizeof(*wphdr) - bleft)
+			return DATA_INVALID;
+
+		sp = buffer;
+
+		if(*sp++ == 'w' && *sp == 'v' && *++sp == 'p' && *++sp == 'k' && !(*++sp & 1) && (sp[2] < 16) && !sp[3] && (sp[5] == 4) && (sp[4] >= 2) && (sp[4] <= 0xf)) {
+			memcpy(wphdr, buffer, sizeof(*wphdr));
+			little_endian_to_native(wphdr, WavpackHeaderFormat);
+			return bytes_skipped;
+		}
+
+		while(sp < ep && *sp != 'w')
+			sp++;
+
+		if((bytes_skipped += sp - buffer) > WavpackHeadRetry)
+			return DATA_INVALID;
 	}
-	else
-	    bleft = 0;
-
-	if (infile (streamhand, buffer + bleft, sizeof (*wphdr) - bleft) != (long) sizeof (*wphdr) - bleft)
-	    return DATA_INVALID;
-
-	sp = buffer;
-
-	if (*sp++ == 'w' && *sp == 'v' && *++sp == 'p' && *++sp == 'k' &&
-	    !(*++sp & 1) && (sp[2]<16) && !sp[3] && (sp[5]==4) && (sp[4]>=2) && (sp[4]<=0xf)){
-		memcpy (wphdr, buffer, sizeof (*wphdr));
-		little_endian_to_native (wphdr, WavpackHeaderFormat);
-		return bytes_skipped;
-	    }
-
-	while (sp < ep && *sp != 'w')
-	    sp++;
-
-	if ((bytes_skipped += sp - buffer) > WavpackHeadRetry)
-	    return DATA_INVALID;
-    }
 }
 
 //--------------------------------------------------------------------
 //Reset decoding buffers (after seek)
 
-void WavpackResetDecoding(WavpackContext *wpc)
+void WavpackResetDecoding(WavpackContext * wpc)
 {
- if(wpc){
-  WavpackStream *wps = &wpc->stream;
-  CLEAR(wps->wphdr);
-  wps->sample_index=DATA_INVALID;
- }
+	if(wpc) {
+		WavpackStream *wps = &wpc->stream;
+		CLEAR(wps->wphdr);
+		wps->sample_index = DATA_INVALID;
+	}
 }
 
-void WavpackUpdateStreamhand(WavpackContext *wpc, void *streamhand)
+void WavpackUpdateStreamhand(WavpackContext * wpc, void *streamhand)
 {
- if(wpc){
-  wpc->streamhand=streamhand;
-  wpc->stream.wvbits.streamhand=streamhand;
- }
+	if(wpc) {
+		wpc->streamhand = streamhand;
+		wpc->stream.wvbits.streamhand = streamhand;
+	}
 }

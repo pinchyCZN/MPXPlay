@@ -8,7 +8,7 @@
 #include "mm_accel.h"
 #include <stdlib.h>
 
-int (* a52_resample) (float * _f, int16_t * s16)=NULL;
+int (*a52_resample) (float *_f, int16_t * s16) = NULL;
 
 #include "resamplc.c"
 
@@ -16,27 +16,28 @@ int (* a52_resample) (float * _f, int16_t * s16)=NULL;
 #include "resamplm.c"
 #endif
 
-void* a52_resample_init(uint32_t mm_accel,int flags,int chans){
-void* tmp;
+void *a52_resample_init(uint32_t mm_accel, int flags, int chans)
+{
+	void *tmp;
 
 #ifdef ARCH_X86
-    if(mm_accel&MM_ACCEL_X86_MMX){
-	tmp=a52_resample_MMX(flags,chans);
-	if(tmp){
-	    if(a52_resample==NULL) av_log(NULL, AV_LOG_INFO, "Using MMX optimized resampler\n");
-	    a52_resample=tmp;
-	    return tmp;
+	if(mm_accel & MM_ACCEL_X86_MMX) {
+		tmp = a52_resample_MMX(flags, chans);
+		if(tmp) {
+			if(a52_resample == NULL)
+				av_log(NULL, AV_LOG_INFO, "Using MMX optimized resampler\n");
+			a52_resample = tmp;
+			return tmp;
+		}
 	}
-    }
 #endif
 
-    tmp=a52_resample_C(flags,chans);
-    if(tmp){
-	//if(a52_resample==NULL) av_log(NULL, AV_LOG_INFO, "No accelerated resampler found\n");
-	a52_resample=tmp;
-	return tmp;
-    }
-
-    //av_log(NULL, AV_LOG_ERROR, "Unimplemented resampler for mode 0x%X -> %d channels conversion - Contact MPlayer developers!\n", flags, chans);
-    return NULL;
+	tmp = a52_resample_C(flags, chans);
+	if(tmp) {
+		//if(a52_resample==NULL) av_log(NULL, AV_LOG_INFO, "No accelerated resampler found\n");
+		a52_resample = tmp;
+		return tmp;
+	}
+	//av_log(NULL, AV_LOG_ERROR, "Unimplemented resampler for mode 0x%X -> %d channels conversion - Contact MPlayer developers!\n", flags, chans);
+	return NULL;
 }

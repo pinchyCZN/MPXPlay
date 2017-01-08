@@ -16,12 +16,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
+
 /**
  * @file mem.c
  * default memory allocator for libavcodec.
  */
- 
+
 #include "avcodec.h"
 
 /* here we can use OS dependant allocation functions */
@@ -44,53 +44,53 @@
  */
 void *av_malloc(unsigned int size)
 {
-    void *ptr;
+	void *ptr;
 #ifdef MEMALIGN_HACK
-    int diff;
+	int diff;
 #endif
 
-    /* lets disallow possible ambiguous cases */
-    if(size > INT_MAX)
-        return NULL;
-    
-#ifdef MEMALIGN_HACK
-    ptr = malloc(size+16+1);
-    diff= ((-(int)ptr - 1)&15) + 1;
-    ptr += diff;
-    ((char*)ptr)[-1]= diff;
-#elif defined (HAVE_MEMALIGN) 
-    ptr = memalign(16,size);
-    /* Why 64? 
-       Indeed, we should align it:
-         on 4 for 386
-         on 16 for 486
-	 on 32 for 586, PPro - k6-III
-	 on 64 for K7 (maybe for P3 too).
-       Because L1 and L2 caches are aligned on those values.
-       But I don't want to code such logic here!
-     */
-     /* Why 16?
-        because some cpus need alignment, for example SSE2 on P4, & most RISC cpus
-        it will just trigger an exception and the unaligned load will be done in the
-        exception handler or it will just segfault (SSE2 on P4)
-        Why not larger? because i didnt see a difference in benchmarks ...
-     */
-     /* benchmarks with p3
-        memalign(64)+1		3071,3051,3032
-        memalign(64)+2		3051,3032,3041
-        memalign(64)+4		2911,2896,2915
-        memalign(64)+8		2545,2554,2550
-        memalign(64)+16		2543,2572,2563
-        memalign(64)+32		2546,2545,2571
-        memalign(64)+64		2570,2533,2558
+	/* lets disallow possible ambiguous cases */
+	if(size > INT_MAX)
+		return NULL;
 
-        btw, malloc seems to do 8 byte alignment by default here
-     */
+#ifdef MEMALIGN_HACK
+	ptr = malloc(size + 16 + 1);
+	diff = ((-(int)ptr - 1) & 15) + 1;
+	ptr += diff;
+	((char *)ptr)[-1] = diff;
+#elif defined (HAVE_MEMALIGN)
+	ptr = memalign(16, size);
+	/* Why 64? 
+	   Indeed, we should align it:
+	   on 4 for 386
+	   on 16 for 486
+	   on 32 for 586, PPro - k6-III
+	   on 64 for K7 (maybe for P3 too).
+	   Because L1 and L2 caches are aligned on those values.
+	   But I don't want to code such logic here!
+	 */
+	/* Why 16?
+	   because some cpus need alignment, for example SSE2 on P4, & most RISC cpus
+	   it will just trigger an exception and the unaligned load will be done in the
+	   exception handler or it will just segfault (SSE2 on P4)
+	   Why not larger? because i didnt see a difference in benchmarks ...
+	 */
+	/* benchmarks with p3
+	   memalign(64)+1      3071,3051,3032
+	   memalign(64)+2      3051,3032,3041
+	   memalign(64)+4      2911,2896,2915
+	   memalign(64)+8      2545,2554,2550
+	   memalign(64)+16     2543,2572,2563
+	   memalign(64)+32     2546,2545,2571
+	   memalign(64)+64     2570,2533,2558
+
+	   btw, malloc seems to do 8 byte alignment by default here
+	 */
 #else
-    ptr = malloc(size);
+	ptr = malloc(size);
 #endif
- //fprintf(stdout,"av malloc %8.8X\n",(unsigned long)ptr);
-    return ptr;
+	//fprintf(stdout,"av malloc %8.8X\n",(unsigned long)ptr);
+	return ptr;
 }
 
 /**
@@ -101,20 +101,21 @@ void *av_malloc(unsigned int size)
 void *av_realloc(void *ptr, unsigned int size)
 {
 #ifdef MEMALIGN_HACK
-    int diff;
+	int diff;
 #endif
- //fprintf(stdout,"av realloc %8.8X\n",(unsigned long)ptr);
-    /* lets disallow possible ambiguous cases */
-    if(size > INT_MAX)
-        return NULL;
+	//fprintf(stdout,"av realloc %8.8X\n",(unsigned long)ptr);
+	/* lets disallow possible ambiguous cases */
+	if(size > INT_MAX)
+		return NULL;
 
 #ifdef MEMALIGN_HACK
-    //FIXME this isnt aligned correctly though it probably isnt needed
-    if(!ptr) return av_malloc(size);
-    diff= ((char*)ptr)[-1];
-    return realloc(ptr - diff, size + diff) + diff;
+	//FIXME this isnt aligned correctly though it probably isnt needed
+	if(!ptr)
+		return av_malloc(size);
+	diff = ((char *)ptr)[-1];
+	return realloc(ptr - diff, size + diff) + diff;
 #else
-    return realloc(ptr, size);
+	return realloc(ptr, size);
 #endif
 
 }
@@ -122,13 +123,12 @@ void *av_realloc(void *ptr, unsigned int size)
 /* NOTE: ptr = NULL is explicetly allowed */
 void av_free(void *ptr)
 {
-    /* XXX: this test should not be needed on most libcs */
-    if (ptr)
+	/* XXX: this test should not be needed on most libcs */
+	if(ptr)
 #ifdef MEMALIGN_HACK
-        free(ptr - ((char*)ptr)[-1]);
+		free(ptr - ((char *)ptr)[-1]);
 #else
-        free(ptr);
+		free(ptr);
 #endif
- //fprintf(stdout,"av free %8.8X\n",(unsigned long)ptr);
+	//fprintf(stdout,"av free %8.8X\n",(unsigned long)ptr);
 }
-

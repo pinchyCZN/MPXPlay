@@ -35,55 +35,55 @@
 
 drc_info *drc_init(real_t cut, real_t boost)
 {
- drc_info *drc = (drc_info*)malloc(sizeof(drc_info));
- if(!drc)
-  return drc;
+	drc_info *drc = (drc_info *) malloc(sizeof(drc_info));
+	if(!drc)
+		return drc;
 
- memset(drc, 0, sizeof(drc_info));
+	memset(drc, 0, sizeof(drc_info));
 
- drc->ctrl1 = cut;
- drc->ctrl2 = boost;
+	drc->ctrl1 = cut;
+	drc->ctrl2 = boost;
 
- drc->num_bands = 1;
- drc->band_top[0] = 1024/4 - 1;
- drc->dyn_rng_sgn[0] = 1;
- drc->dyn_rng_ctl[0] = 0;
+	drc->num_bands = 1;
+	drc->band_top[0] = 1024 / 4 - 1;
+	drc->dyn_rng_sgn[0] = 1;
+	drc->dyn_rng_ctl[0] = 0;
 
- return drc;
+	return drc;
 }
 
-void drc_end(drc_info *drc)
+void drc_end(drc_info * drc)
 {
- if(drc)
-  free(drc);
+	if(drc)
+		free(drc);
 }
 
-void drc_decode(drc_info *drc, real_t *spec)
+void drc_decode(drc_info * drc, real_t * spec)
 {
- uint32_t i, bd, top;
- uint32_t bottom = 0;
+	uint32_t i, bd, top;
+	uint32_t bottom = 0;
 
- if (drc->num_bands == 1)
-  drc->band_top[0] = 1024/4 - 1;
+	if(drc->num_bands == 1)
+		drc->band_top[0] = 1024 / 4 - 1;
 
- for (bd = 0; bd < drc->num_bands; bd++){
-  real_t factor, exp;
+	for(bd = 0; bd < drc->num_bands; bd++) {
+		real_t factor, exp;
 
-  top = 4 * (drc->band_top[bd] + 1);
+		top = 4 * (drc->band_top[bd] + 1);
 
-  /* Decode DRC gain factor */
-  if (drc->dyn_rng_sgn[bd])  /* compress */
-   exp = -drc->ctrl1 * (drc->dyn_rng_ctl[bd] - (DRC_REF_LEVEL - drc->prog_ref_level))/24.0;
-  else /* boost */
-   exp = drc->ctrl2 * (drc->dyn_rng_ctl[bd] - (DRC_REF_LEVEL - drc->prog_ref_level))/24.0;
+		/* Decode DRC gain factor */
+		if(drc->dyn_rng_sgn[bd])	/* compress */
+			exp = -drc->ctrl1 * (drc->dyn_rng_ctl[bd] - (DRC_REF_LEVEL - drc->prog_ref_level)) / 24.0;
+		else					/* boost */
+			exp = drc->ctrl2 * (drc->dyn_rng_ctl[bd] - (DRC_REF_LEVEL - drc->prog_ref_level)) / 24.0;
 
-  //factor = (real_t)pow(2.0, exp);
-  factor = (real_t)pow2(exp);
+		//factor = (real_t)pow(2.0, exp);
+		factor = (real_t) pow2(exp);
 
-  /* Apply gain factor */
-  for (i = bottom; i < top; i++)
-   spec[i] *= factor;
+		/* Apply gain factor */
+		for(i = bottom; i < top; i++)
+			spec[i] *= factor;
 
-  bottom = top;
- }
+		bottom = top;
+	}
 }

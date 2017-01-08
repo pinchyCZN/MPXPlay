@@ -34,159 +34,158 @@
 
 #define TAGS_INIT_STORAGE 16
 
-static int32_t mp4ff_tag_add_field(mp4ff_metadata_t *tags, unsigned int atom,const char *value)
+static int32_t mp4ff_tag_add_field(mp4ff_metadata_t * tags, unsigned int atom, const char *value)
 {
- mp4ff_tag_t *tagp;
+	mp4ff_tag_t *tagp;
 
- if(!atom || !value)
-  return 0;
+	if(!atom || !value)
+		return 0;
 
- if(tags->count>=tags->storage){
-  unsigned int newsize=(tags->storage)? (tags->storage*2):TAGS_INIT_STORAGE;
-  mp4ff_tag_t *newmem=calloc(newsize,sizeof(mp4ff_tag_t));
-  if(!newmem)
-   return 0;
-  if(tags->tags){
-   if(tags->count)
-    memcpy(newmem,tags->tags,tags->count*sizeof(mp4ff_tag_t));
-   free(tags->tags);
-  }
-  tags->tags=newmem;
-  tags->storage=newsize;
- }
+	if(tags->count >= tags->storage) {
+		unsigned int newsize = (tags->storage) ? (tags->storage * 2) : TAGS_INIT_STORAGE;
+		mp4ff_tag_t *newmem = calloc(newsize, sizeof(mp4ff_tag_t));
+		if(!newmem)
+			return 0;
+		if(tags->tags) {
+			if(tags->count)
+				memcpy(newmem, tags->tags, tags->count * sizeof(mp4ff_tag_t));
+			free(tags->tags);
+		}
+		tags->tags = newmem;
+		tags->storage = newsize;
+	}
 
- tagp=&tags->tags[tags->count];
+	tagp = &tags->tags[tags->count];
 
- tagp->value = strdup(value);
+	tagp->value = strdup(value);
 
- if(!tagp->value)
-  return 0;
+	if(!tagp->value)
+		return 0;
 
- tagp->atom=atom;
+	tagp->atom = atom;
 
- tags->count++;
- return 1;
+	tags->count++;
+	return 1;
 }
 
-void mp4ff_tag_delete(mp4ff_metadata_t *tags)
+void mp4ff_tag_delete(mp4ff_metadata_t * tags)
 {
- mp4ff_tag_t *tagp;
+	mp4ff_tag_t *tagp;
 
- tagp=tags->tags;
- if(tagp){
-  uint32_t i=tags->count;
-  if(i){
-   do{
-    if(tagp->value)
-     free(tagp->value);
-    tagp++;
-   }while(--i);
-  }
-  free(tags->tags);
-  tags->tags = NULL;
- }
+	tagp = tags->tags;
+	if(tagp) {
+		uint32_t i = tags->count;
+		if(i) {
+			do {
+				if(tagp->value)
+					free(tagp->value);
+				tagp++;
+			} while(--i);
+		}
+		free(tags->tags);
+		tags->tags = NULL;
+	}
 
- tags->count = 0;
+	tags->count = 0;
 }
 
 extern char *mpxplay_tagging_id3v1_index_to_genre(unsigned int i);
 
-static int32_t mp4ff_parse_tag(mp4ff_t *f, const uint8_t parent_atom_type, const int32_t size)
+static int32_t mp4ff_parse_tag(mp4ff_t * f, const uint8_t parent_atom_type, const int32_t size)
 {
- uint8_t atom_type;
- uint8_t header_size = 0;
- uint64_t subsize, sumsize = 0;
- uint32_t done = 0;
+	uint8_t atom_type;
+	uint8_t header_size = 0;
+	uint64_t subsize, sumsize = 0;
+	uint32_t done = 0;
 
- while (sumsize < size){
-  uint64_t destpos;
-  subsize = mp4ff_atom_read_header(f, &atom_type, &header_size);
-  destpos = mp4ff_position(f)+subsize-header_size;
-  if(!done){
-   if(atom_type == ATOM_DATA){
-    mp4ff_read_char(f);  // version
-    mp4ff_read_int24(f); // flags
-    mp4ff_read_int32(f); // reserved
+	while(sumsize < size) {
+		uint64_t destpos;
+		subsize = mp4ff_atom_read_header(f, &atom_type, &header_size);
+		destpos = mp4ff_position(f) + subsize - header_size;
+		if(!done) {
+			if(atom_type == ATOM_DATA) {
+				mp4ff_read_char(f);	// version
+				mp4ff_read_int24(f);	// flags
+				mp4ff_read_int32(f);	// reserved
 
-    // some need special attention
-    if((parent_atom_type==ATOM_GENRE2) || (parent_atom_type==ATOM_TEMPO)){
-     if(subsize - header_size >= 8 + 2){
-      uint16_t val = mp4ff_read_int16(f);
+				// some need special attention
+				if((parent_atom_type == ATOM_GENRE2) || (parent_atom_type == ATOM_TEMPO)) {
+					if(subsize - header_size >= 8 + 2) {
+						uint16_t val = mp4ff_read_int16(f);
 
-      if(val){
-       if(parent_atom_type == ATOM_TEMPO){
-        char temp[16];
-        sprintf(temp, "%.5u BPM", val);
-        mp4ff_tag_add_field(&(f->tags),parent_atom_type,temp);
-       }else{
-        const char *temp = mpxplay_tagging_id3v1_index_to_genre(val-1);
-        if(temp)
-         mp4ff_tag_add_field(&(f->tags),parent_atom_type,temp);
-       }
-      }
-      done = 1;
-     }
-    }else
-     if((parent_atom_type==ATOM_TRACK) || (parent_atom_type==ATOM_DISC)){
-      if(!done && subsize - header_size >= 8 + 8){
-       uint16_t index,total;
-       char temp[32];
-       mp4ff_read_int16(f);
-       index = mp4ff_read_int16(f);
-       total = mp4ff_read_int16(f);
-       mp4ff_read_int16(f);
+						if(val) {
+							if(parent_atom_type == ATOM_TEMPO) {
+								char temp[16];
+								sprintf(temp, "%.5u BPM", val);
+								mp4ff_tag_add_field(&(f->tags), parent_atom_type, temp);
+							} else {
+								const char *temp = mpxplay_tagging_id3v1_index_to_genre(val - 1);
+								if(temp)
+									mp4ff_tag_add_field(&(f->tags), parent_atom_type, temp);
+							}
+						}
+						done = 1;
+					}
+				} else if((parent_atom_type == ATOM_TRACK) || (parent_atom_type == ATOM_DISC)) {
+					if(!done && subsize - header_size >= 8 + 8) {
+						uint16_t index, total;
+						char temp[32];
+						mp4ff_read_int16(f);
+						index = mp4ff_read_int16(f);
+						total = mp4ff_read_int16(f);
+						mp4ff_read_int16(f);
 
-       if(total>0)
-        sprintf(temp,"%d/%d",index,total);
-       else
-        sprintf(temp,"%d",index);
-       mp4ff_tag_add_field(&(f->tags),parent_atom_type,temp);
-       done = 1;
-      }
-     }else{
-      char *data = mp4ff_read_string(f,(uint32_t)(subsize-(header_size+8)));
-      mp4ff_tag_add_field(&(f->tags),parent_atom_type,data);
-      free(data);
-      done=1;
-     }
-   }
-   mp4ff_set_position(f, destpos);
-   sumsize += subsize;
-  }
- }
+						if(total > 0)
+							sprintf(temp, "%d/%d", index, total);
+						else
+							sprintf(temp, "%d", index);
+						mp4ff_tag_add_field(&(f->tags), parent_atom_type, temp);
+						done = 1;
+					}
+				} else {
+					char *data = mp4ff_read_string(f, (uint32_t) (subsize - (header_size + 8)));
+					mp4ff_tag_add_field(&(f->tags), parent_atom_type, data);
+					free(data);
+					done = 1;
+				}
+			}
+			mp4ff_set_position(f, destpos);
+			sumsize += subsize;
+		}
+	}
 
- return 1;
+	return 1;
 }
 
-int32_t mp4ff_parse_metadata(mp4ff_t *f, const int32_t size)
+int32_t mp4ff_parse_metadata(mp4ff_t * f, const int32_t size)
 {
- uint64_t subsize, sumsize = 0;
- uint8_t atom_type;
- uint8_t header_size = 0;
+	uint64_t subsize, sumsize = 0;
+	uint8_t atom_type;
+	uint8_t header_size = 0;
 
- while(sumsize < size){
-  subsize = mp4ff_atom_read_header(f, &atom_type, &header_size);
-  mp4ff_parse_tag(f, atom_type, (uint32_t)(subsize-header_size));
-  sumsize += subsize;
- }
+	while(sumsize < size) {
+		subsize = mp4ff_atom_read_header(f, &atom_type, &header_size);
+		mp4ff_parse_tag(f, atom_type, (uint32_t) (subsize - header_size));
+		sumsize += subsize;
+	}
 
- return 0;
+	return 0;
 }
 
-char *mp4ff_meta_search_by_atom(mp4ff_t *f,uint32_t atom)
+char *mp4ff_meta_search_by_atom(mp4ff_t * f, uint32_t atom)
 {
- mp4ff_metadata_t *tags=&f->tags;
- uint32_t i=tags->count;
- mp4ff_tag_t *tagp=tags->tags;
+	mp4ff_metadata_t *tags = &f->tags;
+	uint32_t i = tags->count;
+	mp4ff_tag_t *tagp = tags->tags;
 
- if(tagp && i){
-  do{
-   if(tagp->atom==atom)
-    return tagp->value;
-   tagp++;
-  }while(--i);
- }
- return NULL;
+	if(tagp && i) {
+		do {
+			if(tagp->atom == atom)
+				return tagp->value;
+			tagp++;
+		} while(--i);
+	}
+	return NULL;
 }
 
-#endif // USE_TAGGING
+#endif							// USE_TAGGING

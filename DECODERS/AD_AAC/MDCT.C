@@ -51,52 +51,52 @@
 
 mdct_info *faad_mdct_init(uint32_t N)
 {
- mdct_info *mdct;
- uint32_t k;
- complex_t *sc;
- double cangle, sangle, c, s, scale;
+	mdct_info *mdct;
+	uint32_t k;
+	complex_t *sc;
+	double cangle, sangle, c, s, scale;
 
- mdct = (mdct_info*)malloc(sizeof(mdct_info));
- if(!mdct)
-  return mdct;
+	mdct = (mdct_info *) malloc(sizeof(mdct_info));
+	if(!mdct)
+		return mdct;
 
- mdct->N = N;
- mdct->sincos = (complex_t*)malloc(N/4*sizeof(complex_t));
- if(!mdct->sincos)
-  goto err_out;
- mdct->Z1 = (complex_t*)malloc(N/4*sizeof(complex_t));
- if(!mdct->Z1)
-  goto err_out;
+	mdct->N = N;
+	mdct->sincos = (complex_t *) malloc(N / 4 * sizeof(complex_t));
+	if(!mdct->sincos)
+		goto err_out;
+	mdct->Z1 = (complex_t *) malloc(N / 4 * sizeof(complex_t));
+	if(!mdct->Z1)
+		goto err_out;
 
- c = cos(2.0f / N * M_PI / 8.0f);
- s = sin(2.0f / N * M_PI / 8.0f);
- sangle = sin(2.0f / N * M_PI);
- cangle = cos(2.0f / N * M_PI);
- scale = sqrt(2.0f / N);
+	c = cos(2.0f / N * M_PI / 8.0f);
+	s = sin(2.0f / N * M_PI / 8.0f);
+	sangle = sin(2.0f / N * M_PI);
+	cangle = cos(2.0f / N * M_PI);
+	scale = sqrt(2.0f / N);
 
- sc=mdct->sincos[0];
- k=N/4;
+	sc = mdct->sincos[0];
+	k = N / 4;
 
- do{
-  double cold;
-  RE(sc[0]) = -MUL_C_C(c,scale);
-  IM(sc[0]) = -MUL_C_C(s,scale);
-  sc++;
-  cold = c;
-  c = MUL_C_C(c,cangle) - MUL_C_C(s,sangle);
-  s = MUL_C_C(s,cangle) + MUL_C_C(cold,sangle);
- }while(--k);
+	do {
+		double cold;
+		RE(sc[0]) = -MUL_C_C(c, scale);
+		IM(sc[0]) = -MUL_C_C(s, scale);
+		sc++;
+		cold = c;
+		c = MUL_C_C(c, cangle) - MUL_C_C(s, sangle);
+		s = MUL_C_C(s, cangle) + MUL_C_C(cold, sangle);
+	} while(--k);
 
- mdct->cfft = cffti(N/4);
- if(!mdct->cfft)
-  goto err_out;
+	mdct->cfft = cffti(N / 4);
+	if(!mdct->cfft)
+		goto err_out;
 
- return mdct;
+	return mdct;
 
-err_out:
- faad_mdct_end(mdct);
- free(mdct);
- return NULL;
+  err_out:
+	faad_mdct_end(mdct);
+	free(mdct);
+	return NULL;
 }
 
 /*mdct_info *faad_mdct_init(uint32_t N)
@@ -146,121 +146,119 @@ err_out:
  return NULL;
 }*/
 
-void faad_mdct_end(mdct_info *mdct)
+void faad_mdct_end(mdct_info * mdct)
 {
- if(mdct){
-  cfftu(mdct->cfft);
+	if(mdct) {
+		cfftu(mdct->cfft);
 
-  if(mdct->Z1)
-   free(mdct->Z1);
-  if(mdct->sincos)
-   free(mdct->sincos);
+		if(mdct->Z1)
+			free(mdct->Z1);
+		if(mdct->sincos)
+			free(mdct->sincos);
 
-  free(mdct);
- }
+		free(mdct);
+	}
 }
 
-void faad_imdct(mdct_info *mdct, real_t *X_in, real_t *X_out)
+void faad_imdct(mdct_info * mdct, real_t * X_in, real_t * X_out)
 {
- uint32_t k;
+	uint32_t k;
 
- complex_t *Z1 = mdct->Z1;
- complex_t *sincos = mdct->sincos;
+	complex_t *Z1 = mdct->Z1;
+	complex_t *sincos = mdct->sincos;
 
- uint32_t N  = mdct->N;
- uint32_t N2 = N >> 1;
- uint32_t N4 = N >> 2;
- uint32_t N8 = N >> 3;
+	uint32_t N = mdct->N;
+	uint32_t N2 = N >> 1;
+	uint32_t N4 = N >> 2;
+	uint32_t N8 = N >> 3;
 
- real_t *rex=&X_in[ 0];
- real_t *imx=&X_in[N2-1];
+	real_t *rex = &X_in[0];
+	real_t *imx = &X_in[N2 - 1];
 
- k=N4;
- do{
-  RE(Z1[0]) = MUL_R_C(*imx, RE(sincos[0])) - MUL_R_C(*rex, IM(sincos[0]));
-  IM(Z1[0]) = MUL_R_C(*rex, RE(sincos[0])) + MUL_R_C(*imx, IM(sincos[0]));
-  rex+=2;
-  imx-=2;
-  sincos++;
-  Z1++;
- }while(--k);
- Z1 = mdct->Z1;
+	k = N4;
+	do {
+		RE(Z1[0]) = MUL_R_C(*imx, RE(sincos[0])) - MUL_R_C(*rex, IM(sincos[0]));
+		IM(Z1[0]) = MUL_R_C(*rex, RE(sincos[0])) + MUL_R_C(*imx, IM(sincos[0]));
+		rex += 2;
+		imx -= 2;
+		sincos++;
+		Z1++;
+	} while(--k);
+	Z1 = mdct->Z1;
 
- cfftb(mdct->cfft, Z1);
+	cfftb(mdct->cfft, Z1);
 
- sincos = mdct->sincos;
- k=N4;
- do{
-  double rex = RE(Z1[0]);
-  double imx = IM(Z1[0]);
+	sincos = mdct->sincos;
+	k = N4;
+	do {
+		double rex = RE(Z1[0]);
+		double imx = IM(Z1[0]);
 
-  RE(Z1[0]) = MUL_R_C(rex, RE(sincos[0])) - MUL_R_C(imx, IM(sincos[0]));
-  IM(Z1[0]) = MUL_R_C(imx, RE(sincos[0])) + MUL_R_C(rex, IM(sincos[0]));
-  Z1++;
-  sincos++;
- }while(--k);
+		RE(Z1[0]) = MUL_R_C(rex, RE(sincos[0])) - MUL_R_C(imx, IM(sincos[0]));
+		IM(Z1[0]) = MUL_R_C(imx, RE(sincos[0])) + MUL_R_C(rex, IM(sincos[0]));
+		Z1++;
+		sincos++;
+	} while(--k);
 
- Z1 = mdct->Z1;
- for (k = 0; k < N8; k++){
-  uint16_t n = k << 1;
-  X_out[              n] =  IM(Z1[N8 +     k]);
-  X_out[          1 + n] = -RE(Z1[N8 - 1 - k]);
-  X_out[N4 +          n] =  RE(Z1[         k]);
-  X_out[N4 +      1 + n] = -IM(Z1[N4 - 1 - k]);
-  X_out[N2 +          n] =  RE(Z1[N8 +     k]);
-  X_out[N2 +      1 + n] = -IM(Z1[N8 - 1 - k]);
-  X_out[N2 + N4 +     n] = -IM(Z1[         k]);
-  X_out[N2 + N4 + 1 + n] =  RE(Z1[N4 - 1 - k]);
- }
+	Z1 = mdct->Z1;
+	for(k = 0; k < N8; k++) {
+		uint16_t n = k << 1;
+		X_out[n] = IM(Z1[N8 + k]);
+		X_out[1 + n] = -RE(Z1[N8 - 1 - k]);
+		X_out[N4 + n] = RE(Z1[k]);
+		X_out[N4 + 1 + n] = -IM(Z1[N4 - 1 - k]);
+		X_out[N2 + n] = RE(Z1[N8 + k]);
+		X_out[N2 + 1 + n] = -IM(Z1[N8 - 1 - k]);
+		X_out[N2 + N4 + n] = -IM(Z1[k]);
+		X_out[N2 + N4 + 1 + n] = RE(Z1[N4 - 1 - k]);
+	}
 }
 
 #ifdef LTP_DEC
-void faad_mdct(mdct_info *mdct, real_t *X_in, real_t *X_out)
+void faad_mdct(mdct_info * mdct, real_t * X_in, real_t * X_out)
 {
-    uint16_t k;
+	uint16_t k;
 
-    complex_t x;
-    complex_t *Z1 = mdct->Z1;
-    complex_t *sincos = mdct->sincos;
+	complex_t x;
+	complex_t *Z1 = mdct->Z1;
+	complex_t *sincos = mdct->sincos;
 
-    uint16_t N  = mdct->N;
-    uint16_t N2 = N >> 1;
-    uint16_t N4 = N >> 2;
-    uint16_t N8 = N >> 3;
+	uint16_t N = mdct->N;
+	uint16_t N2 = N >> 1;
+	uint16_t N4 = N >> 2;
+	uint16_t N8 = N >> 3;
 
 	real_t scale = REAL_CONST(N);
 
-    /* pre-FFT complex multiplication */
-    for (k = 0; k < N8; k++)
-    {
-        uint16_t n = k << 1;
-        RE(x) = X_in[N - N4 - 1 - n] + X_in[N - N4 +     n];
-        IM(x) = X_in[    N4 +     n] - X_in[    N4 - 1 - n];
+	/* pre-FFT complex multiplication */
+	for(k = 0; k < N8; k++) {
+		uint16_t n = k << 1;
+		RE(x) = X_in[N - N4 - 1 - n] + X_in[N - N4 + n];
+		IM(x) = X_in[N4 + n] - X_in[N4 - 1 - n];
 
-        RE(Z1[k]) = -MUL_R_C(RE(x), RE(sincos[k])) - MUL_R_C(IM(x), IM(sincos[k]));
-        IM(Z1[k]) = -MUL_R_C(IM(x), RE(sincos[k])) + MUL_R_C(RE(x), IM(sincos[k]));
+		RE(Z1[k]) = -MUL_R_C(RE(x), RE(sincos[k])) - MUL_R_C(IM(x), IM(sincos[k]));
+		IM(Z1[k]) = -MUL_R_C(IM(x), RE(sincos[k])) + MUL_R_C(RE(x), IM(sincos[k]));
 
-        RE(x) =  X_in[N2 - 1 - n] - X_in[        n];
-        IM(x) =  X_in[N2 +     n] + X_in[N - 1 - n];
+		RE(x) = X_in[N2 - 1 - n] - X_in[n];
+		IM(x) = X_in[N2 + n] + X_in[N - 1 - n];
 
-        RE(Z1[k + N8]) = -MUL_R_C(RE(x), RE(sincos[k + N8])) - MUL_R_C(IM(x), IM(sincos[k + N8]));
-        IM(Z1[k + N8]) = -MUL_R_C(IM(x), RE(sincos[k + N8])) + MUL_R_C(RE(x), IM(sincos[k + N8]));
-    }
+		RE(Z1[k + N8]) = -MUL_R_C(RE(x), RE(sincos[k + N8])) - MUL_R_C(IM(x), IM(sincos[k + N8]));
+		IM(Z1[k + N8]) = -MUL_R_C(IM(x), RE(sincos[k + N8])) + MUL_R_C(RE(x), IM(sincos[k + N8]));
+	}
 
-    /* complex FFT */
-    cfftf(mdct->cfft, Z1);
+	/* complex FFT */
+	cfftf(mdct->cfft, Z1);
 
-    /* post-FFT complex multiplication */
-    for (k = 0; k < N4; k++)
-    {
-        uint16_t n = k << 1;
-        RE(x) = MUL(MUL_R_C(RE(Z1[k]), RE(sincos[k])) + MUL_R_C(IM(Z1[k]), IM(sincos[k])), scale);
-        IM(x) = MUL(MUL_R_C(IM(Z1[k]), RE(sincos[k])) - MUL_R_C(RE(Z1[k]), IM(sincos[k])), scale);
+	/* post-FFT complex multiplication */
+	for(k = 0; k < N4; k++) {
+		uint16_t n = k << 1;
+		RE(x) = MUL(MUL_R_C(RE(Z1[k]), RE(sincos[k])) + MUL_R_C(IM(Z1[k]), IM(sincos[k])), scale);
+		IM(x) = MUL(MUL_R_C(IM(Z1[k]), RE(sincos[k])) - MUL_R_C(RE(Z1[k]), IM(sincos[k])), scale);
 
-        X_out[         n] =  RE(x);
-        X_out[N2 - 1 - n] = -IM(x);
-        X_out[N2 +     n] =  IM(x);
-        X_out[N  - 1 - n] = -RE(x);
-    }
+		X_out[n] = RE(x);
+		X_out[N2 - 1 - n] = -IM(x);
+		X_out[N2 + n] = IM(x);
+		X_out[N - 1 - n] = -RE(x);
+	}
 }
 #endif

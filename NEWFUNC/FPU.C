@@ -18,14 +18,14 @@ void asm_fpu_setround_near(unsigned int *);
 
 void pds_fpu_setround_near(void)
 {
- unsigned int controlword;
+	unsigned int controlword;
 #ifdef __WATCOMC__
- #pragma aux asm_fpu_setround_near=\
+#pragma aux asm_fpu_setround_near=\
   "fstcw word ptr [eax]"\
   "and word ptr [eax],0xf3ff"\
   "fldcw word ptr [eax]"\
   parm[eax] modify[];
- asm_fpu_setround_near(&controlword);
+	asm_fpu_setround_near(&controlword);
 #endif
 }
 
@@ -33,13 +33,13 @@ void asm_fpu_setround_chop(unsigned int *);
 
 void pds_fpu_setround_chop(void)
 {
- unsigned int controlword;
+	unsigned int controlword;
 #ifdef __WATCOMC__
- #pragma aux asm_fpu_setround_chop=\
+#pragma aux asm_fpu_setround_chop=\
   "fstcw word ptr [eax]"\
   "or word ptr [eax],0x0c00"\
   "fldcw word ptr [eax]"\
   parm[eax] modify[];
- asm_fpu_setround_chop(&controlword);
+	asm_fpu_setround_chop(&controlword);
 #endif
 }

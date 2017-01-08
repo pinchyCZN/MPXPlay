@@ -32,32 +32,30 @@
 #include "ms_is.h"
 #include "pns.h"
 
-void ms_decode(ic_stream *ics, ic_stream *icsr, real_t *l_spec, real_t *r_spec,
-               uint16_t frame_len)
+void ms_decode(ic_stream * ics, ic_stream * icsr, real_t * l_spec, real_t * r_spec, uint16_t frame_len)
 {
- uint32_t g, b, sfb;
- uint32_t group = 0;
- uint32_t nshort = frame_len/8;
- uint16_t i;
+	uint32_t g, b, sfb;
+	uint32_t group = 0;
+	uint32_t nshort = frame_len / 8;
+	uint16_t i;
 
- if (ics->ms_mask_present >= 1){
-  for (g = 0; g < ics->num_window_groups; g++){
-   for (b = 0; b < ics->window_group_length[g]; b++){
-    for(sfb = 0; sfb < ics->max_sfb; sfb++){
-     if ((ics->ms_used[g][sfb] || ics->ms_mask_present == 2) &&
-          !is_intensity(icsr, g, sfb) && !is_noise(ics, g, sfb)){
-      for (i = ics->swb_offset[sfb]; i < ics->swb_offset[sfb+1]; i++){
-       uint32_t k=group+i;
-       double tmp = r_spec[k];
-       r_spec[k] = l_spec[k]-tmp;
-       l_spec[k] = l_spec[k]+tmp;
-      }
-     }
-    }
-    group+=nshort;
-   }
-  }
- }
+	if(ics->ms_mask_present >= 1) {
+		for(g = 0; g < ics->num_window_groups; g++) {
+			for(b = 0; b < ics->window_group_length[g]; b++) {
+				for(sfb = 0; sfb < ics->max_sfb; sfb++) {
+					if((ics->ms_used[g][sfb] || ics->ms_mask_present == 2) && !is_intensity(icsr, g, sfb) && !is_noise(ics, g, sfb)) {
+						for(i = ics->swb_offset[sfb]; i < ics->swb_offset[sfb + 1]; i++) {
+							uint32_t k = group + i;
+							double tmp = r_spec[k];
+							r_spec[k] = l_spec[k] - tmp;
+							l_spec[k] = l_spec[k] + tmp;
+						}
+					}
+				}
+				group += nshort;
+			}
+		}
+	}
 }
 
 /*void ms_decode(ic_stream *ics, ic_stream *icsr, real_t *l_spec, real_t *r_spec,
@@ -90,43 +88,42 @@ void ms_decode(ic_stream *ics, ic_stream *icsr, real_t *l_spec, real_t *r_spec,
  }
 }*/
 
-void is_decode(ic_stream *ics, ic_stream *icsr, real_t *l_spec, real_t *r_spec,
-               uint16_t frame_len)
+void is_decode(ic_stream * ics, ic_stream * icsr, real_t * l_spec, real_t * r_spec, uint16_t frame_len)
 {
- uint8_t g, sfb, b;
- uint16_t i, k;
- real_t scale;
+	uint8_t g, sfb, b;
+	uint16_t i, k;
+	real_t scale;
 
- uint16_t nshort = frame_len/8;
- uint8_t group = 0;
+	uint16_t nshort = frame_len / 8;
+	uint8_t group = 0;
 
- for (g = 0; g < icsr->num_window_groups; g++){
-  /* Do intensity stereo decoding */
-  for (b = 0; b < icsr->window_group_length[g]; b++){
-   for (sfb = 0; sfb < icsr->max_sfb; sfb++){
-    if (is_intensity(icsr, g, sfb)){
-     /* For scalefactor bands coded in intensity stereo the
-      corresponding predictors in the right channel are
-      switched to "off".
-     */
-     ics->pred.prediction_used[sfb] = 0;
-     icsr->pred.prediction_used[sfb] = 0;
+	for(g = 0; g < icsr->num_window_groups; g++) {
+		/* Do intensity stereo decoding */
+		for(b = 0; b < icsr->window_group_length[g]; b++) {
+			for(sfb = 0; sfb < icsr->max_sfb; sfb++) {
+				if(is_intensity(icsr, g, sfb)) {
+					/* For scalefactor bands coded in intensity stereo the
+					   corresponding predictors in the right channel are
+					   switched to "off".
+					 */
+					ics->pred.prediction_used[sfb] = 0;
+					icsr->pred.prediction_used[sfb] = 0;
 
-     scale = (real_t)pow2(-(0.25f*(real_t)icsr->scale_factors[g][sfb]));
-     //scale = (real_t)pow(0.5, (0.25*icsr->scale_factors[g][sfb]));
+					scale = (real_t) pow2(-(0.25f * (real_t) icsr->scale_factors[g][sfb]));
+					//scale = (real_t)pow(0.5, (0.25*icsr->scale_factors[g][sfb]));
 
-     /* Scale from left to right channel,do not touch left channel */
-     for (i = icsr->swb_offset[sfb]; i < icsr->swb_offset[sfb+1]; i++){
-      k = (group*nshort)+i;
+					/* Scale from left to right channel,do not touch left channel */
+					for(i = icsr->swb_offset[sfb]; i < icsr->swb_offset[sfb + 1]; i++) {
+						k = (group * nshort) + i;
 
-      r_spec[k] = MUL(l_spec[k], scale);
+						r_spec[k] = MUL(l_spec[k], scale);
 
-      if (is_intensity(icsr, g, sfb) != invert_intensity(ics, g, sfb))
-       r_spec[k] = -r_spec[k];
-     }
-    }
-   }
-   group++;
-  }
- }
+						if(is_intensity(icsr, g, sfb) != invert_intensity(ics, g, sfb))
+							r_spec[k] = -r_spec[k];
+					}
+				}
+			}
+			group++;
+		}
+	}
 }

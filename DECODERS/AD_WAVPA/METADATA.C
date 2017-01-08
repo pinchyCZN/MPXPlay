@@ -12,94 +12,93 @@
 
 #include "wavpack.h"
 
-int read_metadata_buff (WavpackContext *wpc, WavpackMetadata *wpmd)
+int read_metadata_buff(WavpackContext * wpc, WavpackMetadata * wpmd)
 {
-    uchar tchar;
+	uchar tchar;
 
-    if (!wpc->infile (wpc->streamhand, &wpmd->id, 1) || !wpc->infile (wpc->streamhand, &tchar, 1))
-	return FALSE;
+	if(!wpc->infile(wpc->streamhand, &wpmd->id, 1) || !wpc->infile(wpc->streamhand, &tchar, 1))
+		return FALSE;
 
-    wpmd->byte_length = tchar << 1;
+	wpmd->byte_length = tchar << 1;
 
-    if (wpmd->id & ID_LARGE) {
-	wpmd->id &= ~ID_LARGE;
+	if(wpmd->id & ID_LARGE) {
+		wpmd->id &= ~ID_LARGE;
 
-	if (!wpc->infile (wpc->streamhand, &tchar, 1))
-	    return FALSE;
+		if(!wpc->infile(wpc->streamhand, &tchar, 1))
+			return FALSE;
 
-	wpmd->byte_length += (long) tchar << 9;
+		wpmd->byte_length += (long)tchar << 9;
 
-	if (!wpc->infile (wpc->streamhand, &tchar, 1))
-	    return FALSE;
+		if(!wpc->infile(wpc->streamhand, &tchar, 1))
+			return FALSE;
 
-	wpmd->byte_length += (long) tchar << 17;
-    }
-
-    if (wpmd->id & ID_ODD_SIZE) {
-	wpmd->id &= ~ID_ODD_SIZE;
-	wpmd->byte_length--;
-    }
-
-    if (wpmd->byte_length && wpmd->byte_length <= sizeof (wpc->read_buffer)) {
-	ulong bytes_to_read = wpmd->byte_length + (wpmd->byte_length & 1);
-
-	if (wpc->infile (wpc->streamhand, wpc->read_buffer, bytes_to_read) != (long) bytes_to_read) {
-	    wpmd->data = NULL;
-	    return FALSE;
+		wpmd->byte_length += (long)tchar << 17;
 	}
 
-	wpmd->data = wpc->read_buffer;
-    }
-    else
-	wpmd->data = NULL;
+	if(wpmd->id & ID_ODD_SIZE) {
+		wpmd->id &= ~ID_ODD_SIZE;
+		wpmd->byte_length--;
+	}
 
-    return TRUE;
+	if(wpmd->byte_length && wpmd->byte_length <= sizeof(wpc->read_buffer)) {
+		ulong bytes_to_read = wpmd->byte_length + (wpmd->byte_length & 1);
+
+		if(wpc->infile(wpc->streamhand, wpc->read_buffer, bytes_to_read) != (long)bytes_to_read) {
+			wpmd->data = NULL;
+			return FALSE;
+		}
+
+		wpmd->data = wpc->read_buffer;
+	} else
+		wpmd->data = NULL;
+
+	return TRUE;
 }
 
-int process_metadata (WavpackContext *wpc, WavpackMetadata *wpmd)
+int process_metadata(WavpackContext * wpc, WavpackMetadata * wpmd)
 {
-    WavpackStream *wps = &wpc->stream;
+	WavpackStream *wps = &wpc->stream;
 
-    switch (wpmd->id) {
+	switch (wpmd->id) {
 	case ID_DUMMY:
-	    return TRUE;
+		return TRUE;
 
 	case ID_DECORR_TERMS:
-	    return read_decorr_terms (wps, wpmd);
+		return read_decorr_terms(wps, wpmd);
 
 	case ID_DECORR_WEIGHTS:
-	    return read_decorr_weights (wps, wpmd);
+		return read_decorr_weights(wps, wpmd);
 
 	case ID_DECORR_SAMPLES:
-	    return read_decorr_samples (wps, wpmd);
+		return read_decorr_samples(wps, wpmd);
 
 	case ID_ENTROPY_VARS:
-	    return read_entropy_vars (wps, wpmd);
+		return read_entropy_vars(wps, wpmd);
 
 	case ID_HYBRID_PROFILE:
-	    return read_hybrid_profile (wps, wpmd);
+		return read_hybrid_profile(wps, wpmd);
 
 	case ID_FLOAT_INFO:
-	    return read_float_info (wps, wpmd);
+		return read_float_info(wps, wpmd);
 
 	case ID_INT32_INFO:
-	    return read_int32_info (wps, wpmd);
+		return read_int32_info(wps, wpmd);
 
 	case ID_CHANNEL_INFO:
-	    return read_channel_info (wpc, wpmd);
+		return read_channel_info(wpc, wpmd);
 
 	case ID_CONFIG_BLOCK:
-	    return read_config_info (wpc, wpmd);
+		return read_config_info(wpc, wpmd);
 
 	case ID_WV_BITSTREAM:
-	    return init_wv_bitstream (wpc, wpmd);
+		return init_wv_bitstream(wpc, wpmd);
 
 	case ID_SHAPING_WEIGHTS:
 	case ID_WVC_BITSTREAM:
 	case ID_WVX_BITSTREAM:
-	    return TRUE;
+		return TRUE;
 
 	default:
-	    return (wpmd->id & ID_OPTIONAL_DATA) ? TRUE : FALSE;
-    }
+		return (wpmd->id & ID_OPTIONAL_DATA) ? TRUE : FALSE;
+	}
 }

@@ -19,7 +19,7 @@
 #include "newfunc\newfunc.h"
 
 extern unsigned int analtabnum;
-extern unsigned long analtab[5][32],volnum[5][2];
+extern unsigned long analtab[5][32], volnum[5][2];
 
 extern unsigned int displaymode;
 extern unsigned int SOUNDLIMITvol;
@@ -27,12 +27,12 @@ extern unsigned int SOUNDLIMITvol;
 //--------------------------------------------------------------------------
 
 //void asm_get_volumelevel_maxsign(short *,unsigned int);
-void asm_get_volumelevel_average(short *,unsigned int);
+void asm_get_volumelevel_average(short *, unsigned int);
 
-void mixer_get_volumelevel(short *pcm_sample,unsigned int samplenum,unsigned int channelnum)
+void mixer_get_volumelevel(short *pcm_sample, unsigned int samplenum, unsigned int channelnum)
 {
- unsigned int channelskip=(channelnum>2)? ((channelnum-2)*2+2):2;
- samplenum=samplenum/channelnum*2;
+	unsigned int channelskip = (channelnum > 2) ? ((channelnum - 2) * 2 + 2) : 2;
+	samplenum = samplenum / channelnum * 2;
 /*#pragma aux asm_get_volumelevel_maxsign=\
  "mov edi,eax"\
  "shr edx,1"\
@@ -68,46 +68,23 @@ void mixer_get_volumelevel(short *pcm_sample,unsigned int samplenum,unsigned int
 
  asm_get_volumelevel_maxsign(pcm_sample,samplenum);*/
 #ifdef WIN32
- __asm{
-	 mov edx,samplenum
-	 mov edi,pcm_sample
-		 shr edx,1
-		 mov ecx,edx
-		 xor ebx,ebx
-		 xor esi,esi
-vload1:movsx eax,word ptr [edi]
-	   test eax,eax
-	   jge vpositivl
-	   neg eax
-vpositivl:add ebx,eax
-		  add edi,2
-		  movsx eax,word ptr [edi]
-		  test eax,eax
-		  jge vpositivr
-		  neg eax
-vpositivr:add esi,eax
-		  add edi,dword ptr channelskip
-		  dec edx
-		  jnz vload1
-		  shr ecx,5
-		  test ecx,ecx
-		  jz nodiv
-		  mov eax,ebx
-		  xor edx,edx
-		  div ecx
-		  mov ebx,eax
-		  mov eax,esi
-		  xor edx,edx
-		  div ecx
-		  mov esi,eax
-nodiv:
-	 mov edi,dword ptr analtabnum
-		 shl edi,3
-		 add edi,offset volnum
-		 mov dword ptr [edi],ebx
-		 mov dword ptr 4[edi],esi
- }
-}
+	__asm {
+		mov edx, samplenum mov edi, pcm_sample shr edx, 1 mov ecx, edx xor ebx, ebx xor esi, esi vload1:movsx eax, word ptr[edi]
+		test eax, eax jge vpositivl neg eax vpositivl:add ebx, eax add edi, 2 movsx eax, word ptr[edi]
+test eax, eax
+			jge vpositivr
+			neg eax
+			vpositivr:add esi, eax
+			add edi, dword ptr channelskip
+			dec edx
+			jnz vload1
+			shr ecx, 5
+			test ecx, ecx
+			jz nodiv
+			mov eax, ebx
+			xor edx, edx
+			div ecx
+			mov ebx, eax mov eax, esi xor edx, edx div ecx mov esi, eax nodiv: mov edi, dword ptr analtabnum shl edi, 3 add edi, offset volnum mov dword ptr[edi], ebx mov dword ptr 4[edi], esi}}
 #else
 #pragma aux asm_get_volumelevel_average=\
  "mov edi,eax"\
@@ -148,9 +125,9 @@ nodiv:
  "mov dword ptr 4[edi],esi"\
  parm[eax][edx] modify [ebx ecx edi esi];
 
- asm_get_volumelevel_average(pcm_sample,samplenum);
+	asm_get_volumelevel_average(pcm_sample, samplenum);
 }
-#endif //WIN32
+#endif							//WIN32
 
 /*void get_volumelevel(short *pcm_sample,unsigned int samplenum)
 {
@@ -184,8 +161,7 @@ one_mixerfunc_info MIXER_FUNCINFO_getvolume={
 #define SAMPLES     (1<<POW)
 #define SAMPLES2    (1<<(POW-1))
 
-static long cossintab86[SAMPLES2][2]=
-{{268435455, 0}, {268434192, 823548}, {268430402, 1647088},
+static long cossintab86[SAMPLES2][2] = { {268435455, 0}, {268434192, 823548}, {268430402, 1647088},
 {268424086, 2470614}, {268415243, 3294115}, {268403873, 4117586},
 {268389978, 4941018}, {268373556, 5764404}, {268354608, 6587735},
 {268333134, 7411005}, {268309134, 8234204}, {268282610, 9057326},
@@ -310,56 +286,16 @@ static int fftinited;
 #ifdef WIN32
 void fftCalc(long *xi, long *cos, unsigned long d2)
 {
-	__asm{
-	mov	 edx,d2
-	shl  edx, 2 
-	
-	mov	 edi,cos
-	mov	 esi,xi
-	mov  ebx, [esi]  
-	mov  ecx, [esi+edx] 
-	mov  eax, ebx 
-	add  ebx, ecx 
-	sub  eax, ecx 
-	sar  ebx, 1 
-	push eax 
-	push eax 
-	mov  [esi], ebx 
-	 
-	mov  ecx, [esi+edx+4] 
-	mov  ebx, [esi+4]  
-	mov  eax, ebx 
-	add  ebx, ecx 
-	sub  eax, ecx 
-	sar  ebx, 1 
-	mov  ecx, eax 
-	mov  [esi+4], ebx 
-	 
-	add  esi, edx 
-	 
-	mov  edx, [edi+4] 
-	xor  ebx, ebx 
-	imul edx 
-	shrd eax, edx, 29 
-	mov  edx, [edi] 
-	sub  ebx, eax 
-	pop  eax 
-	imul edx 
-	shrd eax, edx, 29 
-	add  ebx, eax 
-	mov  edx, [edi+4] 
-	pop  eax 
-	mov  [esi], ebx 
-	imul edx 
-	shrd eax, edx, 29 
-	mov  ebx, eax 
-	mov  eax, [edi] 
-	imul ecx 
-	shrd eax, edx, 29 
-	add  ebx, eax 
-	mov  [esi+4], ebx
-	}
-}
+	__asm {
+		mov edx, d2 shl edx, 2 mov edi, cos mov esi, xi mov ebx,[esi]
+		mov ecx,[esi + edx]
+		mov eax, ebx add ebx, ecx sub eax, ecx sar ebx, 1 push eax push eax mov[esi], ebx mov ecx,[esi + edx + 4]
+		mov ebx,[esi + 4]
+		mov eax, ebx add ebx, ecx sub eax, ecx sar ebx, 1 mov ecx, eax mov[esi + 4], ebx add esi, edx mov edx,[edi + 4]
+		xor ebx, ebx imul edx shrd eax, edx, 29 mov edx,[edi]
+		sub ebx, eax pop eax imul edx shrd eax, edx, 29 add ebx, eax mov edx,[edi + 4]
+		pop eax mov[esi], ebx imul edx shrd eax, edx, 29 mov ebx, eax mov eax,[edi]
+imul ecx shrd eax, edx, 29 add ebx, eax mov[esi + 4], ebx}}
 #else
 
 void fftCalc(long *xi, long *cos, unsigned long d2);
@@ -412,82 +348,82 @@ void fftCalc(long *xi, long *cos, unsigned long d2);
 
 static void fftInit(void)
 {
- int i,j,k;
- j=0;
- for(i=0; i<SAMPLES; ++i){
-  permtab[i]=j;
-  for(k=SAMPLES2; k&&(k<=j); k>>=1)
-   j-=k;
-  j+=k;
- }
- for (i=SAMPLES2/4+1; i<=SAMPLES2/2; ++i){
-  cossintab86[i][0]=cossintab86[SAMPLES2/2-i][1];
-  cossintab86[i][1]=cossintab86[SAMPLES2/2-i][0];
- }
- for (i=SAMPLES2/2+1; i<SAMPLES2; ++i){
-  cossintab86[i][0]=-cossintab86[SAMPLES2-i][0];
-  cossintab86[i][1]=cossintab86[SAMPLES2-i][1];
- }
- fftinited=1;
+	int i, j, k;
+	j = 0;
+	for(i = 0; i < SAMPLES; ++i) {
+		permtab[i] = j;
+		for(k = SAMPLES2; k && (k <= j); k >>= 1)
+			j -= k;
+		j += k;
+	}
+	for(i = SAMPLES2 / 4 + 1; i <= SAMPLES2 / 2; ++i) {
+		cossintab86[i][0] = cossintab86[SAMPLES2 / 2 - i][1];
+		cossintab86[i][1] = cossintab86[SAMPLES2 / 2 - i][0];
+	}
+	for(i = SAMPLES2 / 2 + 1; i < SAMPLES2; ++i) {
+		cossintab86[i][0] = -cossintab86[SAMPLES2 - i][0];
+		cossintab86[i][1] = cossintab86[SAMPLES2 - i][1];
+	}
+	fftinited = 1;
 }
 
 static void dofft86(long (*x)[2], const int n)
 {
- int i,j;
- long *xe=x[1<<n],curcossin[2],*xi;
+	int i, j;
+	long *xe = x[1 << n], curcossin[2], *xi;
 
- for(i=POW-n;i<POW;++i){
-  const unsigned long s2dk=SAMPLES2>>i;
-  const unsigned long d2=s2dk<<1;
-  for(j=0;j<s2dk;++j){
-   curcossin[0]=cossintab86[j<<i][0];
-   curcossin[1]=cossintab86[j<<i][1];
-   for(xi=x[j];xi<xe;xi+=(d2<<1))
-    fftCalc(xi,curcossin,d2);
-  }
- }
+	for(i = POW - n; i < POW; ++i) {
+		const unsigned long s2dk = SAMPLES2 >> i;
+		const unsigned long d2 = s2dk << 1;
+		for(j = 0; j < s2dk; ++j) {
+			curcossin[0] = cossintab86[j << i][0];
+			curcossin[1] = cossintab86[j << i][1];
+			for(xi = x[j]; xi < xe; xi += (d2 << 1))
+				fftCalc(xi, curcossin, d2);
+		}
+	}
 }
 
-void mixer_pcm_spectrum_analiser(short *pcm_sample,unsigned int samplenum,unsigned int channelnum)
+void mixer_pcm_spectrum_analiser(short *pcm_sample, unsigned int samplenum, unsigned int channelnum)
 {
- //const int outsamplenum=(samplenum>>1)
- unsigned long *ana=&analtab[analtabnum][0];
- const int bits[2]={10,7}; // 1024+128 (1<<10)+(1<<7) = 1152 samples
- const unsigned int outsamplenum[2]={1024,128};//1<<bits[0],1<<bits[1]};
- const unsigned int half[2]={512,64}; //outsamplenum[0]>>1,outsamplenum[1]>>1};
- const unsigned int anashift[2]={4,1};// 512>>4=32, 64>>1=32 subband channels
- int i,j;
+	//const int outsamplenum=(samplenum>>1)
+	unsigned long *ana = &analtab[analtabnum][0];
+	const int bits[2] = { 10, 7 };	// 1024+128 (1<<10)+(1<<7) = 1152 samples
+	const unsigned int outsamplenum[2] = { 1024, 128 };	//1<<bits[0],1<<bits[1]};
+	const unsigned int half[2] = { 512, 64 };	//outsamplenum[0]>>1,outsamplenum[1]>>1};
+	const unsigned int anashift[2] = { 4, 1 };	// 512>>4=32, 64>>1=32 subband channels
+	int i, j;
 
- if(!fftinited)
-  fftInit();
+	if(!fftinited)
+		fftInit();
 
- for(i=0;i<32;i++)
-  ana[i]=0;
+	for(i = 0; i < 32; i++)
+		ana[i] = 0;
 
- if(samplenum<2304){
-  short *pcm=pcm_sample+samplenum;
-  i=2304-samplenum;
-  while(i--)
-   *pcm++=0;
- }
+	if(samplenum < 2304) {
+		short *pcm = pcm_sample + samplenum;
+		i = 2304 - samplenum;
+		while(i--)
+			*pcm++ = 0;
+	}
 
- for(j=0;j<2;j++){
-  for(i=0;i<outsamplenum[j];i++){
-   x86[i][0]=((long)(pcm_sample[0])+(long)(pcm_sample[1]))<<12;
-   pcm_sample+=channelnum;
-   x86[i][1]=0;
-  }
-  dofft86(x86,bits[j]);
-  for(i=1;i<=half[j];++i){
-   float ff;
-   long x0,x1,index;
-   index=permtab[i]>>(POW-bits[j]);
-   x0 =x86[index][0]>>12;
-   x1 =x86[index][1]>>12;
-   x0=x0*x0+x1*x1;
-   ff=sqrt((float)x0);
-   pds_ftoi(ff,&x0);
-   ana[(i-1)>>anashift[j]]+=x0<<1;
-  }
- }
+	for(j = 0; j < 2; j++) {
+		for(i = 0; i < outsamplenum[j]; i++) {
+			x86[i][0] = ((long)(pcm_sample[0]) + (long)(pcm_sample[1])) << 12;
+			pcm_sample += channelnum;
+			x86[i][1] = 0;
+		}
+		dofft86(x86, bits[j]);
+		for(i = 1; i <= half[j]; ++i) {
+			float ff;
+			long x0, x1, index;
+			index = permtab[i] >> (POW - bits[j]);
+			x0 = x86[index][0] >> 12;
+			x1 = x86[index][1] >> 12;
+			x0 = x0 * x0 + x1 * x1;
+			ff = sqrt((float)x0);
+			pds_ftoi(ff, &x0);
+			ana[(i - 1) >> anashift[j]] += x0 << 1;
+		}
+	}
 }

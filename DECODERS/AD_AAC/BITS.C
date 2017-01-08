@@ -33,48 +33,48 @@
 #include "bits.h"
 
 #ifndef FAAD_USE_BITS_ASM
-static uint32_t bitmask[33]=
-{0x00000000,0x00000001,0x00000003,0x00000007,0x0000000f,
- 0x0000001f,0x0000003f,0x0000007f,0x000000ff,0x000001ff,
- 0x000003ff,0x000007ff,0x00000fff,0x00001fff,0x00003fff,
- 0x00007fff,0x0000ffff,0x0001ffff,0x0003ffff,0x0007ffff,
- 0x000fffff,0x001fffff,0x003fffff,0x007fffff,0x00ffffff,
- 0x01ffffff,0x03ffffff,0x07ffffff,0x0fffffff,0x1fffffff,
- 0x3fffffff,0x7fffffff,0xffffffff };
+static uint32_t bitmask[33] = { 0x00000000, 0x00000001, 0x00000003, 0x00000007, 0x0000000f,
+	0x0000001f, 0x0000003f, 0x0000007f, 0x000000ff, 0x000001ff,
+	0x000003ff, 0x000007ff, 0x00000fff, 0x00001fff, 0x00003fff,
+	0x00007fff, 0x0000ffff, 0x0001ffff, 0x0003ffff, 0x0007ffff,
+	0x000fffff, 0x001fffff, 0x003fffff, 0x007fffff, 0x00ffffff,
+	0x01ffffff, 0x03ffffff, 0x07ffffff, 0x0fffffff, 0x1fffffff,
+	0x3fffffff, 0x7fffffff, 0xffffffff
+};
 #endif
 
-void faad_initbits(bitfile *b,void *buf,uint32_t bytes)
+void faad_initbits(bitfile * b, void *buf, uint32_t bytes)
 {
- b->bitpos=0;
- b->storedbits=bytes<<3;
- b->buffer=buf;
- b->error=0;
+	b->bitpos = 0;
+	b->storedbits = bytes << 3;
+	b->buffer = buf;
+	b->error = 0;
 }
 
-uint32_t faad_byte_align(bitfile *b)
+uint32_t faad_byte_align(bitfile * b)
 {
- uint32_t newbitpos=(b->bitpos+7)&(~7);
- uint32_t remainder=newbitpos-b->bitpos;
- b->bitpos=newbitpos;
- if(newbitpos>b->storedbits)
-  b->error=1;
- return remainder;
+	uint32_t newbitpos = (b->bitpos + 7) & (~7);
+	uint32_t remainder = newbitpos - b->bitpos;
+	b->bitpos = newbitpos;
+	if(newbitpos > b->storedbits)
+		b->error = 1;
+	return remainder;
 }
 
-uint32_t faad_get_processed_bits(bitfile *b)
+uint32_t faad_get_processed_bits(bitfile * b)
 {
- return b->bitpos;
+	return b->bitpos;
 }
 
-void faad_rewindbits(bitfile *b)
+void faad_rewindbits(bitfile * b)
 {
- b->bitpos=0;
- b->error=0;
+	b->bitpos = 0;
+	b->error = 0;
 }
 
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
 
-uint32_t asm_faad_bitsshow24(bitfile *b,uint32_t bits);
+uint32_t asm_faad_bitsshow24(bitfile * b, uint32_t bits);
 
 #pragma aux asm_faad_bitsshow24=\
  "mov ebx,dword ptr [eax]"\
@@ -102,54 +102,54 @@ uint32_t asm_faad_bitsshow24(bitfile *b,uint32_t bits);
 #endif
 
 //show max. 24 bits
-uint32_t faad_bits_show24(bitfile *b,uint32_t bits)
+uint32_t faad_bits_show24(bitfile * b, uint32_t bits)
 {
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
- return asm_faad_bitsshow24(b,bits);
+	return asm_faad_bitsshow24(b, bits);
 #else
- uint32_t ret,bitindex;
- uint8_t *bufpos;
+	uint32_t ret, bitindex;
+	uint8_t *bufpos;
 
- if((b->bitpos+bits)>b->storedbits){
-  b->error=1;
-  return 0;
- }
+	if((b->bitpos + bits) > b->storedbits) {
+		b->error = 1;
+		return 0;
+	}
 
- bufpos=b->buffer+(b->bitpos>>3);
- bitindex=b->bitpos&7;
+	bufpos = b->buffer + (b->bitpos >> 3);
+	bitindex = b->bitpos & 7;
 
- ret=*((uint32_t *)bufpos);
+	ret = *((uint32_t *) bufpos);
 #ifndef ARCH_IS_BIG_ENDIAN
- BSWAP(ret);
+	BSWAP(ret);
 #endif
- //ret<<=bitindex;
- //ret>>=32-bits;
- ret>>=32-bitindex-bits;
- ret&=bitmask[bits];
+	//ret<<=bitindex;
+	//ret>>=32-bits;
+	ret >>= 32 - bitindex - bits;
+	ret &= bitmask[bits];
 
- return ret;
+	return ret;
 #endif
 }
 
-uint32_t faad_showbits(bitfile *b,uint32_t bits)
+uint32_t faad_showbits(bitfile * b, uint32_t bits)
 {
- uint32_t ret;
+	uint32_t ret;
 
- if(bits<=24)
-  ret=faad_bits_show24(b,bits);
- else{
-  ret=faad_bits_show24(b,bits-16)<<16;
-  b->bitpos+=bits-16;
-  ret|=faad_bits_show24(b,16);
-  b->bitpos-=bits-16;
- }
+	if(bits <= 24)
+		ret = faad_bits_show24(b, bits);
+	else {
+		ret = faad_bits_show24(b, bits - 16) << 16;
+		b->bitpos += bits - 16;
+		ret |= faad_bits_show24(b, 16);
+		b->bitpos -= bits - 16;
+	}
 
- return ret;
+	return ret;
 }
 
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
 
-uint32_t asm_faad_bitsshow3b_h(bitfile *b);
+uint32_t asm_faad_bitsshow3b_h(bitfile * b);
 
 #pragma aux asm_faad_bitsshow3b_h=\
  "mov ebx,dword ptr [eax]"\
@@ -165,37 +165,37 @@ uint32_t asm_faad_bitsshow3b_h(bitfile *b);
 #endif
 
 //show left (top) aligned min. 25 bits (lowest 7 bit is undefinied)
-uint32_t faad_bits_show3b_h(bitfile *b)
+uint32_t faad_bits_show3b_h(bitfile * b)
 {
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
- return asm_faad_bitsshow3b_h(b);
+	return asm_faad_bitsshow3b_h(b);
 #else
- uint32_t ret,bitindex;
- uint8_t *bufpos;
+	uint32_t ret, bitindex;
+	uint8_t *bufpos;
 
- bufpos=b->buffer+(b->bitpos>>3);
- bitindex=b->bitpos&7;
+	bufpos = b->buffer + (b->bitpos >> 3);
+	bitindex = b->bitpos & 7;
 
- ret=*((uint32_t *)bufpos);
+	ret = *((uint32_t *) bufpos);
 #ifndef ARCH_IS_BIG_ENDIAN
- BSWAP(ret);
+	BSWAP(ret);
 #endif
- ret<<=bitindex;
+	ret <<= bitindex;
 
- return ret;
+	return ret;
 #endif
 }
 
-void faad_flushbits(bitfile *b,uint32_t bits)
+void faad_flushbits(bitfile * b, uint32_t bits)
 {
- b->bitpos+=bits;
- if(b->bitpos>b->storedbits)
-  b->error=1;
+	b->bitpos += bits;
+	if(b->bitpos > b->storedbits)
+		b->error = 1;
 }
 
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
 
-uint32_t asm_faad_bitsread24(bitfile *b,uint32_t bits);
+uint32_t asm_faad_bitsread24(bitfile * b, uint32_t bits);
 
 #pragma aux asm_faad_bitsread24=\
  "mov ebx,dword ptr [eax]"\
@@ -224,60 +224,60 @@ uint32_t asm_faad_bitsread24(bitfile *b,uint32_t bits);
 #endif
 
 //read max. 24 bits
-uint32_t faad_bits_read24(bitfile *b,uint32_t bits DEBUGDEC)
+uint32_t faad_bits_read24(bitfile * b, uint32_t bits DEBUGDEC)
 {
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
- uint32_t ret=asm_faad_bitsread24(b,bits);
+	uint32_t ret = asm_faad_bitsread24(b, bits);
 #ifdef ANALYSIS
- if(print){
-  fprintf(stdout, "%4d %2d bits, val: %4d, variable: %d %s \n", dbg_count++, bits, ret, var, dbg);
-  fflush(stdout);
- }
+	if(print) {
+		fprintf(stdout, "%4d %2d bits, val: %4d, variable: %d %s \n", dbg_count++, bits, ret, var, dbg);
+		fflush(stdout);
+	}
 #endif
- return ret;
+	return ret;
 #else
- uint32_t ret,bitindex;
- uint8_t *bufpos;
+	uint32_t ret, bitindex;
+	uint8_t *bufpos;
 
- bufpos=b->buffer+(b->bitpos>>3);
- bitindex=b->bitpos&7;
- b->bitpos+=bits;
+	bufpos = b->buffer + (b->bitpos >> 3);
+	bitindex = b->bitpos & 7;
+	b->bitpos += bits;
 
- if(b->bitpos>b->storedbits){
-  b->error=1;
-  return 0;
- }
+	if(b->bitpos > b->storedbits) {
+		b->error = 1;
+		return 0;
+	}
 
- ret=*((uint32_t *)bufpos);
+	ret = *((uint32_t *) bufpos);
 #ifndef ARCH_IS_BIG_ENDIAN
- BSWAP(ret);
+	BSWAP(ret);
 #endif
- //ret<<=bitindex;
- //ret>>=32-bits;
- ret>>=32-bitindex-bits;
- ret&=bitmask[bits];
+	//ret<<=bitindex;
+	//ret>>=32-bits;
+	ret >>= 32 - bitindex - bits;
+	ret &= bitmask[bits];
 
- return ret;
+	return ret;
 #endif
 }
 
-uint32_t faad_getbits(bitfile *b,uint32_t bits  DEBUGDEC)
+uint32_t faad_getbits(bitfile * b, uint32_t bits DEBUGDEC)
 {
- uint32_t ret;
+	uint32_t ret;
 
- if(bits<=24)
-  ret=faad_bits_read24(b,bits DEBUGVAR(print,var,dbg));
- else{
-  ret=faad_bits_read24(b,bits-16 DEBUGVAR(print,var,dbg))<<16;
-  ret|=faad_bits_read24(b,16 DEBUGVAR(print,var,dbg));
- }
+	if(bits <= 24)
+		ret = faad_bits_read24(b, bits DEBUGVAR(print, var, dbg));
+	else {
+		ret = faad_bits_read24(b, bits - 16 DEBUGVAR(print, var, dbg)) << 16;
+		ret |= faad_bits_read24(b, 16 DEBUGVAR(print, var, dbg));
+	}
 
- return ret;
+	return ret;
 }
 
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
 
-long asm_faad_bitsread1(bitfile *b);
+long asm_faad_bitsread1(bitfile * b);
 
 #pragma aux asm_faad_bitsread1=\
  "mov ecx,dword ptr [eax]"\
@@ -303,35 +303,35 @@ long asm_faad_bitsread1(bitfile *b);
 
 #endif
 
-uint32_t faad_get1bit(bitfile *b  DEBUGDEC)
+uint32_t faad_get1bit(bitfile * b DEBUGDEC)
 {
 #if defined(FAAD_USE_BITS_ASM) && defined(__WATCOMC__)
- return asm_faad_bitsread1(b);
+	return asm_faad_bitsread1(b);
 #else
- uint32_t bitindex;
- uint8_t *bufpos;
+	uint32_t bitindex;
+	uint8_t *bufpos;
 
- bitindex=b->bitpos&7;
- bufpos=b->buffer+(b->bitpos>>3);
- b->bitpos++;
+	bitindex = b->bitpos & 7;
+	bufpos = b->buffer + (b->bitpos >> 3);
+	b->bitpos++;
 
- if(b->bitpos>b->storedbits){
-  b->error=1;
-  return 0;
- }
+	if(b->bitpos > b->storedbits) {
+		b->error = 1;
+		return 0;
+	}
 
- return ((bufpos[0]>>(7-bitindex))&1);
+	return ((bufpos[0] >> (7 - bitindex)) & 1);
 #endif
 }
 
 //set the number of left bits
-uint32_t faad_bits_setleft(bitfile *b,uint32_t left)
+uint32_t faad_bits_setleft(bitfile * b, uint32_t left)
 {
- uint32_t newsb=b->bitpos+left;
- if(newsb<b->storedbits){
-  b->storedbits=newsb;
-  return 1;
- }
- b->error=1;
- return 0;
+	uint32_t newsb = b->bitpos + left;
+	if(newsb < b->storedbits) {
+		b->storedbits = newsb;
+		return 1;
+	}
+	b->error = 1;
+	return 0;
 }

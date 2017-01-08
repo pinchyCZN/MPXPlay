@@ -35,86 +35,97 @@
 /* Returns the sample rate index based on the samplerate */
 uint8_t get_sr_index(uint32_t samplerate)
 {
-    if (16428320 <= samplerate) return 11;
-    if (92017 <= samplerate) return 0;
-    if (75132 <= samplerate) return 1;
-    if (55426 <= samplerate) return 2;
-    if (46009 <= samplerate) return 3;
-    if (37566 <= samplerate) return 4;
-    if (27713 <= samplerate) return 5;
-    if (23004 <= samplerate) return 6;
-    if (18783 <= samplerate) return 7;
-    if (13856 <= samplerate) return 8;
-    if (11502 <= samplerate) return 9;
-    if (9391 <= samplerate) return 10;
+	if(16428320 <= samplerate)
+		return 11;
+	if(92017 <= samplerate)
+		return 0;
+	if(75132 <= samplerate)
+		return 1;
+	if(55426 <= samplerate)
+		return 2;
+	if(46009 <= samplerate)
+		return 3;
+	if(37566 <= samplerate)
+		return 4;
+	if(27713 <= samplerate)
+		return 5;
+	if(23004 <= samplerate)
+		return 6;
+	if(18783 <= samplerate)
+		return 7;
+	if(13856 <= samplerate)
+		return 8;
+	if(11502 <= samplerate)
+		return 9;
+	if(9391 <= samplerate)
+		return 10;
 
-    return 11;
+	return 11;
 }
 
 /* Returns 1 if an object type is decodable, otherwise returns 0 */
 uint8_t can_decode_ot(uint8_t object_type)
 {
-    switch (object_type)
-    {
-    case LC:
-        return 1;
-    case MAIN:
+	switch (object_type) {
+	case LC:
+		return 1;
+	case MAIN:
 #ifdef MAIN_DEC
-        return 1;
+		return 1;
 #else
-        return 0;
+		return 0;
 #endif
-    case SSR:
+	case SSR:
 #ifdef SSR_DEC
-        return 1;
+		return 1;
 #else
-        return 0;
+		return 0;
 #endif
-    case LTP:
+	case LTP:
 #ifdef LTP_DEC
-        return 1;
+		return 1;
 #else
-        return 0;
+		return 0;
 #endif
 
-    /* ER object types */
+		/* ER object types */
 #ifdef ERROR_RESILIENCE
-    case ER_LC:
+	case ER_LC:
 #ifdef DRM
-    case DRM_ER_LC:
+	case DRM_ER_LC:
 #endif
-        return 1;
-    case ER_LTP:
+		return 1;
+	case ER_LTP:
 #ifdef LTP_DEC
-        return 1;
+		return 1;
 #else
-        return 0;
+		return 0;
 #endif
-    case LD:
+	case LD:
 #ifdef LD_DEC
-        return 1;
+		return 1;
 #else
-        return 0;
+		return 0;
 #endif
 #endif
-    }
+	}
 
-    return 0;
+	return 0;
 }
 
-static const  uint8_t    Parity [256] = {  // parity
-	0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
-	1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,
-	1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,
-	0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
-	1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,
-	0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
-	0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
-	1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0
+static const uint8_t Parity[256] = {	// parity
+	0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+	1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+	1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+	0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+	1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+	0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+	0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+	1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0
 };
 
-static uint32_t  __r1 = 1;
-static uint32_t  __r2 = 1;
+static uint32_t __r1 = 1;
+static uint32_t __r2 = 1;
 
 
 /*
@@ -145,21 +156,24 @@ static uint32_t  __r2 = 1;
  */
 uint32_t random_int(void)
 {
-    //static const uint32_t rnd_seed = 16428320;
-	uint32_t  t1, t2, t3, t4;
+	//static const uint32_t rnd_seed = 16428320;
+	uint32_t t1, t2, t3, t4;
 
-	t3   = t1 = __r1;   t4   = t2 = __r2;       // Parity calculation is done via table lookup, this is also available
-	t1  &= 0xF5;        t2 >>= 25;              // on CPUs without parity, can be implemented in C and avoid unpredictable
-	t1   = Parity [t1]; t2  &= 0x63;            // jumps and slow rotate through the carry flag operations.
-	t1 <<= 31;          t2   = Parity [t2];
+	t3 = t1 = __r1;
+	t4 = t2 = __r2;				// Parity calculation is done via table lookup, this is also available
+	t1 &= 0xF5;
+	t2 >>= 25;					// on CPUs without parity, can be implemented in C and avoid unpredictable
+	t1 = Parity[t1];
+	t2 &= 0x63;					// jumps and slow rotate through the carry flag operations.
+	t1 <<= 31;
+	t2 = Parity[t2];
 
-	return (__r1 = (t3 >> 1) | t1 ) ^ (__r2 = (t4 + t4) | t2 );
+	return (__r1 = (t3 >> 1) | t1) ^ (__r2 = (t4 + t4) | t2);
 }
 
 #define LOG2 0.30102999566398
 
 int32_t int_log2(int32_t val)
 {
-    return (int32_t)ceil(log(val)/log(2));
+	return (int32_t) ceil(log(val) / log(2));
 }
-

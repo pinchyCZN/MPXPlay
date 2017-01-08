@@ -45,65 +45,65 @@
 #ifndef USE_AAC_MDCT
 
 #ifdef MDCT_ASM
- #ifdef MDCT_FPU32
-  #include "newfunc.h"
- #endif
+#ifdef MDCT_FPU32
+#include "newfunc.h"
+#endif
  //static DATA_TYPE cPI1_8,cPI2_8,cPI3_8;
- static DATA_TYPE cPI1_8=.92387953251128675613F;
- static DATA_TYPE cPI2_8=.70710678118654752441F;
- static DATA_TYPE cPI3_8=.38268343236508977175F;
- static DATA_TYPE half=0.5f;
+static DATA_TYPE cPI1_8 = .92387953251128675613F;
+static DATA_TYPE cPI2_8 = .70710678118654752441F;
+static DATA_TYPE cPI3_8 = .38268343236508977175F;
+static DATA_TYPE half = 0.5f;
 #endif
 
 void *oggdec_mdct_init(unsigned int n)
 {
- int i,n1,n2,log2n,*bitrev;
- DATA_TYPE *T;
- double mpin1,mpin2;
+	int i, n1, n2, log2n, *bitrev;
+	DATA_TYPE *T;
+	double mpin1, mpin2;
 
- mdct_lookup *lookup=_ogg_calloc(1,sizeof(mdct_lookup));
- if(!lookup)
-  return lookup;
+	mdct_lookup *lookup = _ogg_calloc(1, sizeof(mdct_lookup));
+	if(!lookup)
+		return lookup;
 
- lookup->n=n;
- lookup->bitrev=bitrev=_ogg_malloc(sizeof(*bitrev)*(n/4));
- lookup->trig=T=_ogg_malloc(sizeof(*T)*(n+n/4));
+	lookup->n = n;
+	lookup->bitrev = bitrev = _ogg_malloc(sizeof(*bitrev) * (n / 4));
+	lookup->trig = T = _ogg_malloc(sizeof(*T) * (n + n / 4));
 
- n1=n;
- n2=n>>1;
- log2n=lookup->log2n=rint(log((float)n1)/log(2.0F));
- mpin1=M_PI/n1;
- mpin2=M_PI/(n1<<1);
+	n1 = n;
+	n2 = n >> 1;
+	log2n = lookup->log2n = rint(log((float)n1) / log(2.0F));
+	mpin1 = M_PI / n1;
+	mpin2 = M_PI / (n1 << 1);
 
- for(i=0;i<n2;i+=2){
-  T[i]     =FLOAT_CONV( cos(mpin1*(i<<1)) );
-  T[i+1]   =FLOAT_CONV(-sin(mpin1*(i<<1)) );
-  T[n2+i]  =FLOAT_CONV( cos(mpin2*(i+1) ) );
-  T[n2+i+1]=FLOAT_CONV( sin(mpin2*(i+1) ) );
- }
+	for(i = 0; i < n2; i += 2) {
+		T[i] = FLOAT_CONV(cos(mpin1 * (i << 1)));
+		T[i + 1] = FLOAT_CONV(-sin(mpin1 * (i << 1)));
+		T[n2 + i] = FLOAT_CONV(cos(mpin2 * (i + 1)));
+		T[n2 + i + 1] = FLOAT_CONV(sin(mpin2 * (i + 1)));
+	}
 
- for(i=0;i<n/4;i+=2){
-  T[n+i]  =FLOAT_CONV( cos(mpin1*((i<<1)+2))*0.5F);
-  T[n+i+1]=FLOAT_CONV(-sin(mpin1*((i<<1)+2))*0.5F);
- }
+	for(i = 0; i < n / 4; i += 2) {
+		T[n + i] = FLOAT_CONV(cos(mpin1 * ((i << 1) + 2)) * 0.5F);
+		T[n + i + 1] = FLOAT_CONV(-sin(mpin1 * ((i << 1) + 2)) * 0.5F);
+	}
 
- {
-  int mask=(1<<(log2n-1))-1,i,j;
-  int msb=1<<(log2n-2);
-  for(i=0;i<n/8;i++){
-   int acc=0;
-   for(j=0;msb>>j;j++)
-    if((msb>>j)&i)
-     acc|=1<<j;
+	{
+		int mask = (1 << (log2n - 1)) - 1, i, j;
+		int msb = 1 << (log2n - 2);
+		for(i = 0; i < n / 8; i++) {
+			int acc = 0;
+			for(j = 0; msb >> j; j++)
+				if((msb >> j) & i)
+					acc |= 1 << j;
 #ifdef MDCT_ASM
-   bitrev[i*2]=(((~acc)&mask)-1)<<2;  // to avoid shl
-   bitrev[i*2+1]=acc<<2;
+			bitrev[i * 2] = (((~acc) & mask) - 1) << 2;	// to avoid shl
+			bitrev[i * 2 + 1] = acc << 2;
 #else
-   bitrev[i*2]=((~acc)&mask)-1;
-   bitrev[i*2+1]=acc;
+			bitrev[i * 2] = ((~acc) & mask) - 1;
+			bitrev[i * 2 + 1] = acc;
 #endif
-  }
- }
+		}
+	}
 
 //#ifdef MDCT_ASM
 // cPI1_8=cos(pi*1.0f/8.0f);
@@ -112,21 +112,24 @@ void *oggdec_mdct_init(unsigned int n)
 //#endif
 
 #ifdef MDCT_FORWARD
- lookup->scale=FLOAT_CONV(4.f/n);
+	lookup->scale = FLOAT_CONV(4.f / n);
 #endif
- return lookup;
+	return lookup;
 }
 
-void oggdec_mdct_clear(mdct_lookup *l)
+void oggdec_mdct_clear(mdct_lookup * l)
 {
- if(l){
-  if(l->trig) _ogg_free(l->trig);
-  if(l->bitrev) _ogg_free(l->bitrev);
+	if(l) {
+		if(l->trig)
+			_ogg_free(l->trig);
+		if(l->bitrev)
+			_ogg_free(l->bitrev);
 #ifdef MDCT_FORWARD
-  if(l->forward_buffer) _ogg_free(l->forward_buffer);
+		if(l->forward_buffer)
+			_ogg_free(l->forward_buffer);
 #endif
-  free(l);
- }
+		free(l);
+	}
 }
 
 #if defined(MDCT_ASM) && defined(__WATCOMC__) && !defined(MDCT_INTEGERIZED) && !defined(DOUBLE_PRECISION)
@@ -136,7 +139,7 @@ void mb16_1(void);
 void mb8_1(void);
 void mb8_2(void);
 
-STIN void mdct_butterfly_16(DATA_TYPE *x)
+STIN void mdct_butterfly_16(DATA_TYPE * x)
 {
 #pragma aux mb16_0=\
  "fld  dword ptr cPI2_8"\
@@ -202,8 +205,8 @@ STIN void mdct_butterfly_16(DATA_TYPE *x)
  "fstp dword ptr 28[eax]"\
  "fstp dword ptr 24[eax]"\
  modify[];
- mb16_0();
- mb16_1();
+	mb16_0();
+	mb16_1();
 
 #pragma aux mb8_1=\
  "fld  dword ptr 16[eax]"\
@@ -283,8 +286,8 @@ STIN void mdct_butterfly_16(DATA_TYPE *x)
  "fstp dword ptr 36[eax]"\
  modify[];
 
- mb8_1();
- mb8_2();
+	mb8_1();
+	mb8_2();
 }
 
 /*STIN void mdct_butterfly_16(DATA_TYPE *x)
@@ -352,7 +355,7 @@ void mb32_1(void);
 void mb32_2(void);
 void mb32_3(void);
 
-STIN void mdct_butterfly_32(DATA_TYPE *x)
+STIN void mdct_butterfly_32(DATA_TYPE * x)
 {
 #pragma aux mb32_0=\
  "fld  dword ptr 120[eax]"\
@@ -380,20 +383,20 @@ STIN void mdct_butterfly_32(DATA_TYPE *x)
  "fstp dword ptr  24[eax]"\
  "fstp dword ptr  28[eax]"\
  modify[];
- mb32_0();
- /*r0 = x[30] - x[14];
- r1 = x[31] - x[15];
- x[30] += x[14];
- x[31] += x[15];
- x[15]  = r1;
- x[14]  = r0;
+	mb32_0();
+	/*r0 = x[30] - x[14];
+	   r1 = x[31] - x[15];
+	   x[30] += x[14];
+	   x[31] += x[15];
+	   x[15]  = r1;
+	   x[14]  = r0;
 
- r0 = x[22] - x[6];
- r1 = x[7]  - x[23];
- x[22] += x[6];
- x[23] += x[7];
- x[6]   = r1;
- x[7]   = r0;*/
+	   r0 = x[22] - x[6];
+	   r1 = x[7]  - x[23];
+	   x[22] += x[6];
+	   x[23] += x[7];
+	   x[6]   = r1;
+	   x[7]   = r0; */
 
 #pragma aux mb32_1=\
  "fld  dword ptr cPI2_8"\
@@ -432,20 +435,20 @@ STIN void mdct_butterfly_32(DATA_TYPE *x)
  "fmul"\
  "fstp dword ptr  12[eax]"\
  modify[];
- mb32_1();
- /*r0 = x[26] - x[10];
- r1 = x[27] - x[11];
- x[26] += x[10];
- x[27] += x[11];
- x[10]  = MULT_NORM(( r0  - r1 ) * cPI2_8);
- x[11]  = MULT_NORM(( r0  + r1 ) * cPI2_8);
+	mb32_1();
+	/*r0 = x[26] - x[10];
+	   r1 = x[27] - x[11];
+	   x[26] += x[10];
+	   x[27] += x[11];
+	   x[10]  = MULT_NORM(( r0  - r1 ) * cPI2_8);
+	   x[11]  = MULT_NORM(( r0  + r1 ) * cPI2_8);
 
- r0 = x[2]  - x[18];
- r1 = x[3]  - x[19];
- x[18] += x[2];
- x[19] += x[3];
- x[2]   = MULT_NORM(( r1  + r0 ) * cPI2_8);
- x[3]   = MULT_NORM(( r1  - r0 ) * cPI2_8);*/
+	   r0 = x[2]  - x[18];
+	   r1 = x[3]  - x[19];
+	   x[18] += x[2];
+	   x[19] += x[3];
+	   x[2]   = MULT_NORM(( r1  + r0 ) * cPI2_8);
+	   x[3]   = MULT_NORM(( r1  - r0 ) * cPI2_8); */
 
 #pragma aux mb32_2=\
  "fld  dword ptr cPI1_8"\
@@ -493,21 +496,21 @@ STIN void mdct_butterfly_32(DATA_TYPE *x)
  "fadd"\
  "fstp dword ptr  36[eax]"\
  modify[];
- mb32_2();
+	mb32_2();
 
- /*r0 = x[28] - x[12];
- r1 = x[29] - x[13];
- x[28] += x[12];
- x[29] += x[13];
- x[12]  = MULT_NORM( r0 * cPI1_8  -  r1 * cPI3_8 );
- x[13]  = MULT_NORM( r0 * cPI3_8  +  r1 * cPI1_8 );*/
+	/*r0 = x[28] - x[12];
+	   r1 = x[29] - x[13];
+	   x[28] += x[12];
+	   x[29] += x[13];
+	   x[12]  = MULT_NORM( r0 * cPI1_8  -  r1 * cPI3_8 );
+	   x[13]  = MULT_NORM( r0 * cPI3_8  +  r1 * cPI1_8 ); */
 
- /*r0 = x[24] - x[8];
- r1 = x[25] - x[9];
- x[24] += x[8];
- x[25] += x[9];
- x[8]   = MULT_NORM( r0 * cPI3_8  -  r1 * cPI1_8 );
- x[9]   = MULT_NORM( r0 * cPI1_8  +  r1 * cPI3_8);*/
+	/*r0 = x[24] - x[8];
+	   r1 = x[25] - x[9];
+	   x[24] += x[8];
+	   x[25] += x[9];
+	   x[8]   = MULT_NORM( r0 * cPI3_8  -  r1 * cPI1_8 );
+	   x[9]   = MULT_NORM( r0 * cPI1_8  +  r1 * cPI3_8); */
 
 #pragma aux mb32_3=\
  "fld  dword ptr  16[eax]"\
@@ -552,7 +555,7 @@ STIN void mdct_butterfly_32(DATA_TYPE *x)
  "fadd"\
  "fstp dword ptr    [eax]"\
  modify[];
- mb32_3();
+	mb32_3();
 
 /*
  r0 = x[4]  - x[20];
@@ -569,13 +572,13 @@ STIN void mdct_butterfly_32(DATA_TYPE *x)
  x[1]   = MULT_NORM( r1 * cPI1_8  -  r0 * cPI3_8 );
  x[0]   = MULT_NORM( r1 * cPI3_8  +  r0 * cPI1_8 );*/
 
- mdct_butterfly_16(x);
- mdct_butterfly_16(x+16);
+	mdct_butterfly_16(x);
+	mdct_butterfly_16(x + 16);
 }
 
 void mbf_asm(void);
 
-STIN void mdct_butterfly_first(DATA_TYPE *T,DATA_TYPE *x,int points)
+STIN void mdct_butterfly_first(DATA_TYPE * T, DATA_TYPE * x, int points)
 {
 #pragma aux mbf_asm=\
  "mov edi,ebx"\
@@ -675,12 +678,12 @@ STIN void mdct_butterfly_first(DATA_TYPE *T,DATA_TYPE *x,int points)
   "fstp dword ptr  4[edx]"\
  "jnz mbfback1"\
  modify [eax ebx edx edi];
- mbf_asm();
+	mbf_asm();
 }
 
 void mbg_asm(void);
 
-STIN void mdct_butterfly_generic(DATA_TYPE *T,DATA_TYPE *x,int points,int trigint)
+STIN void mdct_butterfly_generic(DATA_TYPE * T, DATA_TYPE * x, int points, int trigint)
 {
 #pragma aux mbg_asm=\
  "mov edi,ebx"\
@@ -784,14 +787,14 @@ STIN void mdct_butterfly_generic(DATA_TYPE *T,DATA_TYPE *x,int points,int trigin
   "fstp dword ptr  4[edx]"\
  "jnz mbgback1"\
  modify [eax ebx ecx edx edi];
- mbg_asm();
+	mbg_asm();
 }
 
 void mbr_asm(void);
 
-STIN void mdct_bitreverse(DATA_TYPE *x,int n,DATA_TYPE *T,int *bit)
+STIN void mdct_bitreverse(DATA_TYPE * x, int n, DATA_TYPE * T, int *bit)
 {
- DATA_TYPE *x_save;
+	DATA_TYPE *x_save;
 
 #pragma aux mbr_asm=\
  "shl edx,2"\
@@ -877,294 +880,294 @@ STIN void mdct_bitreverse(DATA_TYPE *x,int n,DATA_TYPE *T,int *bit)
  "jb mbrback1"\
  "fstp st"\
  modify [eax ebx ecx edx edi esi];
- mbr_asm();
+	mbr_asm();
 }
 
 #else
 
 /* 8 point butterfly (in place, 4 register) */
-STIN void mdct_butterfly_8(DATA_TYPE *x)
+STIN void mdct_butterfly_8(DATA_TYPE * x)
 {
- REG_TYPE r0   = x[6] + x[2];
- REG_TYPE r1   = x[6] - x[2];
- REG_TYPE r2   = x[4] + x[0];
- REG_TYPE r3   = x[4] - x[0];
+	REG_TYPE r0 = x[6] + x[2];
+	REG_TYPE r1 = x[6] - x[2];
+	REG_TYPE r2 = x[4] + x[0];
+	REG_TYPE r3 = x[4] - x[0];
 
- x[6] = r0   + r2;
- x[4] = r0   - r2;
+	x[6] = r0 + r2;
+	x[4] = r0 - r2;
 
- r0   = x[5] - x[1];
- r2   = x[7] - x[3];
- x[0] = r1   + r0;
- x[2] = r1   - r0;
+	r0 = x[5] - x[1];
+	r2 = x[7] - x[3];
+	x[0] = r1 + r0;
+	x[2] = r1 - r0;
 
- r0   = x[5] + x[1];
- r1   = x[7] + x[3];
- x[3] = r2   + r3;
- x[1] = r2   - r3;
- x[7] = r1   + r0;
- x[5] = r1   - r0;
+	r0 = x[5] + x[1];
+	r1 = x[7] + x[3];
+	x[3] = r2 + r3;
+	x[1] = r2 - r3;
+	x[7] = r1 + r0;
+	x[5] = r1 - r0;
 }
 
 /* 16 point butterfly (in place, 4 register) */
-STIN void mdct_butterfly_16(DATA_TYPE *x)
+STIN void mdct_butterfly_16(DATA_TYPE * x)
 {
- REG_TYPE r0     = x[1]  - x[9];
- REG_TYPE r1     = x[0]  - x[8];
+	REG_TYPE r0 = x[1] - x[9];
+	REG_TYPE r1 = x[0] - x[8];
 
- x[8]  += x[0];
- x[9]  += x[1];
- x[0]   = MULT_NORM((r0   + r1) * cPI2_8);
- x[1]   = MULT_NORM((r0   - r1) * cPI2_8);
+	x[8] += x[0];
+	x[9] += x[1];
+	x[0] = MULT_NORM((r0 + r1) * cPI2_8);
+	x[1] = MULT_NORM((r0 - r1) * cPI2_8);
 
- r0     = x[3]  - x[11];
- r1     = x[10] - x[2];
- x[10] += x[2];
- x[11] += x[3];
- x[2]   = r0;
- x[3]   = r1;
+	r0 = x[3] - x[11];
+	r1 = x[10] - x[2];
+	x[10] += x[2];
+	x[11] += x[3];
+	x[2] = r0;
+	x[3] = r1;
 
- r0     = x[12] - x[4];
- r1     = x[13] - x[5];
- x[12] += x[4];
- x[13] += x[5];
- x[4]   = MULT_NORM((r0   - r1) * cPI2_8);
- x[5]   = MULT_NORM((r0   + r1) * cPI2_8);
+	r0 = x[12] - x[4];
+	r1 = x[13] - x[5];
+	x[12] += x[4];
+	x[13] += x[5];
+	x[4] = MULT_NORM((r0 - r1) * cPI2_8);
+	x[5] = MULT_NORM((r0 + r1) * cPI2_8);
 
- r0     = x[14] - x[6];
- r1     = x[15] - x[7];
- x[14] += x[6];
- x[15] += x[7];
- x[6]  = r0;
- x[7]  = r1;
+	r0 = x[14] - x[6];
+	r1 = x[15] - x[7];
+	x[14] += x[6];
+	x[15] += x[7];
+	x[6] = r0;
+	x[7] = r1;
 
- mdct_butterfly_8(x);
- mdct_butterfly_8(x+8);
+	mdct_butterfly_8(x);
+	mdct_butterfly_8(x + 8);
 }
 
 /* 32 point butterfly (in place, 4 register) */
-STIN void mdct_butterfly_32(DATA_TYPE *x)
+STIN void mdct_butterfly_32(DATA_TYPE * x)
 {
- REG_TYPE r0     = x[30] - x[14];
- REG_TYPE r1     = x[31] - x[15];
+	REG_TYPE r0 = x[30] - x[14];
+	REG_TYPE r1 = x[31] - x[15];
 
- x[30] += x[14];
- x[31] += x[15];
- x[14]  = r0;
- x[15]  = r1;
+	x[30] += x[14];
+	x[31] += x[15];
+	x[14] = r0;
+	x[15] = r1;
 
- r0 = x[28] - x[12];
- r1 = x[29] - x[13];
- x[28] += x[12];
- x[29] += x[13];
- x[12]  = MULT_NORM( r0 * cPI1_8  -  r1 * cPI3_8 );
- x[13]  = MULT_NORM( r0 * cPI3_8  +  r1 * cPI1_8 );
+	r0 = x[28] - x[12];
+	r1 = x[29] - x[13];
+	x[28] += x[12];
+	x[29] += x[13];
+	x[12] = MULT_NORM(r0 * cPI1_8 - r1 * cPI3_8);
+	x[13] = MULT_NORM(r0 * cPI3_8 + r1 * cPI1_8);
 
- r0 = x[26] - x[10];
- r1 = x[27] - x[11];
- x[26] += x[10];
- x[27] += x[11];
- x[10]  = MULT_NORM(( r0  - r1 ) * cPI2_8);
- x[11]  = MULT_NORM(( r0  + r1 ) * cPI2_8);
+	r0 = x[26] - x[10];
+	r1 = x[27] - x[11];
+	x[26] += x[10];
+	x[27] += x[11];
+	x[10] = MULT_NORM((r0 - r1) * cPI2_8);
+	x[11] = MULT_NORM((r0 + r1) * cPI2_8);
 
- r0 = x[24] - x[8];
- r1 = x[25] - x[9];
- x[24] += x[8];
- x[25] += x[9];
- x[8]   = MULT_NORM( r0 * cPI3_8  -  r1 * cPI1_8 );
- x[9]   = MULT_NORM( r1 * cPI3_8  +  r0 * cPI1_8 );
+	r0 = x[24] - x[8];
+	r1 = x[25] - x[9];
+	x[24] += x[8];
+	x[25] += x[9];
+	x[8] = MULT_NORM(r0 * cPI3_8 - r1 * cPI1_8);
+	x[9] = MULT_NORM(r1 * cPI3_8 + r0 * cPI1_8);
 
- r0 = x[22] - x[6];
- r1 = x[7]  - x[23];
- x[22] += x[6];
- x[23] += x[7];
- x[6]   = r1;
- x[7]   = r0;
+	r0 = x[22] - x[6];
+	r1 = x[7] - x[23];
+	x[22] += x[6];
+	x[23] += x[7];
+	x[6] = r1;
+	x[7] = r0;
 
- r0 = x[4]  - x[20];
- r1 = x[5]  - x[21];
- x[20] += x[4];
- x[21] += x[5];
- x[4]   = MULT_NORM( r1 * cPI1_8  +  r0 * cPI3_8 );
- x[5]   = MULT_NORM( r1 * cPI3_8  -  r0 * cPI1_8 );
+	r0 = x[4] - x[20];
+	r1 = x[5] - x[21];
+	x[20] += x[4];
+	x[21] += x[5];
+	x[4] = MULT_NORM(r1 * cPI1_8 + r0 * cPI3_8);
+	x[5] = MULT_NORM(r1 * cPI3_8 - r0 * cPI1_8);
 
- r0 = x[2]  - x[18];
- r1 = x[3]  - x[19];
- x[18] += x[2];
- x[19] += x[3];
- x[2]   = MULT_NORM(( r1  + r0 ) * cPI2_8);
- x[3]   = MULT_NORM(( r1  - r0 ) * cPI2_8);
+	r0 = x[2] - x[18];
+	r1 = x[3] - x[19];
+	x[18] += x[2];
+	x[19] += x[3];
+	x[2] = MULT_NORM((r1 + r0) * cPI2_8);
+	x[3] = MULT_NORM((r1 - r0) * cPI2_8);
 
- r0 = x[0]  - x[16];
- r1 = x[1]  - x[17];
- x[16] += x[0];
- x[17] += x[1];
- x[0]   = MULT_NORM( r1 * cPI3_8  +  r0 * cPI1_8 );
- x[1]   = MULT_NORM( r1 * cPI1_8  -  r0 * cPI3_8 );
+	r0 = x[0] - x[16];
+	r1 = x[1] - x[17];
+	x[16] += x[0];
+	x[17] += x[1];
+	x[0] = MULT_NORM(r1 * cPI3_8 + r0 * cPI1_8);
+	x[1] = MULT_NORM(r1 * cPI1_8 - r0 * cPI3_8);
 
- mdct_butterfly_16(x);
- mdct_butterfly_16(x+16);
+	mdct_butterfly_16(x);
+	mdct_butterfly_16(x + 16);
 }
 
 /* N point first stage butterfly (in place, 2 register) */
-STIN void mdct_butterfly_first(DATA_TYPE *T,DATA_TYPE *x,int points)
+STIN void mdct_butterfly_first(DATA_TYPE * T, DATA_TYPE * x, int points)
 {
- DATA_TYPE *x1        = x          + points      - 8;
- DATA_TYPE *x2        = x          + (points>>1) - 8;
- REG_TYPE   r0;
- REG_TYPE   r1;
+	DATA_TYPE *x1 = x + points - 8;
+	DATA_TYPE *x2 = x + (points >> 1) - 8;
+	REG_TYPE r0;
+	REG_TYPE r1;
 
- do{
-  r0 = x1[6] - x2[6];
-  r1 = x1[7] - x2[7];
-  x1[6]  += x2[6];
-  x1[7]  += x2[7];
-  x2[6]   = MULT_NORM(r1 * T[1]  +  r0 * T[0]);
-  x2[7]   = MULT_NORM(r1 * T[0]  -  r0 * T[1]);
+	do {
+		r0 = x1[6] - x2[6];
+		r1 = x1[7] - x2[7];
+		x1[6] += x2[6];
+		x1[7] += x2[7];
+		x2[6] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		x2[7] = MULT_NORM(r1 * T[0] - r0 * T[1]);
 
-  r0 = x1[4] - x2[4];
-  r1 = x1[5] - x2[5];
-  x1[4]  += x2[4];
-  x1[5]  += x2[5];
-  x2[4]   = MULT_NORM(r1 * T[5]  +  r0 * T[4]);
-  x2[5]   = MULT_NORM(r1 * T[4]  -  r0 * T[5]);
+		r0 = x1[4] - x2[4];
+		r1 = x1[5] - x2[5];
+		x1[4] += x2[4];
+		x1[5] += x2[5];
+		x2[4] = MULT_NORM(r1 * T[5] + r0 * T[4]);
+		x2[5] = MULT_NORM(r1 * T[4] - r0 * T[5]);
 
-  r0 = x1[2] - x2[2];
-  r1 = x1[3] - x2[3];
-  x1[2]  += x2[2];
-  x1[3]  += x2[3];
-  x2[2]   = MULT_NORM(r1 * T[9]  +  r0 * T[8]);
-  x2[3]   = MULT_NORM(r1 * T[8]  -  r0 * T[9]);
+		r0 = x1[2] - x2[2];
+		r1 = x1[3] - x2[3];
+		x1[2] += x2[2];
+		x1[3] += x2[3];
+		x2[2] = MULT_NORM(r1 * T[9] + r0 * T[8]);
+		x2[3] = MULT_NORM(r1 * T[8] - r0 * T[9]);
 
-  r0 = x1[0] - x2[0];
-  r1 = x1[1] - x2[1];
-  x1[0]  += x2[0];
-  x1[1]  += x2[1];
-  x2[0]   = MULT_NORM(r1 * T[13] +  r0 * T[12]);
-  x2[1]   = MULT_NORM(r1 * T[12] -  r0 * T[13]);
+		r0 = x1[0] - x2[0];
+		r1 = x1[1] - x2[1];
+		x1[0] += x2[0];
+		x1[1] += x2[1];
+		x2[0] = MULT_NORM(r1 * T[13] + r0 * T[12]);
+		x2[1] = MULT_NORM(r1 * T[12] - r0 * T[13]);
 
-  x1-=8;
-  x2-=8;
-  T+=16;
- }while(x2>=x);
+		x1 -= 8;
+		x2 -= 8;
+		T += 16;
+	} while(x2 >= x);
 }
 
-STIN void mdct_butterfly_generic(DATA_TYPE *T,DATA_TYPE *x,int points,int trigint)
+STIN void mdct_butterfly_generic(DATA_TYPE * T, DATA_TYPE * x, int points, int trigint)
 {
- DATA_TYPE *x1        = x          + points      - 8;
- DATA_TYPE *x2        = x          + (points>>1) - 8;
- REG_TYPE   r0;
- REG_TYPE   r1;
+	DATA_TYPE *x1 = x + points - 8;
+	DATA_TYPE *x2 = x + (points >> 1) - 8;
+	REG_TYPE r0;
+	REG_TYPE r1;
 
- do{
-  r0      = x1[6] - x2[6];
-  r1      = x1[7] - x2[7];
-  x1[6]  += x2[6];
-  x1[7]  += x2[7];
-  x2[6]   = MULT_NORM(r1 * T[1]  +  r0 * T[0]);
-  x2[7]   = MULT_NORM(r1 * T[0]  -  r0 * T[1]);
+	do {
+		r0 = x1[6] - x2[6];
+		r1 = x1[7] - x2[7];
+		x1[6] += x2[6];
+		x1[7] += x2[7];
+		x2[6] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		x2[7] = MULT_NORM(r1 * T[0] - r0 * T[1]);
 
-  T+=trigint;
+		T += trigint;
 
-  r0      = x1[4] - x2[4];
-  r1      = x1[5] - x2[5];
-  x1[4]  += x2[4];
-  x1[5]  += x2[5];
-  x2[4]   = MULT_NORM(r1 * T[1]  +  r0 * T[0]);
-  x2[5]   = MULT_NORM(r1 * T[0]  -  r0 * T[1]);
+		r0 = x1[4] - x2[4];
+		r1 = x1[5] - x2[5];
+		x1[4] += x2[4];
+		x1[5] += x2[5];
+		x2[4] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		x2[5] = MULT_NORM(r1 * T[0] - r0 * T[1]);
 
-  T+=trigint;
+		T += trigint;
 
-  r0      = x1[2] - x2[2];
-  r1      = x1[3] - x2[3];
-  x1[2]  += x2[2];
-  x1[3]  += x2[3];
-  x2[2]   = MULT_NORM(r1 * T[1]  +  r0 * T[0]);
-  x2[3]   = MULT_NORM(r1 * T[0]  -  r0 * T[1]);
+		r0 = x1[2] - x2[2];
+		r1 = x1[3] - x2[3];
+		x1[2] += x2[2];
+		x1[3] += x2[3];
+		x2[2] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		x2[3] = MULT_NORM(r1 * T[0] - r0 * T[1]);
 
-  T+=trigint;
+		T += trigint;
 
-  r0      = x1[0] - x2[0];
-  r1      = x1[1] - x2[1];
-  x1[0]  += x2[0];
-  x1[1]  += x2[1];
-  x2[0]   = MULT_NORM(r1 * T[1]  +  r0 * T[0]);
-  x2[1]   = MULT_NORM(r1 * T[0]  -  r0 * T[1]);
+		r0 = x1[0] - x2[0];
+		r1 = x1[1] - x2[1];
+		x1[0] += x2[0];
+		x1[1] += x2[1];
+		x2[0] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		x2[1] = MULT_NORM(r1 * T[0] - r0 * T[1]);
 
-  T+=trigint;
-  x1-=8;
-  x2-=8;
+		T += trigint;
+		x1 -= 8;
+		x2 -= 8;
 
- }while(x2>=x);
+	} while(x2 >= x);
 }
 
-STIN void mdct_bitreverse(DATA_TYPE *x,int n,DATA_TYPE *T,int *bit)
+STIN void mdct_bitreverse(DATA_TYPE * x, int n, DATA_TYPE * T, int *bit)
 {
- DATA_TYPE *w0,*w1;
+	DATA_TYPE *w0, *w1;
 
- T+=n;
- w0=x;
- w1=x+(n>>1);
- x=w1;
+	T += n;
+	w0 = x;
+	w1 = x + (n >> 1);
+	x = w1;
 
- do{
-  DATA_TYPE *x0    = x+bit[0];
-  DATA_TYPE *x1    = x+bit[1];
+	do {
+		DATA_TYPE *x0 = x + bit[0];
+		DATA_TYPE *x1 = x + bit[1];
 
-  REG_TYPE  r0     = x0[1]  - x1[1];
-  REG_TYPE  r1     = x0[0]  + x1[0];
-  REG_TYPE  r2     = MULT_NORM(r1     * T[0]   + r0 * T[1]);
-  REG_TYPE  r3     = MULT_NORM(r1     * T[1]   - r0 * T[0]);
+		REG_TYPE r0 = x0[1] - x1[1];
+		REG_TYPE r1 = x0[0] + x1[0];
+		REG_TYPE r2 = MULT_NORM(r1 * T[0] + r0 * T[1]);
+		REG_TYPE r3 = MULT_NORM(r1 * T[1] - r0 * T[0]);
 
-  w1    -= 4;
+		w1 -= 4;
 
-  r0     = HALVE(x0[1] + x1[1]);
-  r1     = HALVE(x0[0] - x1[0]);
+		r0 = HALVE(x0[1] + x1[1]);
+		r1 = HALVE(x0[0] - x1[0]);
 
-  w0[0]  = r0     + r2;
-  w1[2]  = r0     - r2;
-  w0[1]  = r1     + r3;
-  w1[3]  = r3     - r1;
+		w0[0] = r0 + r2;
+		w1[2] = r0 - r2;
+		w0[1] = r1 + r3;
+		w1[3] = r3 - r1;
 
-  x0     = x+bit[2];
-  x1     = x+bit[3];
+		x0 = x + bit[2];
+		x1 = x + bit[3];
 
-  r0     = x0[1]  - x1[1];
-  r1     = x0[0]  + x1[0];
-  r2     = MULT_NORM(r1     * T[2]   + r0 * T[3]);
-  r3     = MULT_NORM(r1     * T[3]   - r0 * T[2]);
+		r0 = x0[1] - x1[1];
+		r1 = x0[0] + x1[0];
+		r2 = MULT_NORM(r1 * T[2] + r0 * T[3]);
+		r3 = MULT_NORM(r1 * T[3] - r0 * T[2]);
 
-  r0     = HALVE(x0[1] + x1[1]);
-  r1     = HALVE(x0[0] - x1[0]);
+		r0 = HALVE(x0[1] + x1[1]);
+		r1 = HALVE(x0[0] - x1[0]);
 
-  w0[2]  = r0     + r2;
-  w1[0]  = r0     - r2;
-  w0[3]  = r1     + r3;
-  w1[1]  = r3     - r1;
+		w0[2] = r0 + r2;
+		w1[0] = r0 - r2;
+		w0[3] = r1 + r3;
+		w1[1] = r3 - r1;
 
-  T     += 4;
-  bit   += 4;
-  w0    += 4;
- }while(w0<w1);
+		T += 4;
+		bit += 4;
+		w0 += 4;
+	} while(w0 < w1);
 }
 
 #endif
 
-STIN void mdct_butterflies(mdct_lookup *init,DATA_TYPE *x,int points)
+STIN void mdct_butterflies(mdct_lookup * init, DATA_TYPE * x, int points)
 {
- DATA_TYPE *T=init->trig;
- int stages=init->log2n-5;
- int i,j;
+	DATA_TYPE *T = init->trig;
+	int stages = init->log2n - 5;
+	int i, j;
 
- if(--stages>0)
-  mdct_butterfly_first(T,x,points);
+	if(--stages > 0)
+		mdct_butterfly_first(T, x, points);
 
- for(i=1;--stages>0;i++)
-  for(j=0;j<(1<<i);j++)
-   mdct_butterfly_generic(T,x+(points>>i)*j,points>>i,4<<i);
+	for(i = 1; --stages > 0; i++)
+		for(j = 0; j < (1 << i); j++)
+			mdct_butterfly_generic(T, x + (points >> i) * j, points >> i, 4 << i);
 
- for(j=0;j<points;j+=32)
-  mdct_butterfly_32(x+j);
+	for(j = 0; j < points; j += 32)
+		mdct_butterfly_32(x + j);
 }
 
 #ifdef MDCT_FPUC
@@ -1172,199 +1175,199 @@ void asm_fpusetround_chop(void);
 void asm_fpusetround_near(void);
 #endif
 
-void oggdec_mdct_backward(mdct_lookup *init, DATA_TYPE *in, DATA_TYPE *out)
+void oggdec_mdct_backward(mdct_lookup * init, DATA_TYPE * in, DATA_TYPE * out)
 {
- int n=init->n;
- int n2=n>>1;
- int n4=n>>2;
+	int n = init->n;
+	int n2 = n >> 1;
+	int n4 = n >> 2;
 
- /* rotate */
+	/* rotate */
 
- DATA_TYPE *iX = in+n2-7;
- DATA_TYPE *oX = out+n2+n4;
- DATA_TYPE *T  = init->trig+n4;
+	DATA_TYPE *iX = in + n2 - 7;
+	DATA_TYPE *oX = out + n2 + n4;
+	DATA_TYPE *T = init->trig + n4;
 
 #ifdef MDCT_FPUC
- int tmp;
- #pragma aux asm_fpusetround_chop=\
+	int tmp;
+#pragma aux asm_fpusetround_chop=\
   "fstcw word ptr tmp"\
   "or word ptr tmp,0x0c00"\
   "fldcw word ptr tmp"\
   modify[];
- asm_fpusetround_chop();
+	asm_fpusetround_chop();
 #endif
 
- do{
-  oX         -= 4;
-  oX[0]       = MULT_NORM(-iX[2] * T[3] - iX[0]  * T[2]);
-  oX[1]       = MULT_NORM (iX[0] * T[3] - iX[2]  * T[2]);
-  oX[2]       = MULT_NORM(-iX[6] * T[1] - iX[4]  * T[0]);
-  oX[3]       = MULT_NORM (iX[4] * T[1] - iX[6]  * T[0]);
-  iX         -= 8;
-  T          += 4;
- }while(iX>=in);
+	do {
+		oX -= 4;
+		oX[0] = MULT_NORM(-iX[2] * T[3] - iX[0] * T[2]);
+		oX[1] = MULT_NORM(iX[0] * T[3] - iX[2] * T[2]);
+		oX[2] = MULT_NORM(-iX[6] * T[1] - iX[4] * T[0]);
+		oX[3] = MULT_NORM(iX[4] * T[1] - iX[6] * T[0]);
+		iX -= 8;
+		T += 4;
+	} while(iX >= in);
 
- iX            = in+n2-8;
- oX            = out+n2+n4;
- T             = init->trig+n4;
+	iX = in + n2 - 8;
+	oX = out + n2 + n4;
+	T = init->trig + n4;
 
- do{
-  T          -= 4;
-  oX[0]       =  MULT_NORM (iX[4] * T[3] + iX[6] * T[2]);
-  oX[1]       =  MULT_NORM (iX[4] * T[2] - iX[6] * T[3]);
-  oX[2]       =  MULT_NORM (iX[0] * T[1] + iX[2] * T[0]);
-  oX[3]       =  MULT_NORM (iX[0] * T[0] - iX[2] * T[1]);
-  iX         -= 8;
-  oX         += 4;
- }while(iX>=in);
+	do {
+		T -= 4;
+		oX[0] = MULT_NORM(iX[4] * T[3] + iX[6] * T[2]);
+		oX[1] = MULT_NORM(iX[4] * T[2] - iX[6] * T[3]);
+		oX[2] = MULT_NORM(iX[0] * T[1] + iX[2] * T[0]);
+		oX[3] = MULT_NORM(iX[0] * T[0] - iX[2] * T[1]);
+		iX -= 8;
+		oX += 4;
+	} while(iX >= in);
 
 #ifdef MDCT_FPU32
- pds_fpu_set32bit();
+	pds_fpu_set32bit();
 #endif
 
- mdct_butterflies(init,out+n2,n2);
- mdct_bitreverse(out,init->n,init->trig,init->bitrev);
+	mdct_butterflies(init, out + n2, n2);
+	mdct_bitreverse(out, init->n, init->trig, init->bitrev);
 
 #ifdef MDCT_FPU32
- pds_fpu_set80bit();
+	pds_fpu_set80bit();
 #endif
 
 
- /* rotate + window */
- {
-  DATA_TYPE *oX1=out+n2+n4;
-  DATA_TYPE *oX2=out+n2+n4;
-  DATA_TYPE *iX =out;
-  T             =init->trig+n2;
+	/* rotate + window */
+	{
+		DATA_TYPE *oX1 = out + n2 + n4;
+		DATA_TYPE *oX2 = out + n2 + n4;
+		DATA_TYPE *iX = out;
+		T = init->trig + n2;
 
-  do{
-   oX1-=4;
+		do {
+			oX1 -= 4;
 
-   oX1[3]  =  MULT_NORM (iX[0] * T[1] - iX[1] * T[0]);
-   oX2[0]  = -MULT_NORM (iX[0] * T[0] + iX[1] * T[1]);
+			oX1[3] = MULT_NORM(iX[0] * T[1] - iX[1] * T[0]);
+			oX2[0] = -MULT_NORM(iX[0] * T[0] + iX[1] * T[1]);
 
-   oX1[2]  =  MULT_NORM (iX[2] * T[3] - iX[3] * T[2]);
-   oX2[1]  = -MULT_NORM (iX[2] * T[2] + iX[3] * T[3]);
+			oX1[2] = MULT_NORM(iX[2] * T[3] - iX[3] * T[2]);
+			oX2[1] = -MULT_NORM(iX[2] * T[2] + iX[3] * T[3]);
 
-   oX1[1]  =  MULT_NORM (iX[4] * T[5] - iX[5] * T[4]);
-   oX2[2]  = -MULT_NORM (iX[4] * T[4] + iX[5] * T[5]);
+			oX1[1] = MULT_NORM(iX[4] * T[5] - iX[5] * T[4]);
+			oX2[2] = -MULT_NORM(iX[4] * T[4] + iX[5] * T[5]);
 
-   oX1[0]  =  MULT_NORM (iX[6] * T[7] - iX[7] * T[6]);
-   oX2[3]  = -MULT_NORM (iX[6] * T[6] + iX[7] * T[7]);
+			oX1[0] = MULT_NORM(iX[6] * T[7] - iX[7] * T[6]);
+			oX2[3] = -MULT_NORM(iX[6] * T[6] + iX[7] * T[7]);
 
-   oX2+=4;
-   iX    +=   8;
-   T     +=   8;
-  }while(iX<oX1);
+			oX2 += 4;
+			iX += 8;
+			T += 8;
+		} while(iX < oX1);
 
-  iX=out+n2+n4;
-  oX1=out+n4;
-  oX2=oX1;
+		iX = out + n2 + n4;
+		oX1 = out + n4;
+		oX2 = oX1;
 
-  do{
-   oX1-=4;
-   iX-=4;
+		do {
+			oX1 -= 4;
+			iX -= 4;
 
-   oX2[0] = -(oX1[3] = iX[3]);
-   oX2[1] = -(oX1[2] = iX[2]);
-   oX2[2] = -(oX1[1] = iX[1]);
-   oX2[3] = -(oX1[0] = iX[0]);
+			oX2[0] = -(oX1[3] = iX[3]);
+			oX2[1] = -(oX1[2] = iX[2]);
+			oX2[2] = -(oX1[1] = iX[1]);
+			oX2[3] = -(oX1[0] = iX[0]);
 
-   oX2+=4;
-  }while(oX2<iX);
+			oX2 += 4;
+		} while(oX2 < iX);
 
-  iX=out+n2+n4;
-  oX1=out+n2+n4;
-  oX2=out+n2;
+		iX = out + n2 + n4;
+		oX1 = out + n2 + n4;
+		oX2 = out + n2;
 
-  do{
-   oX1-=4;
-   oX1[0]= iX[3];
-   oX1[1]= iX[2];
-   oX1[2]= iX[1];
-   oX1[3]= iX[0];
-   iX+=4;
-  }while(oX1>oX2);
- }
+		do {
+			oX1 -= 4;
+			oX1[0] = iX[3];
+			oX1[1] = iX[2];
+			oX1[2] = iX[1];
+			oX1[3] = iX[0];
+			iX += 4;
+		} while(oX1 > oX2);
+	}
 #ifdef MDCT_FPUC
- #pragma aux asm_fpusetround_near=\
+#pragma aux asm_fpusetround_near=\
   "fstcw word ptr tmp"\
   "and word ptr tmp,0xf3ff"\
   "fldcw word ptr tmp"\
   modify[];
- asm_fpusetround_near();
+	asm_fpusetround_near();
 #endif
 }
 
 #ifdef MDCT_FORWARD
 
-void oggdec_mdct_forward(mdct_lookup *init, DATA_TYPE *in, DATA_TYPE *out)
+void oggdec_mdct_forward(mdct_lookup * init, DATA_TYPE * in, DATA_TYPE * out)
 {
-  int n=init->n;
-  int n2=n>>1;
-  int n4=n>>2;
-  int n8=n>>3;
-  DATA_TYPE *w=init->forward_buffer;
-  DATA_TYPE *w2=w+n2;
+	int n = init->n;
+	int n2 = n >> 1;
+	int n4 = n >> 2;
+	int n8 = n >> 3;
+	DATA_TYPE *w = init->forward_buffer;
+	DATA_TYPE *w2 = w + n2;
 
-  REG_TYPE r0;
-  REG_TYPE r1;
-  DATA_TYPE *x0=in+n2+n4;
-  DATA_TYPE *x1=x0+1;
-  DATA_TYPE *T=init->trig+n2;
+	REG_TYPE r0;
+	REG_TYPE r1;
+	DATA_TYPE *x0 = in + n2 + n4;
+	DATA_TYPE *x1 = x0 + 1;
+	DATA_TYPE *T = init->trig + n2;
 
-  int i=0;
+	int i = 0;
 
-  for(i=0;i<n8;i+=2){
-    x0 -=4;
-    T-=2;
-    r0= x0[2] + x1[0];
-    r1= x0[0] + x1[2];
-    w2[i]=   MULT_NORM(r1*T[1] + r0*T[0]);
-    w2[i+1]= MULT_NORM(r1*T[0] - r0*T[1]);
-    x1 +=4;
-  }
+	for(i = 0; i < n8; i += 2) {
+		x0 -= 4;
+		T -= 2;
+		r0 = x0[2] + x1[0];
+		r1 = x0[0] + x1[2];
+		w2[i] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		w2[i + 1] = MULT_NORM(r1 * T[0] - r0 * T[1]);
+		x1 += 4;
+	}
 
-  x1=in+1;
+	x1 = in + 1;
 
-  for(;i<n2-n8;i+=2){
-    T-=2;
-    x0 -=4;
-    r0= x0[2] - x1[0];
-    r1= x0[0] - x1[2];
-    w2[i]=   MULT_NORM(r1*T[1] + r0*T[0]);
-    w2[i+1]= MULT_NORM(r1*T[0] - r0*T[1]);
-    x1 +=4;
-  }
+	for(; i < n2 - n8; i += 2) {
+		T -= 2;
+		x0 -= 4;
+		r0 = x0[2] - x1[0];
+		r1 = x0[0] - x1[2];
+		w2[i] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		w2[i + 1] = MULT_NORM(r1 * T[0] - r0 * T[1]);
+		x1 += 4;
+	}
 
-  x0=in+n;
+	x0 = in + n;
 
-  for(;i<n2;i+=2){
-    T-=2;
-    x0 -=4;
-    r0= -x0[2] - x1[0];
-    r1= -x0[0] - x1[2];
-    w2[i]=   MULT_NORM(r1*T[1] + r0*T[0]);
-    w2[i+1]= MULT_NORM(r1*T[0] - r0*T[1]);
-    x1 +=4;
-  }
+	for(; i < n2; i += 2) {
+		T -= 2;
+		x0 -= 4;
+		r0 = -x0[2] - x1[0];
+		r1 = -x0[0] - x1[2];
+		w2[i] = MULT_NORM(r1 * T[1] + r0 * T[0]);
+		w2[i + 1] = MULT_NORM(r1 * T[0] - r0 * T[1]);
+		x1 += 4;
+	}
 
 
-  mdct_butterflies(init,w+n2,n2);
-  mdct_bitreverse(w,init->n,init->trig,init->bitrev);
+	mdct_butterflies(init, w + n2, n2);
+	mdct_bitreverse(w, init->n, init->trig, init->bitrev);
 
-  T=init->trig+n2;
-  x0=out+n2;
+	T = init->trig + n2;
+	x0 = out + n2;
 
-  for(i=0;i<n4;i++){
-    x0--;
-    out[i] =MULT_NORM((w[0]*T[0]+w[1]*T[1])*init->scale);
-    x0[0]  =MULT_NORM((w[0]*T[1]-w[1]*T[0])*init->scale);
-    w+=2;
-    T+=2;
-  }
+	for(i = 0; i < n4; i++) {
+		x0--;
+		out[i] = MULT_NORM((w[0] * T[0] + w[1] * T[1]) * init->scale);
+		x0[0] = MULT_NORM((w[0] * T[1] - w[1] * T[0]) * init->scale);
+		w += 2;
+		T += 2;
+	}
 }
 
 #endif
 
-#endif // !USE_AAC_MDCT
+#endif							// !USE_AAC_MDCT

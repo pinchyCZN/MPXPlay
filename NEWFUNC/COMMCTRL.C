@@ -16,7 +16,7 @@
 
 #include "newfunc.h"
 
-unsigned int newfunc_commctrl_port_init(char *portname,unsigned int baud,unsigned int stop,unsigned int parity)
+unsigned int newfunc_commctrl_port_init(char *portname, unsigned int baud, unsigned int stop, unsigned int parity)
 {
 
 
