@@ -707,10 +707,10 @@ static void mpxplay_debugf(FILE * fp, const char *format, ...)
 }
 
 #else
-	#ifdef WIN32
-		#define mpxplay_debugf (void)sizeof
-	#else
+	#ifdef __WATCOMC__
 		#define mpxplay_debugf()
+	#else
+		#define mpxplay_debugf (void)sizeof
 	#endif
 #endif							// MPXPLAY_USE_DEBUGF
 
