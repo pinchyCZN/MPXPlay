@@ -15,7 +15,7 @@ wlib -q newfunc.lib +drivehnd.obj
 wlib -q newfunc.lib +errorhnd.obj
 wlib -q newfunc.lib +filehand.obj
 wlib -q newfunc.lib +fpu.obj
-wlib -q newfunc.lib +keyboard.obj
+wlib -q newfunc.lib +n_keyboard.obj
 wlib -q newfunc.lib +memory.obj
 wlib -q newfunc.lib +mixed.obj
 wlib -q newfunc.lib +string.obj
