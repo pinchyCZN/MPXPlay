@@ -21,7 +21,7 @@
 		PUBLIC	mpxdec_l3mdct_init_
 		PUBLIC	mpxdec_l3mdct_hybrid_
 
-                PUBLIC	mpxdec_l3mdct_init
+        PUBLIC	mpxdec_l3mdct_init
 		PUBLIC	mpxdec_l3mdct_hybrid
 
 DGROUP		GROUP	CONST,CONST2,_DATA,_BSS

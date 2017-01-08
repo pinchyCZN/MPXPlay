@@ -15,6 +15,10 @@
 ;function: Audio MPEG Layer III sub-routines (huffman decoding, dequantize-sample)
 ;based on the MPG123 decoder source
 
+;set __WASM__=\WATCOM\binnt\wasm.exe
+;%__WASM__% -q -w2 -fo=$(IntDir)\$(InputName).obj $(InputPath)
+;$(OutDir)\$(InputName).obj
+
 .387
 .486p
 .model flat
@@ -26,18 +30,18 @@
 		PUBLIC	mpxdec_l3deq_dequantize_bt2_js_
 		PUBLIC	mpxdec_l3deq_dequantize_ms_bt2_js_
 
-                PUBLIC	mpxdec_l3deq_init
-                PUBLIC	mpxdec_l3deq_dequantize
+        PUBLIC	mpxdec_l3deq_init
+        PUBLIC	mpxdec_l3deq_dequantize
 		PUBLIC	mpxdec_l3deq_dequantize_ms
 		PUBLIC	mpxdec_l3deq_dequantize_bt2
 		PUBLIC	mpxdec_l3deq_dequantize_ms_bt2
 		PUBLIC	mpxdec_l3deq_dequantize_bt2_js
 		PUBLIC	mpxdec_l3deq_dequantize_ms_bt2_js
 
-                PUBLIC  _mpxdec_l3deq_gainpow2_2
-                PUBLIC  _mpxdec_l3deq_gainpow2_4
-                PUBLIC  _mpxdec_l3deq_ispow32_2
-                PUBLIC  _mpxdec_l3deq_ispow32_4
+        PUBLIC  _mpxdec_l3deq_gainpow2_2
+        PUBLIC  _mpxdec_l3deq_gainpow2_4
+        PUBLIC  _mpxdec_l3deq_ispow32_2
+        PUBLIC  _mpxdec_l3deq_ispow32_4
 
 		EXTRN	_mpxdec_bitindex:BYTE
 		EXTRN	_mpxdec_wordpointer:BYTE

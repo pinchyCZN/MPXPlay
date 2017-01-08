@@ -601,7 +601,7 @@ unsigned int getbits_24(int);
 #pragma aux getbits_24=\
 	"mov  eax,mpxdec_bitindex"\
 	"mov  ecx,eax"\
-        "add  mpxdec_bitindex,ebx"\
+	"add  mpxdec_bitindex,ebx"\
 	"shr  eax,3"\
 	"add  eax,mpxdec_wordpointer"\
 	"mov  eax,dword ptr [eax]"\
@@ -618,7 +618,7 @@ unsigned int getbits_8(int);
 #pragma aux getbits_8=\
 	"mov  eax,mpxdec_bitindex"\
 	"mov  ecx,eax"\
-        "add  mpxdec_bitindex,ebx"\
+	"add  mpxdec_bitindex,ebx"\
 	"shr  eax,3"\
 	"add  eax,mpxdec_wordpointer"\
 	"movzx eax,word ptr [eax]"\
@@ -634,7 +634,7 @@ unsigned int get1bit(void);
 #pragma aux get1bit=\
 	"mov  eax,mpxdec_bitindex"\
 	"mov  ecx,eax"\
-        "inc  mpxdec_bitindex"\
+	"inc  mpxdec_bitindex"\
 	"shr  eax,3"\
 	"add  eax,dword ptr mpxdec_wordpointer"\
 	"and  ecx,7"\
