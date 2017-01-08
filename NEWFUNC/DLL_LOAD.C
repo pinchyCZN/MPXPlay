@@ -691,7 +691,11 @@ static mpxp_int32_t dllload_call_proc_stackbased_arg0(void *proc)
 #ifdef WIN32
 	int value;
 	__asm {
-	mov eax, proc call eax mov value, eax} return value;
+	mov eax, proc
+	call eax
+	mov value, eax
+	}
+	return value;
 #else
 #pragma aux asm_stackcall_proc_arg0=\
  "call eax"\
@@ -705,7 +709,13 @@ static mpxp_int32_t dllload_call_proc_stackbased_arg1(void *proc, void *data)
 #ifdef WIN32
 	int value;
 	__asm {
-	push data mov eax, proc call eax pop edx mov value, eax} return value;
+	push data
+	mov eax, proc
+	call eax
+	pop edx
+	mov value, eax
+	}
+	return value;
 #else
 #pragma aux asm_stackcall_proc_arg1=\
  "push edx"\
@@ -721,7 +731,15 @@ static mpxp_int32_t dllload_call_proc_stackbased_arg2(void *proc, void *data1, v
 #ifdef WIN32
 	int value;
 	__asm {
-	push data1 push data2 mov eax, proc call eax pop edx pop ebx mov value, eax} return value;
+	push data1
+	push data2
+	mov eax, proc
+	call eax
+	pop edx
+	pop ebx
+	mov value, eax
+	}
+	return value;
 #else
 #pragma aux asm_stackcall_proc_arg2=\
  "push ebx"\
@@ -739,7 +757,17 @@ static mpxp_int32_t dllload_call_proc_stackbased_arg3(void *proc, void *data1, v
 #ifdef WIN32
 	int value;
 	__asm {
-	push data1 push data2 push data3 mov eax, proc call eax pop edx pop ebx pop ecx mov value, eax} return value;
+	push data1
+	push data2
+	push data3
+	mov eax, proc
+	call eax
+	pop edx
+	pop ebx
+	pop ecx
+	mov value, eax
+	}
+	return value;
 #else
 #pragma aux asm_stackcall_proc_arg3=\
  "push ecx"\

@@ -263,27 +263,95 @@ int apedec_GetMMXAvailable(void)
 {
 	int retval;
 	__asm {
-	  pushad pushfd pop eax mov ecx, eax xor eax, 0x200000 push eax popfd pushfd pop eax cmp eax, ecx jz nocpuid mov eax, 1 CPUID test edx, 0x800000 nocpuid:
-	popad setnz al and eax, 1 mov retval, eax}
+	pushad
+	pushfd
+	pop eax
+	mov ecx, eax
+	xor eax, 0x200000
+	push eax
+	popfd
+	pushfd
+	pop eax
+	cmp eax, ecx
+	jz nocpuid
+	mov eax, 1
+	CPUID 
+	test edx, 0x800000
+nocpuid:
+	popad
+	setnz al
+	and eax, 1
+	mov retval, eax
+	}
 	return retval;
 }
 
 static void CNNFilter_AdaptMMX(short *pM, short *pAdapt, int nDirection, int nOrder)
 {
 	__asm {
-		mov eax, pM mov edx, pAdapt mov ebx, nDirection mov ecx, nOrder shr ecx, 4 test ecx, ecx jz adaptdone cmp ebx, 0 jle AdaptSub AdaptAddLoop:movq mm0,[eax]
-		paddw mm0,[edx] movq[eax], mm0 movq mm1,[eax + 8]
-		paddw mm1,[edx + 8] movq[eax + 8], mm1 movq mm2,[eax + 16]
-		paddw mm2,[edx + 16] movq[eax + 16], mm2 movq mm3,[eax + 24]
-		paddw mm3,[edx + 24] movq[eax + 24], mm3 add eax, 32 add edx, 32 dec ecx jnz AdaptAddLoop jmp adaptend AdaptSub:je adaptdone AdaptSubLoop:movq mm0,[eax]
-		psubw mm0,[edx] movq[eax], mm0 movq mm1,[eax + 8]
-		psubw mm1,[edx + 8] movq[eax + 8], mm1 movq mm2,[eax + 16]
-		psubw mm2,[edx + 16] movq[eax + 16], mm2 movq mm3,[eax + 24]
-psubw mm3,[edx + 24] movq[eax + 24], mm3 add eax, 32 add edx, 32 dec ecx jnz AdaptSubLoop adaptend:emms adaptdone:}} static int CNNFilter_CalculateDotProductMMX(short *pA, short *pB, int nOrder)
+		mov eax, pM
+		mov edx, pAdapt
+		mov ebx, nDirection
+		mov ecx, nOrder
+		shr ecx, 4
+		test ecx, ecx
+		jz adaptdone
+		cmp ebx, 0
+		jle AdaptSub
+AdaptAddLoop:
+		movq mm0,[eax]
+		paddw mm0,[edx]
+		movq[eax], mm0
+		movq mm1,[eax + 8]
+		paddw mm1,[edx + 8]
+		movq[eax + 8], mm1
+		movq mm2,[eax + 16]
+		paddw mm2,[edx + 16]
+		movq[eax + 16], mm2
+		movq mm3,[eax + 24]
+		paddw mm3,[edx + 24]
+		movq[eax + 24], mm3
+		add eax, 32
+		add edx, 32
+		dec ecx 
+		jnz AdaptAddLoop
+		jmp adaptend
+AdaptSub:
+		je adaptdone
+ AdaptSubLoop:
+		movq mm0,[eax]
+		psubw mm0,[edx]
+		movq [eax], mm0
+		movq mm1,[eax + 8]
+		psubw mm1,[edx + 8]
+		movq[eax + 8], mm1
+		movq mm2,[eax + 16]
+		psubw mm2,[edx + 16]
+		movq[eax + 16], mm2
+		movq mm3,[eax + 24]
+		psubw mm3,[edx + 24]
+		movq[eax + 24], mm3
+		add eax, 32
+		add edx, 32
+		dec ecx 
+		jnz AdaptSubLoop
+adaptend:
+		emms adaptdone:
+		}
+}
+static int CNNFilter_CalculateDotProductMMX(short *pA, short *pB, int nOrder)
 {
 	int retval;
 	__asm {
-		mov eax, pA mov edx, pB mov ebx, nOrder mov dword ptr retval, 0 shr ebx, 4 test ebx, ebx jz adaptdone pxor mm7, mm7 loopDot: movq mm0,[eax]
+		mov eax, pA
+		mov edx, pB
+		mov ebx, nOrder
+		mov dword ptr retval, 0
+		shr ebx, 4
+		test ebx, ebx
+		jz adaptdone
+		pxor mm7, mm7
+loopDot:movq mm0,[eax]
 		pmaddwd mm0,[edx]
 		paddd mm7, mm0 movq mm1,[eax + 8]
 		pmaddwd mm1,[edx + 8]
@@ -291,7 +359,19 @@ psubw mm3,[edx + 24] movq[eax + 24], mm3 add eax, 32 add edx, 32 dec ecx jnz Ada
 		pmaddwd mm2,[edx + 16]
 		paddd mm7, mm2 movq mm3,[eax + 24]
 		pmaddwd mm3,[edx + 24]
-	add eax, 32 add edx, 32 paddd mm7, mm3 dec ebx jnz loopDot movq mm6, mm7 psrlq mm7, 32 paddd mm6, mm7 movd dword ptr retval, mm6 emms adaptdone:} return retval;
+		add eax, 32
+		add edx, 32
+		paddd mm7, mm3
+		dec ebx
+		jnz loopDot
+		movq mm6, mm7
+		psrlq mm7, 32
+		paddd mm6, mm7
+		movd dword ptr retval, mm6
+		emms
+adaptdone:
+		}
+	return retval;
 }
 
 

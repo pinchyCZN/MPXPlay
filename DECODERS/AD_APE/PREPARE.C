@@ -66,11 +66,11 @@ void apedec_UnprepareNew(int X, int Y, WAVEFORMATEX * pWaveFormatEx, unsigned ch
 			}
 
 			*(__int16 *) pOutput = (__int16) nR;
-			CALCULATE_CRC_BYTE CALCULATE_CRC_BYTE * (__int16 *) pOutput = (__int16) nL;
+			CALCULATE_CRC_BYTE CALCULATE_CRC_BYTE *(__int16 *) pOutput = (__int16) nL;
 		CALCULATE_CRC_BYTE CALCULATE_CRC_BYTE} else if(pWaveFormatEx->wBitsPerSample == 8) {
 			unsigned char R = (X - (Y / 2) + 128);
 			*pOutput = R;
-			CALCULATE_CRC_BYTE * pOutput = (unsigned char)(R + Y);
+			CALCULATE_CRC_BYTE *pOutput = (unsigned char)(R + Y);
 		CALCULATE_CRC_BYTE} else if(pWaveFormatEx->wBitsPerSample == 24) {
 			__int32 RV, LV;
 			unsigned __int32 nTemp = 0;
@@ -85,8 +85,8 @@ void apedec_UnprepareNew(int X, int Y, WAVEFORMATEX * pWaveFormatEx, unsigned ch
 				nTemp = (unsigned __int32)RV;
 
 			*pOutput = (unsigned char)((nTemp >> 0) & 0xFF);
-			CALCULATE_CRC_BYTE * pOutput = (unsigned char)((nTemp >> 8) & 0xFF);
-			CALCULATE_CRC_BYTE * pOutput = (unsigned char)((nTemp >> 16) & 0xFF);
+			CALCULATE_CRC_BYTE *pOutput = (unsigned char)((nTemp >> 8) & 0xFF);
+			CALCULATE_CRC_BYTE *pOutput = (unsigned char)((nTemp >> 16) & 0xFF);
 			CALCULATE_CRC_BYTE nTemp = 0;
 			if(LV < 0)
 				nTemp = ((unsigned __int32)(LV + 0x800000)) | 0x800000;
@@ -94,8 +94,8 @@ void apedec_UnprepareNew(int X, int Y, WAVEFORMATEX * pWaveFormatEx, unsigned ch
 				nTemp = (unsigned __int32)LV;
 
 			*pOutput = (unsigned char)((nTemp >> 0) & 0xFF);
-			CALCULATE_CRC_BYTE * pOutput = (unsigned char)((nTemp >> 8) & 0xFF);
-			CALCULATE_CRC_BYTE * pOutput = (unsigned char)((nTemp >> 16) & 0xFF);
+			CALCULATE_CRC_BYTE *pOutput = (unsigned char)((nTemp >> 8) & 0xFF);
+			CALCULATE_CRC_BYTE *pOutput = (unsigned char)((nTemp >> 16) & 0xFF);
 		CALCULATE_CRC_BYTE}
 	} else if(pWaveFormatEx->nChannels == 1) {
 		if(pWaveFormatEx->wBitsPerSample == 16) {
@@ -115,8 +115,8 @@ void apedec_UnprepareNew(int X, int Y, WAVEFORMATEX * pWaveFormatEx, unsigned ch
 				nTemp = (unsigned __int32)RV;
 
 			*pOutput = (unsigned char)((nTemp >> 0) & 0xFF);
-			CALCULATE_CRC_BYTE * pOutput = (unsigned char)((nTemp >> 8) & 0xFF);
-			CALCULATE_CRC_BYTE * pOutput = (unsigned char)((nTemp >> 16) & 0xFF);
+			CALCULATE_CRC_BYTE *pOutput = (unsigned char)((nTemp >> 8) & 0xFF);
+			CALCULATE_CRC_BYTE *pOutput = (unsigned char)((nTemp >> 16) & 0xFF);
 		CALCULATE_CRC_BYTE}
 	}
 }

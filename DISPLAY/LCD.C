@@ -28,7 +28,10 @@ unsigned int outp(DWORD port, DWORD val)
 unsigned int inp(unsigned int portid)
 {
 	int value = 0;
-	__asm mov edx, portid __asm in al, dx __asm mov value, eax return value;
+	__asm mov edx, portid 
+	__asm in al, dx 
+	__asm mov value, eax 
+	return value;
 }
 
 #define MPXPLAY_LINK_LCD 1

@@ -69,22 +69,48 @@ void mixer_get_volumelevel(short *pcm_sample, unsigned int samplenum, unsigned i
  asm_get_volumelevel_maxsign(pcm_sample,samplenum);*/
 #ifdef WIN32
 	__asm {
-		mov edx, samplenum mov edi, pcm_sample shr edx, 1 mov ecx, edx xor ebx, ebx xor esi, esi vload1:movsx eax, word ptr[edi]
-		test eax, eax jge vpositivl neg eax vpositivl:add ebx, eax add edi, 2 movsx eax, word ptr[edi]
-test eax, eax
-			jge vpositivr
-			neg eax
-			vpositivr:add esi, eax
-			add edi, dword ptr channelskip
-			dec edx
-			jnz vload1
-			shr ecx, 5
-			test ecx, ecx
-			jz nodiv
-			mov eax, ebx
-			xor edx, edx
-			div ecx
-			mov ebx, eax mov eax, esi xor edx, edx div ecx mov esi, eax nodiv: mov edi, dword ptr analtabnum shl edi, 3 add edi, offset volnum mov dword ptr[edi], ebx mov dword ptr 4[edi], esi}}
+		mov edx, samplenum
+		mov edi, pcm_sample
+		shr edx, 1
+		mov ecx, edx
+		xor ebx, ebx
+		xor esi, esi
+vload1:
+		movsx eax, word ptr[edi]
+		test eax, eax
+		jge vpositivl
+		neg eax
+vpositivl:
+		add ebx, eax
+		add edi, 2
+		movsx eax, word ptr[edi]
+		test eax, eax
+		jge vpositivr
+		neg eax
+vpositivr:
+		add esi, eax
+		add edi, dword ptr channelskip
+		dec edx
+		jnz vload1
+		shr ecx, 5
+		test ecx, ecx
+		jz nodiv
+		mov eax, ebx
+		xor edx, edx
+		div ecx
+		mov ebx, eax
+		mov eax, esi
+		xor edx, edx
+		div ecx
+		mov esi, eax
+nodiv:
+		mov edi, dword ptr analtabnum
+		shl edi, 3
+		add edi, offset volnum
+		mov dword ptr[edi], ebx
+		mov dword ptr 4[edi], esi
+		}
+}
 #else
 #pragma aux asm_get_volumelevel_average=\
  "mov edi,eax"\
@@ -287,15 +313,51 @@ static int fftinited;
 void fftCalc(long *xi, long *cos, unsigned long d2)
 {
 	__asm {
-		mov edx, d2 shl edx, 2 mov edi, cos mov esi, xi mov ebx,[esi]
+		mov edx, d2
+		shl edx, 2
+		mov edi, cos
+		mov esi, xi
+		mov ebx,[esi]
 		mov ecx,[esi + edx]
-		mov eax, ebx add ebx, ecx sub eax, ecx sar ebx, 1 push eax push eax mov[esi], ebx mov ecx,[esi + edx + 4]
+		mov eax, ebx
+		add ebx, ecx
+		sub eax, ecx
+		sar ebx, 1
+		push eax
+		push eax
+		mov[esi], ebx
+		mov ecx,[esi + edx + 4]
 		mov ebx,[esi + 4]
-		mov eax, ebx add ebx, ecx sub eax, ecx sar ebx, 1 mov ecx, eax mov[esi + 4], ebx add esi, edx mov edx,[edi + 4]
-		xor ebx, ebx imul edx shrd eax, edx, 29 mov edx,[edi]
-		sub ebx, eax pop eax imul edx shrd eax, edx, 29 add ebx, eax mov edx,[edi + 4]
-		pop eax mov[esi], ebx imul edx shrd eax, edx, 29 mov ebx, eax mov eax,[edi]
-imul ecx shrd eax, edx, 29 add ebx, eax mov[esi + 4], ebx}}
+		mov eax, ebx
+		add ebx, ecx
+		sub eax, ecx
+		sar ebx, 1
+		mov ecx, eax
+		mov[esi + 4], ebx
+		add esi, edx
+		mov edx,[edi + 4]
+		xor ebx, ebx
+		imul edx
+		shrd eax, edx, 29
+		mov edx,[edi]
+		sub ebx, eax
+		pop eax
+		imul edx
+		shrd eax, edx, 29
+		add ebx, eax
+		mov edx,[edi + 4]
+		pop eax
+		mov[esi], ebx
+		imul edx
+		shrd eax, edx, 29
+		mov ebx, eax
+		mov eax,[edi]
+		imul ecx
+		shrd eax, edx, 29
+		add ebx, eax
+		mov[esi + 4], ebx
+		}
+}
 #else
 
 void fftCalc(long *xi, long *cos, unsigned long d2);

@@ -455,9 +455,8 @@ static int ES1371_adetect(struct mpxplay_audioout_info_s *aui)
 	card->chiprev = pcibios_ReadConfig_Byte(card->pci_dev, PCIR_RID);
 
 	if((card->pci_dev->vendor_id == 0x1274) && (((card->pci_dev->device_id == 0x1371) && ((card->chiprev == ES1371REV_CT5880_A) || (card->chiprev == ES1371REV_ES1373_8)))
-												||
-												((card->pci_dev->device_id == 0x5880)
-												 && ((card->chiprev == CT5880REV_CT5880_C) || (card->chiprev == CT5880REV_CT5880_D) || (card->chiprev == CT5880REV_CT5880_E)))
+												|| ((card->pci_dev->device_id == 0x5880)
+													&& ((card->chiprev == CT5880REV_CT5880_C) || (card->chiprev == CT5880REV_CT5880_D) || (card->chiprev == CT5880REV_CT5880_E)))
 	   )
 		) {
 		funcbit_enable(card->infobits, ENSONIQ_CARD_INFOBIT_AC97RESETHACK);

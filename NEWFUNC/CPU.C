@@ -93,9 +93,21 @@ int asm_cpu_testcpuid(void);
 int asm_cpu_testcpuid(void)
 {
 	__asm {
-	pushad pushfd pop eax mov ecx, eax xor eax, 0x200000 push eax popfd pushfd pop eax cmp eax, ecx popad setnz al and eax, 1}
+	pushad
+	pushfd
+	pop eax
+	mov ecx, eax
+	xor eax, 0x200000
+	push eax
+	popfd
+	pushfd
+	pop	eax
+	cmp eax, ecx
+	popad
+	setnz al
+	and eax, 1
+	}
 }
-
 #else
 #pragma aux asm_cpu_testcpuid=\
  "pushad"\
@@ -120,7 +132,16 @@ int asm_cpu_getcpuid(unsigned int eax_p, int *ebx_p, int *ecx_p, int *edx_p);
 int asm_cpu_getcpuid(unsigned int eax_p, int *ebx_p, int *ecx_p, int *edx_p)
 {
 	__asm {
-mov eax, eax_p cpuid mov edi, ebx_p mov[edi], ebx mov edi, ecx_p mov[edi], ecx mov edi, edx_p mov[edi], edx}}
+	mov eax, eax_p
+	cpuid 
+	mov edi, ebx_p
+	mov[edi], ebx
+	mov edi, ecx_p
+	mov[edi], ecx
+	mov edi, edx_p
+	mov[edi], edx
+	}
+}
 #else
 #pragma aux asm_cpu_getcpuid=\
  "push ebx"\

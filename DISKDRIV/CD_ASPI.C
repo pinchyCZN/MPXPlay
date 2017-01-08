@@ -556,7 +556,18 @@ static mpxp_int32_t winaspi_call_proc_stackbased(void *proc, void *data)
 #ifdef WIN32
 	int value;
 	__asm {
-	cmp edx, 0 je nodata push edx call eax pop edx jmp end nodata:call eax end: mov value, eax} return value;
+	cmp edx, 0
+	je nodata
+	push edx
+	call eax
+	pop edx
+	jmp end
+nodata:
+	call eax 
+end:
+	mov value, eax
+	}
+	return value;
 #else
 //#if defined(__WATCOMC__)
 #pragma aux asm_stackcall_proc=\
