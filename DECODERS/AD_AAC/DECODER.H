@@ -44,7 +44,7 @@ extern "C" {
 #endif*/
 
 #ifndef FAADAPI
- #define FAADAPI
+#define FAADAPI
 #endif
 
 #include "bits.h"
@@ -86,44 +86,31 @@ extern "C" {
 #define LFE_CHANNEL          (9)
 #define UNKNOWN_CHANNEL      (0)
 
-char* FAADAPI faacDecGetErrorMessage(uint8_t errcode);
+	char *FAADAPI faacDecGetErrorMessage(uint8_t errcode);
 
-uint32_t FAADAPI faacDecGetCapabilities();
+	uint32_t FAADAPI faacDecGetCapabilities();
 
-faacDecHandle FAADAPI faacDecOpen();
+	faacDecHandle FAADAPI faacDecOpen();
 
-faacDecConfigurationPtr FAADAPI faacDecGetCurrentConfiguration(faacDecHandle hDecoder);
+	faacDecConfigurationPtr FAADAPI faacDecGetCurrentConfiguration(faacDecHandle hDecoder);
 
-uint8_t FAADAPI faacDecSetConfiguration(faacDecHandle hDecoder,
-                                    faacDecConfigurationPtr config);
+	uint8_t FAADAPI faacDecSetConfiguration(faacDecHandle hDecoder, faacDecConfigurationPtr config);
 
 /* Init the library based on info from the AAC file (ADTS/ADIF) */
-int32_t FAADAPI faacDecInit(faacDecHandle hDecoder,
-                            uint8_t *buffer,
-                            uint32_t buffer_size,
-                            uint32_t *samplerate,
-                            uint32_t *channels);
+	int32_t FAADAPI faacDecInit(faacDecHandle hDecoder, uint8_t * buffer, uint32_t buffer_size, uint32_t * samplerate, uint32_t * channels);
 
 /* Init the library using a DecoderSpecificInfo */
-int32_t FAADAPI faacDecInit2(faacDecHandle hDecoder, uint8_t *pBuffer,
-                         uint32_t SizeOfDecoderSpecificInfo,
-                         uint32_t *samplerate, uint32_t *channels);
+	int32_t FAADAPI faacDecInit2(faacDecHandle hDecoder, uint8_t * pBuffer, uint32_t SizeOfDecoderSpecificInfo, uint32_t * samplerate, uint32_t * channels);
 
 /* Init the library for DRM */
-int32_t FAADAPI faacDecInitDRM(faacDecHandle hDecoder, uint32_t samplerate,
-                              uint32_t channels);
+	int32_t FAADAPI faacDecInitDRM(faacDecHandle hDecoder, uint32_t samplerate, uint32_t channels);
 
-void FAADAPI faacDecClose(faacDecHandle hDecoder);
+	void FAADAPI faacDecClose(faacDecHandle hDecoder);
 
-void* FAADAPI faacDecDecode(faacDecHandle hDecoder,
-                            faacDecFrameInfo *hInfo,
-                            uint8_t *buffer,
-                            uint32_t buffer_size);
+	void *FAADAPI faacDecDecode(faacDecHandle hDecoder, faacDecFrameInfo * hInfo, uint8_t * buffer, uint32_t buffer_size);
 //---------------------------------------------------------------------
 
-void raw_data_block(faacDecHandle hDecoder, faacDecFrameInfo *hInfo,
-                    bitfile *ld,int16_t **spec_data, real_t **spec_coef,
-                    program_config *pce, drc_info *drc);
+	void raw_data_block(faacDecHandle hDecoder, faacDecFrameInfo * hInfo, bitfile * ld, int16_t ** spec_data, real_t ** spec_coef, program_config * pce, drc_info * drc);
 
 
 /*#ifdef _WIN32

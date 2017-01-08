@@ -38,6 +38,6 @@ typedef unsigned long long uint64_t;
 
 #endif
 
-#endif // MPXPLAY_INT_TYPES
+#endif							// MPXPLAY_INT_TYPES
 
-#endif // INTTYPES_H_
+#endif							// INTTYPES_H_

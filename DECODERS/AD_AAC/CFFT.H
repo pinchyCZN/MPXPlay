@@ -32,10 +32,10 @@
 extern "C" {
 #endif
 
-void cfftf(cfft_info *cfft, complex_t *c);
-void cfftb(cfft_info *cfft, complex_t *c);
-cfft_info *cffti(uint32_t n);
-void cfftu(cfft_info *cfft);
+	void cfftf(cfft_info * cfft, complex_t * c);
+	void cfftb(cfft_info * cfft, complex_t * c);
+	cfft_info *cffti(uint32_t n);
+	void cfftu(cfft_info * cfft);
 
 #ifdef __cplusplus
 }

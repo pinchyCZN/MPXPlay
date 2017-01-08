@@ -24,16 +24,16 @@
 #  define _V_IFDEFJAIL_H_
 
 #ifdef __GNUC__
- #define STIN static __inline__
+#define STIN static __inline__
 #elif defined(_WIN32) && !defined(__WATCOMC__)
- #define STIN static __inline
+#define STIN static __inline
 #else
- #define STIN static
+#define STIN static
 #endif
 
 #undef M_PI
 #ifndef M_PI
- #  define M_PI (3.1415926536f)
+#  define M_PI (3.1415926536f)
 #endif
 
 #if defined(_WIN32) || defined(__WATCOMC__)
@@ -47,7 +47,7 @@
 #  define FAST_HYPOT hypot
 #endif
 
-#endif // _V_IFDEFJAIL_H_
+#endif							// _V_IFDEFJAIL_H_
 
 #ifdef HAVE_ALLOCA_H
 #  include <alloca.h>
@@ -76,28 +76,27 @@
 
 typedef ogg_int16_t vorbis_fpu_control;
 
-static inline void vorbis_fpu_setround(vorbis_fpu_control *fpu){
-  ogg_int16_t ret;
-  ogg_int16_t temp;
-  __asm__ __volatile__("fnstcw %0\n\t"
-	  "movw %0,%%dx\n\t"
-	  "orw $62463,%%dx\n\t"
-	  "movw %%dx,%1\n\t"
-	  "fldcw %1\n\t":"=m"(ret):"m"(temp): "dx");
-  *fpu=ret;
+static inline void vorbis_fpu_setround(vorbis_fpu_control * fpu)
+{
+	ogg_int16_t ret;
+	ogg_int16_t temp;
+	__asm__ __volatile__("fnstcw %0\n\t" "movw %0,%%dx\n\t" "orw $62463,%%dx\n\t" "movw %%dx,%1\n\t" "fldcw %1\n\t":"=m"(ret):"m"(temp):"dx");
+	*fpu = ret;
 }
 
-static inline void vorbis_fpu_restore(vorbis_fpu_control fpu){
-  __asm__ __volatile__("fldcw %0":: "m"(fpu));
+static inline void vorbis_fpu_restore(vorbis_fpu_control fpu)
+{
+	__asm__ __volatile__("fldcw %0"::"m"(fpu));
 }
 
 /* assumes the FPU is in round mode! */
-static inline int vorbis_ftoi(double f){  /* yes, double!  Otherwise,
-					     we get extra fst/fld to
-					     truncate precision */
-  int i;
-  __asm__("fistl %0": "=m"(i) : "t"(f));
-  return(i);
+static inline int vorbis_ftoi(double f)
+{								/* yes, double!  Otherwise,
+								   we get extra fst/fld to
+								   truncate precision */
+	int i;
+  __asm__("fistl %0": "=m"(i):"t"(f));
+	return (i);
 }
 #endif
 
@@ -117,10 +116,12 @@ typedef ogg_int16_t vorbis_fpu_control;
 }*/
 #define vorbis_ftoi(n) ((int)(n+0.5F))
 
-static __inline void vorbis_fpu_setround(vorbis_fpu_control *fpu){
+static __inline void vorbis_fpu_setround(vorbis_fpu_control * fpu)
+{
 }
 
-static __inline void vorbis_fpu_restore(vorbis_fpu_control fpu){
+static __inline void vorbis_fpu_restore(vorbis_fpu_control fpu)
+{
 }
 
 #endif
@@ -142,4 +143,4 @@ typedef int vorbis_fpu_control;
 
 #endif
 
-#endif /* _OS_H */
+#endif							/* _OS_H */

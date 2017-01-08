@@ -33,7 +33,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
+#endif							/* __cplusplus */
 
 /*#ifdef _WIN32
   #pragma pack(push, 8)
@@ -47,7 +47,7 @@ extern "C" {
 #endif*/
 
 #ifndef FAADAPI
- #define FAADAPI
+#define FAADAPI
 #endif
 
 #define FAAD2_VERSION "2.0 RC1 "
@@ -60,7 +60,7 @@ extern "C" {
 #define ER_LC     17
 #define ER_LTP    19
 #define LD        23
-#define DRM_ER_LC 27 /* special object type for DRM */
+#define DRM_ER_LC 27			/* special object type for DRM */
 
 /* header types */
 #define RAW        0
@@ -101,71 +101,52 @@ extern "C" {
 
 /* A decode call can eat up to FAAD_MIN_STREAMSIZE bytes per decoded channel,
    so at least so much bytes per channel should be available in this stream */
-#define FAAD_MIN_STREAMSIZE 768 /* 6144 bits/channel */
+#define FAAD_MIN_STREAMSIZE 768	/* 6144 bits/channel */
 
-#define AAC_PCMOUT_T float  // must match with MPXPLAY_PCMOUT_FLOAT_T
+#define AAC_PCMOUT_T float		// must match with MPXPLAY_PCMOUT_FLOAT_T
 
-unsigned long FAADAPI faacDecGetCapabilities(void);
+	unsigned long FAADAPI faacDecGetCapabilities(void);
 
-faacDecHandle FAADAPI faacDecOpen(void);
+	faacDecHandle FAADAPI faacDecOpen(void);
 
-faacDecConfigurationPtr FAADAPI faacDecGetCurrentConfiguration(faacDecHandle hDecoder);
+	faacDecConfigurationPtr FAADAPI faacDecGetCurrentConfiguration(faacDecHandle hDecoder);
 
 // new init functions
-int FAADAPI faacDecInit_frame(faacDecHandle hDecoder, uint8_t *buffer,
-                              uint32_t buffer_size,
-                              faacDecFrameInfo *frameInfo);
+	int FAADAPI faacDecInit_frame(faacDecHandle hDecoder, uint8_t * buffer, uint32_t buffer_size, faacDecFrameInfo * frameInfo);
 
-int FAADAPI faacDecInit_dsi(faacDecHandle hDecoder, unsigned char *pBuffer,
-                            unsigned long SizeOfDecoderSpecificInfo,
-                            faacDecFrameInfo *frameInfo);
+	int FAADAPI faacDecInit_dsi(faacDecHandle hDecoder, unsigned char *pBuffer, unsigned long SizeOfDecoderSpecificInfo, faacDecFrameInfo * frameInfo);
 
 /* Init the library based on info from the AAC file (ADTS/ADIF) */
-long FAADAPI faacDecInit(faacDecHandle hDecoder,
-                        unsigned char *buffer,
-                        unsigned long buffer_size,
-                        unsigned long *samplerate,
-                        unsigned int  *channels);
+	long FAADAPI faacDecInit(faacDecHandle hDecoder, unsigned char *buffer, unsigned long buffer_size, unsigned long *samplerate, unsigned int *channels);
 
 /* Init the library using a DecoderSpecificInfo */
-int FAADAPI faacDecInit2(faacDecHandle hDecoder, unsigned char *pBuffer,
-                         unsigned long SizeOfDecoderSpecificInfo,
-                         unsigned long *samplerate, unsigned int *channels);
+	int FAADAPI faacDecInit2(faacDecHandle hDecoder, unsigned char *pBuffer, unsigned long SizeOfDecoderSpecificInfo, unsigned long *samplerate, unsigned int *channels);
 
 /* Init the library for DRM */
-int FAADAPI faacDecInitDRM(faacDecHandle hDecoder, unsigned long samplerate,
-                            unsigned int channels);
+	int FAADAPI faacDecInitDRM(faacDecHandle hDecoder, unsigned long samplerate, unsigned int channels);
 
-long FAADAPI faacDecGetframeLength(faacDecHandle hDecoder);
+	long FAADAPI faacDecGetframeLength(faacDecHandle hDecoder);
 
 //init dynamic memory fields
-long FAADAPI faacDecInitFields(faacDecHandle hDecoder);
+	long FAADAPI faacDecInitFields(faacDecHandle hDecoder);
 //bitstream related mallocs only
-unsigned int FAADAPI faacDecInitField_bs(faacDecHandle hDecoder);
+	unsigned int FAADAPI faacDecInitField_bs(faacDecHandle hDecoder);
 
 //close
-void FAADAPI faacDecClose(faacDecHandle hDecoder);
+	void FAADAPI faacDecClose(faacDecHandle hDecoder);
 
 //decoding
-void* FAADAPI faacDecDecode(faacDecHandle hDecoder,
-                            faacDecFrameInfo *hInfo,
-                            unsigned char *buffer,
-                            unsigned long buffer_size);
+	void *FAADAPI faacDecDecode(faacDecHandle hDecoder, faacDecFrameInfo * hInfo, unsigned char *buffer, unsigned long buffer_size);
 
 // seek helpers
-void FAADAPI faacDecPostSeekReset(faacDecHandle hDecoder, long frame);
+	void FAADAPI faacDecPostSeekReset(faacDecHandle hDecoder, long frame);
 
-void FAADAPI faacDecReadframe(faacDecHandle hDecoder,
-                            faacDecFrameInfo *hInfo,
-                            unsigned char *buffer,
-                            unsigned long buffer_size);
+	void FAADAPI faacDecReadframe(faacDecHandle hDecoder, faacDecFrameInfo * hInfo, unsigned char *buffer, unsigned long buffer_size);
 
 // MP4
-char FAADAPI AudioSpecificConfig(unsigned char *pBuffer,
-                                 unsigned long buffer_size,
-                                 mp4AudioSpecificConfig *mp4ASC);
+	char FAADAPI AudioSpecificConfig(unsigned char *pBuffer, unsigned long buffer_size, mp4AudioSpecificConfig * mp4ASC);
 
-void aac_analiser_clear(void);
+	void aac_analiser_clear(void);
 
 /*#ifdef _WIN32
   #pragma pack(pop)
@@ -173,6 +154,5 @@ void aac_analiser_clear(void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
-
+#endif							/* __cplusplus */
 #endif

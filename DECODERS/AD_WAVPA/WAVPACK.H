@@ -12,14 +12,14 @@
 
 // This header file contains all the definitions required by WavPack.
 
-typedef unsigned char	uchar;
-typedef signed char     schar;
+typedef unsigned char uchar;
+typedef signed char schar;
 #if !defined(__GNUC__) || defined(WIN32)
-typedef unsigned short	ushort;
-typedef unsigned long	ulong;
-typedef unsigned int	uint;
+typedef unsigned short ushort;
+typedef unsigned long ulong;
+typedef unsigned int uint;
 #elif defined(__APPLE__)
-typedef unsigned long	ulong;
+typedef unsigned long ulong;
 #endif
 
 // This structure is used to access the individual fields of 32-bit ieee
@@ -28,9 +28,9 @@ typedef unsigned long	ulong;
 // how common that is.
 
 typedef struct {
-    unsigned mantissa : 23;
-    unsigned exponent : 8;
-    unsigned sign : 1;
+	unsigned mantissa:23;
+	unsigned exponent:8;
+	unsigned sign:1;
 } f32;
 
 #include <stdio.h>
@@ -45,33 +45,33 @@ typedef struct {
 // and .wvc files.
 
 typedef struct {
-    char ckID [4];
-    ulong ckSize;
-    short version;
-    uchar track_no, index_no;
-    ulong total_samples, block_index, block_samples, flags, crc;
+	char ckID[4];
+	ulong ckSize;
+	short version;
+	uchar track_no, index_no;
+	ulong total_samples, block_index, block_samples, flags, crc;
 } WavpackHeader;
 
-#define WavpackHeadRetry    65536  // in bytes
+#define WavpackHeadRetry    65536	// in bytes
 
 #define WavpackHeaderFormat "4LS2LLLLL"
 
 // or-values for "flags"
 
-#define BYTES_STORED	3	// 1-4 bytes/sample
-#define MONO_FLAG	4	// not stereo
-#define HYBRID_FLAG	8	// hybrid mode
+#define BYTES_STORED	3		// 1-4 bytes/sample
+#define MONO_FLAG	4			// not stereo
+#define HYBRID_FLAG	8			// hybrid mode
 #define JOINT_STEREO	0x10	// joint stereo
 #define CROSS_DECORR	0x20	// no-delay cross decorrelation
 #define HYBRID_SHAPE	0x40	// noise shape (hybrid mode only)
-#define FLOAT_DATA	0x80	// ieee 32-bit floating point data
+#define FLOAT_DATA	0x80		// ieee 32-bit floating point data
 
-#define INT32_DATA	0x100	// special extended int handling
+#define INT32_DATA	0x100		// special extended int handling
 #define HYBRID_BITRATE	0x200	// bitrate noise (hybrid mode only)
 #define HYBRID_BALANCE	0x400	// balance noise (hybrid stereo mode only)
 
 #define INITIAL_BLOCK	0x800	// initial block of multichannel segment
-#define FINAL_BLOCK	0x1000	// final block of multichannel segment
+#define FINAL_BLOCK	0x1000		// final block of multichannel segment
 
 #define SHIFT_LSB	13
 #define SHIFT_MASK	(0x1fL << SHIFT_LSB)
@@ -92,9 +92,9 @@ typedef struct {
 // This is an internal representation of metadata.
 
 typedef struct {
-    long byte_length;
-    void *data;
-    uchar id;
+	long byte_length;
+	void *data;
+	uchar id;
 } WavpackMetadata;
 
 #define ID_OPTIONAL_DATA	0x20
@@ -130,9 +130,9 @@ typedef struct {
 // the higher level functions. Not all fields are used in both modes.
 
 typedef struct {
-    int bits_per_sample, bytes_per_sample;
-    int qmode, flags, xmode, num_channels, float_norm_exp;
-    long block_samples, extra_flags, sample_rate, channel_mask;
+	int bits_per_sample, bytes_per_sample;
+	int qmode, flags, xmode, num_channels, float_norm_exp;
+	long block_samples, extra_flags, sample_rate, channel_mask;
 } WavpackConfig;
 
 #define CONFIG_BYTES_STORED	3	// 1-4 bytes/sample
@@ -155,15 +155,15 @@ typedef struct {
 #define CONFIG_COPY_TIME	0x20000	// copy file-time from source
 #define CONFIG_CREATE_EXE	0x40000	// create executable (not yet)
 #define CONFIG_CREATE_WVC	0x80000	// create correction file
-#define CONFIG_OPTIMIZE_WVC	0x100000 // maximize bybrid compression
-#define CONFIG_QUALITY_MODE	0x200000 // psychoacoustic quality mode
-#define CONFIG_RAW_FLAG		0x400000 // raw mode (not implemented yet)
-#define CONFIG_CALC_NOISE	0x800000 // calc noise in hybrid mode
-#define CONFIG_LOSSY_MODE	0x1000000 // obsolete (for information)
-#define CONFIG_EXTRA_MODE	0x2000000 // extra processing mode
-#define CONFIG_SKIP_WVX		0x4000000 // no wvx stream w/ floats & big ints
-#define CONFIG_MD5_CHECKSUM	0x8000000 // compute & store MD5 signature
-#define CONFIG_QUIET_MODE	0x10000000 // don't report progress %
+#define CONFIG_OPTIMIZE_WVC	0x100000	// maximize bybrid compression
+#define CONFIG_QUALITY_MODE	0x200000	// psychoacoustic quality mode
+#define CONFIG_RAW_FLAG		0x400000	// raw mode (not implemented yet)
+#define CONFIG_CALC_NOISE	0x800000	// calc noise in hybrid mode
+#define CONFIG_LOSSY_MODE	0x1000000	// obsolete (for information)
+#define CONFIG_EXTRA_MODE	0x2000000	// extra processing mode
+#define CONFIG_SKIP_WVX		0x4000000	// no wvx stream w/ floats & big ints
+#define CONFIG_MD5_CHECKSUM	0x8000000	// compute & store MD5 signature
+#define CONFIG_QUIET_MODE	0x10000000	// don't report progress %
 
 //////////////////////////////// WavPack Stream ///////////////////////////////
 
@@ -173,51 +173,51 @@ typedef struct {
 // pointers to hold a complete allocated block of WavPack data, although it's
 // possible to decode WavPack blocks without buffering an entire block.
 
-typedef unsigned long (*read_stream)(void *streamhand, void *buf, unsigned long bytes);
+typedef unsigned long (*read_stream) (void *streamhand, void *buf, unsigned long bytes);
 
 typedef struct Bitstream {
-    uchar *buf, *end, *ptr;
-    void (*wrap)(struct Bitstream *bs);
-    ulong file_bytes, sr;
-    int error, bc;
-    read_stream file;
-    void *streamhand;
+	uchar *buf, *end, *ptr;
+	void (*wrap) (struct Bitstream * bs);
+	ulong file_bytes, sr;
+	int error, bc;
+	read_stream file;
+	void *streamhand;
 } Bitstream;
 
 #define MAX_NTERMS 16
 #define MAX_TERM 8
 
 struct decorr_pass {
-    short term, delta, weight_A, weight_B;
-    long samples_A [MAX_TERM], samples_B [MAX_TERM];
+	short term, delta, weight_A, weight_B;
+	long samples_A[MAX_TERM], samples_B[MAX_TERM];
 };
 
 typedef struct {
-    WavpackHeader wphdr;
+	WavpackHeader wphdr;
 
-    int num_terms, mute_error;
-    ulong sample_index, crc;
-    Bitstream wvbits;
+	int num_terms, mute_error;
+	ulong sample_index, crc;
+	Bitstream wvbits;
 
-    uchar int32_sent_bits, int32_zeros, int32_ones, int32_dups;
-    uchar float_flags, float_shift, float_max_exp, float_norm_exp;
+	uchar int32_sent_bits, int32_zeros, int32_ones, int32_dups;
+	uchar float_flags, float_shift, float_max_exp, float_norm_exp;
 
-    struct decorr_pass decorr_passes [MAX_NTERMS];
+	struct decorr_pass decorr_passes[MAX_NTERMS];
 
-    struct {
-	ulong bitrate_delta [2], bitrate_acc [2];
-	ulong median [3] [2], slow_level [2], error_limit [2];
-	ulong pend_data, holding_one, zeros_acc;
-	int holding_zero, pend_count;
-    } w;
+	struct {
+		ulong bitrate_delta[2], bitrate_acc[2];
+		ulong median[3][2], slow_level[2], error_limit[2];
+		ulong pend_data, holding_one, zeros_acc;
+		int holding_zero, pend_count;
+	} w;
 } WavpackStream;
 
 // flags for float_flags:
 
-#define FLOAT_SHIFT_ONES 1	// bits left-shifted into float = '1'
-#define FLOAT_SHIFT_SAME 2	// bits left-shifted into float are the same
-#define FLOAT_SHIFT_SENT 4	// bits shifted into float are sent literally
-#define FLOAT_ZEROS_SENT 8	// "zeros" are not all real zeros
+#define FLOAT_SHIFT_ONES 1		// bits left-shifted into float = '1'
+#define FLOAT_SHIFT_SAME 2		// bits left-shifted into float are the same
+#define FLOAT_SHIFT_SENT 4		// bits shifted into float are sent literally
+#define FLOAT_ZEROS_SENT 8		// "zeros" are not all real zeros
 #define FLOAT_NEG_ZEROS  0x10	// contains negative zeros
 #define FLOAT_EXCEPTIONS 0x20	// contains exceptions (inf, nan, etc.)
 
@@ -228,16 +228,16 @@ typedef struct {
 // and the provided utilities used instead.
 
 typedef struct {
-    WavpackConfig config;
-    WavpackStream stream;
+	WavpackConfig config;
+	WavpackStream stream;
 
-    uchar read_buffer [1024];
-    char error_message [80];
+	uchar read_buffer[1024];
+	char error_message[80];
 
-    read_stream infile;
-    void *streamhand;
-    ulong total_samples, crc_errors, first_flags;
-    int open_flags, norm_offset, reduced_channels, lossy_blocks;
+	read_stream infile;
+	void *streamhand;
+	ulong total_samples, crc_errors, first_flags;
+	int open_flags, norm_offset, reduced_channels, lossy_blocks;
 
 } WavpackContext;
 
@@ -247,7 +247,7 @@ typedef struct {
 
 // bits.c
 
-void bs_open_read (Bitstream *bs, uchar *buffer_start, uchar *buffer_end, read_stream file, void *streamhand, ulong file_bytes);
+void bs_open_read(Bitstream * bs, uchar * buffer_start, uchar * buffer_end, read_stream file, void *streamhand, ulong file_bytes);
 
 #define bs_is_open(bs) ((bs)->ptr != NULL)
 
@@ -271,50 +271,50 @@ void bs_open_read (Bitstream *bs, uchar *buffer_start, uchar *buffer_end, read_s
     (bs)->bc -= (nbits); \
 }
 
-void little_endian_to_native (void *data, char *format);
-void native_to_little_endian (void *data, char *format);
+void little_endian_to_native(void *data, char *format);
+void native_to_little_endian(void *data, char *format);
 
 // unpack.c
 
-int unpack_init (WavpackContext *wpc);
-int init_wv_bitstream (WavpackContext *wpc, WavpackMetadata *wpmd);
-int read_decorr_terms (WavpackStream *wps, WavpackMetadata *wpmd);
-int read_decorr_weights (WavpackStream *wps, WavpackMetadata *wpmd);
-int read_decorr_samples (WavpackStream *wps, WavpackMetadata *wpmd);
-int read_float_info (WavpackStream *wps, WavpackMetadata *wpmd);
-int read_int32_info (WavpackStream *wps, WavpackMetadata *wpmd);
-int read_channel_info (WavpackContext *wpc, WavpackMetadata *wpmd);
-int read_config_info (WavpackContext *wpc, WavpackMetadata *wpmd);
-long unpack_samples (WavpackContext *wpc, long *buffer, ulong sample_count);
-int check_crc_error (WavpackContext *wpc);
+int unpack_init(WavpackContext * wpc);
+int init_wv_bitstream(WavpackContext * wpc, WavpackMetadata * wpmd);
+int read_decorr_terms(WavpackStream * wps, WavpackMetadata * wpmd);
+int read_decorr_weights(WavpackStream * wps, WavpackMetadata * wpmd);
+int read_decorr_samples(WavpackStream * wps, WavpackMetadata * wpmd);
+int read_float_info(WavpackStream * wps, WavpackMetadata * wpmd);
+int read_int32_info(WavpackStream * wps, WavpackMetadata * wpmd);
+int read_channel_info(WavpackContext * wpc, WavpackMetadata * wpmd);
+int read_config_info(WavpackContext * wpc, WavpackMetadata * wpmd);
+long unpack_samples(WavpackContext * wpc, long *buffer, ulong sample_count);
+int check_crc_error(WavpackContext * wpc);
 
 // metadata.c stuff
 
-int read_metadata_buff (WavpackContext *wpc, WavpackMetadata *wpmd);
-int process_metadata (WavpackContext *wpc, WavpackMetadata *wpmd);
+int read_metadata_buff(WavpackContext * wpc, WavpackMetadata * wpmd);
+int process_metadata(WavpackContext * wpc, WavpackMetadata * wpmd);
 
 // words.c stuff
 
-int read_entropy_vars (WavpackStream *wps, WavpackMetadata *wpmd);
-int read_hybrid_profile (WavpackStream *wps, WavpackMetadata *wpmd);
-long get_word (WavpackStream *wps, int chan);
-long exp2s (int log);
-int restore_weight (schar weight);
+int read_entropy_vars(WavpackStream * wps, WavpackMetadata * wpmd);
+int read_hybrid_profile(WavpackStream * wps, WavpackMetadata * wpmd);
+long get_word(WavpackStream * wps, int chan);
+long exp2s(int log);
+int restore_weight(schar weight);
 
 #define WORD_EOF (1UL << 31)
 #define DATA_INVALID 0xffffffff
 
 // float.c
 
-int read_float_info (WavpackStream *wps, WavpackMetadata *wpmd);
-void float_values (WavpackStream *wps, long *values, long num_values);
-void float_normalize (long *values, long num_values, int delta_exp);
+int read_float_info(WavpackStream * wps, WavpackMetadata * wpmd);
+void float_values(WavpackStream * wps, long *values, long num_values);
+void float_normalize(long *values, long num_values, int delta_exp);
 
 // wputils.c
 
-WavpackContext *WavpackOpenFileInput(WavpackContext *wpc,read_stream infile, void *streamhand, char *error);
+WavpackContext *WavpackOpenFileInput(WavpackContext * wpc, read_stream infile, void *streamhand, char *error);
 
-int WavpackGetMode (WavpackContext *wpc);
+int WavpackGetMode(WavpackContext * wpc);
 
 #define MODE_WVC	0x1
 #define MODE_LOSSLESS	0x2
@@ -324,16 +324,16 @@ int WavpackGetMode (WavpackContext *wpc);
 #define MODE_HIGH	0x20
 #define MODE_FAST	0x40
 
-ulong WavpackUnpackSamples (WavpackContext *wpc, long *buffer, ulong samples);
-ulong WavpackGetNumSamples (WavpackContext *wpc);
-ulong WavpackGetSampleIndex (WavpackContext *wpc);
-int WavpackGetNumErrors (WavpackContext *wpc);
-int WavpackLossyBlocks (WavpackContext *wpc);
-ulong WavpackGetSampleRate (WavpackContext *wpc);
-int WavpackGetBitsPerSample (WavpackContext *wpc);
-int WavpackGetBytesPerSample (WavpackContext *wpc);
-int WavpackGetNumChannels (WavpackContext *wpc);
-int WavpackGetReducedChannels (WavpackContext *wpc);
+ulong WavpackUnpackSamples(WavpackContext * wpc, long *buffer, ulong samples);
+ulong WavpackGetNumSamples(WavpackContext * wpc);
+ulong WavpackGetSampleIndex(WavpackContext * wpc);
+int WavpackGetNumErrors(WavpackContext * wpc);
+int WavpackLossyBlocks(WavpackContext * wpc);
+ulong WavpackGetSampleRate(WavpackContext * wpc);
+int WavpackGetBitsPerSample(WavpackContext * wpc);
+int WavpackGetBytesPerSample(WavpackContext * wpc);
+int WavpackGetNumChannels(WavpackContext * wpc);
+int WavpackGetReducedChannels(WavpackContext * wpc);
 
-void WavpackResetDecoding(WavpackContext *wpc);
-void WavpackUpdateStreamhand(WavpackContext *wpc, void *streamhand);
+void WavpackResetDecoding(WavpackContext * wpc);
+void WavpackUpdateStreamhand(WavpackContext * wpc, void *streamhand);

@@ -21,9 +21,6 @@
 
 #include "os_types.h"
 
-extern void vorbis_lsp_to_curve(ogg_double_t *curve,ogg_double_t *lsp,
-				ogg_double_t *map_cos,
-				int n,int m,
-				ogg_double_t amp,ogg_double_t ampoffset);
+extern void vorbis_lsp_to_curve(ogg_double_t * curve, ogg_double_t * lsp, ogg_double_t * map_cos, int n, int m, ogg_double_t amp, ogg_double_t ampoffset);
 
 #endif

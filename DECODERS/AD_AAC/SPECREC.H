@@ -34,15 +34,14 @@ extern "C" {
 
 #include "syntax.h"
 
-uint8_t window_grouping_info(faacDecHandle hDecoder, ic_stream *ics);
-void quant_to_spec(ic_stream *ics, real_t *spec_data, uint16_t frame_len);
-void inverse_quantization(real_t *x_invquant, int16_t *x_quant, uint16_t frame_len);
-void build_tables(void);
+	uint8_t window_grouping_info(faacDecHandle hDecoder, ic_stream * ics);
+	void quant_to_spec(ic_stream * ics, real_t * spec_data, uint16_t frame_len);
+	void inverse_quantization(real_t * x_invquant, int16_t * x_quant, uint16_t frame_len);
+	void build_tables(void);
 //void build_tables(real_t *pow2_table);
 //void apply_scalefactors(ic_stream *ics, real_t *x_invquant, real_t *pow2_table,
 //                        uint16_t frame_len);
-void inverse_quant_and_apply_scalefactors(ic_stream *ics, real_t *x_invquant,
-                        int16_t *x_quant,uint16_t frame_len);
+	void inverse_quant_and_apply_scalefactors(ic_stream * ics, real_t * x_invquant, int16_t * x_quant, uint16_t frame_len);
 //void inverse_quant_and_apply_scalefactors(ic_stream *ics, real_t *x_invquant, int16_t *x_quant,
 //                        real_t *pow2_table,uint16_t frame_len);
 

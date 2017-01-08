@@ -34,14 +34,9 @@ extern "C" {
 
 #include "decoder.h"
 
-int8_t FAADAPI AudioSpecificConfig(uint8_t *pBuffer,
-                                   uint32_t buffer_size,
-                                   mp4AudioSpecificConfig *mp4ASC);
+	int8_t FAADAPI AudioSpecificConfig(uint8_t * pBuffer, uint32_t buffer_size, mp4AudioSpecificConfig * mp4ASC);
 
-int8_t FAADAPI AudioSpecificConfig2(uint8_t *pBuffer,
-                                    uint32_t buffer_size,
-                                    mp4AudioSpecificConfig *mp4ASC,
-                                    program_config *pce);
+	int8_t FAADAPI AudioSpecificConfig2(uint8_t * pBuffer, uint32_t buffer_size, mp4AudioSpecificConfig * mp4ASC, program_config * pce);
 
 #ifdef __cplusplus
 }

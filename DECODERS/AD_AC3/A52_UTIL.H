@@ -24,9 +24,9 @@
 #ifndef A52_UTIL_H
 #define A52_UTIL_H
 
-uint16_t a52_crc16_block(uint8_t *data,uint32_t num_bytes);
+uint16_t a52_crc16_block(uint8_t * data, uint32_t num_bytes);
 
-void* a52_resample_init(uint32_t mm_accel,int flags,int chans);
-extern int (* a52_resample) (float * _f, int16_t * s16);
+void *a52_resample_init(uint32_t mm_accel, int flags, int chans);
+extern int (*a52_resample) (float *_f, int16_t * s16);
 
-#endif /* A52_H */
+#endif							/* A52_H */

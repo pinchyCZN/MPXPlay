@@ -32,25 +32,22 @@
 extern "C" {
 #endif
 
-void hf_generation(sbr_info *sbr, qmf_t *Xlow,
-                   qmf_t *Xhigh
+	void hf_generation(sbr_info * sbr, qmf_t * Xlow, qmf_t * Xhigh
 #ifdef SBR_LOW_POWER
-                   ,real_t *deg
+					   , real_t * deg
 #endif
-                   ,uint8_t ch);
+					   , uint8_t ch);
 
-static void calc_prediction_coef(sbr_info *sbr, qmf_t *Xlow,
-                                 complex_t *alpha_0, complex_t *alpha_1
+	static void calc_prediction_coef(sbr_info * sbr, qmf_t * Xlow, complex_t * alpha_0, complex_t * alpha_1
 #ifdef SBR_LOW_POWER
-                                 , real_t *rxx
+									 , real_t * rxx
 #endif
-                                 );
-static void calc_aliasing_degree(sbr_info *sbr, real_t *rxx, real_t *deg);
-static void calc_chirp_factors(sbr_info *sbr, uint8_t ch);
-static void patch_construction(sbr_info *sbr);
+		);
+	static void calc_aliasing_degree(sbr_info * sbr, real_t * rxx, real_t * deg);
+	static void calc_chirp_factors(sbr_info * sbr, uint8_t ch);
+	static void patch_construction(sbr_info * sbr);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

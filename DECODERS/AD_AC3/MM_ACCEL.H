@@ -37,6 +37,6 @@
 /* PPC accelerations */
 #define MM_ACCEL_PPC_ALTIVEC	0x00010000
 
-uint32_t mm_accel (void);
+uint32_t mm_accel(void);
 
-#endif /* MM_ACCEL_H */
+#endif							/* MM_ACCEL_H */

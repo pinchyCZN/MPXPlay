@@ -35,18 +35,18 @@ extern "C" {
 //#define MPXPLAY_USE_DEBUGF 1
 
 #ifdef MPXPLAY_USE_DEBUGF
- #include "..\..\newfunc\newfunc.h"
+#include "..\..\newfunc\newfunc.h"
 #else
- #define mpxplay_debugf()
+#define mpxplay_debugf()
 #endif
 
 #define FAAD_USE_ASM 1
 
 #if defined(__WATCOMC__) && !defined(STDC_HEADERS)
- #define STDC_HEADERS 1
+#define STDC_HEADERS 1
 #endif
 
-#define INLINE //__inline
+#define INLINE					//__inline
 
 #ifndef max
 #define max(a, b) (((a) > (b)) ? (a) : (b))
@@ -123,15 +123,15 @@ extern "C" {
 # include <inttypes.h>
 #else
 
-typedef unsigned __int64 uint64_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int8 uint8_t;
-typedef __int64 int64_t;
-typedef __int32 int32_t;
-typedef __int16 int16_t;
-typedef __int8  int8_t;
-typedef float float32_t;
+	typedef unsigned __int64 uint64_t;
+	typedef unsigned __int32 uint32_t;
+	typedef unsigned __int16 uint16_t;
+	typedef unsigned __int8 uint8_t;
+	typedef __int64 int64_t;
+	typedef __int32 int32_t;
+	typedef __int16 int16_t;
+	typedef __int8 int8_t;
+	typedef float float32_t;
 
 #endif
 
@@ -173,14 +173,14 @@ typedef float float32_t;
 #  include <stdint.h>
 # else
 /* we need these... */
-typedef unsigned long long uint64_t;
-typedef unsigned long uint32_t;
-typedef unsigned short uint16_t;
-typedef unsigned char uint8_t;
-typedef long long int64_t;
-typedef long int32_t;
-typedef short int16_t;
-typedef signed char int8_t;
+	typedef unsigned long long uint64_t;
+	typedef unsigned long uint32_t;
+	typedef unsigned short uint16_t;
+	typedef unsigned char uint8_t;
+	typedef long long int64_t;
+	typedef long int32_t;
+	typedef short int16_t;
+	typedef signed char int8_t;
 # endif
 #endif
 #if HAVE_UNISTD_H
@@ -188,7 +188,7 @@ typedef signed char int8_t;
 #endif
 
 #ifndef HAVE_FLOAT32_T
-typedef float float32_t;
+	typedef float float32_t;
 #endif
 
 #if STDC_HEADERS
@@ -198,7 +198,7 @@ typedef float float32_t;
 #  define strchr index
 #  define strrchr rindex
 # endif
-char *strchr(), *strrchr();
+	char *strchr(), *strrchr();
 # if !HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy((s), (d), (n))
 #  define memmove(d, s, n) bcopy((s), (d), (n))
@@ -213,59 +213,59 @@ char *strchr(), *strrchr();
 
 /* FIXED_POINT doesn't work with MAIN and SSR yet */
 #ifdef FIXED_POINT
-  #undef MAIN_DEC
-  #undef SSR_DEC
+#undef MAIN_DEC
+#undef SSR_DEC
 #endif
 
 
 #if defined(FIXED_POINT)
 
-  #ifdef HAS_MATHF_H
-    #include <mathf.h>
-  #else
-    #include <math.h>
-  #endif
+#ifdef HAS_MATHF_H
+#include <mathf.h>
+#else
+#include <math.h>
+#endif
 
-  #include "fixed.h"
+#include "fixed.h"
 
 #elif defined(USE_DOUBLE_PRECISION)
 
-  typedef double real_t;
+	typedef double real_t;
 
-  #include <math.h>
+#include <math.h>
 
-  #define MUL(A,B) ((A)*(B))
-  #define MUL_C_C(A,B) ((A)*(B))
-  #define MUL_R_C(A,B) ((A)*(B))
+#define MUL(A,B) ((A)*(B))
+#define MUL_C_C(A,B) ((A)*(B))
+#define MUL_R_C(A,B) ((A)*(B))
 
-  #define REAL_CONST(A) ((real_t)A)
-  #define COEF_CONST(A) ((real_t)A)
+#define REAL_CONST(A) ((real_t)A)
+#define COEF_CONST(A) ((real_t)A)
 
-#else /* Normal floating point operation */
+#else							/* Normal floating point operation */
 
-  typedef float real_t;
+	typedef float real_t;
 
-  #define MUL(A,B) ((A)*(B))
-  #define MUL_C_C(A,B) ((A)*(B))
-  #define MUL_R_C(A,B) ((A)*(B))
+#define MUL(A,B) ((A)*(B))
+#define MUL_C_C(A,B) ((A)*(B))
+#define MUL_R_C(A,B) ((A)*(B))
 
-  #define REAL_CONST(A) ((real_t)A)
-  #define COEF_CONST(A) ((real_t)A)
+#define REAL_CONST(A) ((real_t)A)
+#define COEF_CONST(A) ((real_t)A)
 
-  #ifdef __ICL /* only Intel C compiler has fmath ??? */
+#ifdef __ICL					/* only Intel C compiler has fmath ??? */
 
-    #include <mathf.h>
+#include <mathf.h>
 
-    #define sin sinf
-    #define cos cosf
-    #define log logf
-    #define floor floorf
-    #define ceil ceilf
-    #define sqrt sqrtf
+#define sin sinf
+#define cos cosf
+#define log logf
+#define floor floorf
+#define ceil ceilf
+#define sqrt sqrtf
 
-  #else
+#else
 
-    #include <math.h>
+#include <math.h>
 
 #ifdef HAVE_SINF
 #  define sin sinf
@@ -290,25 +290,25 @@ char *strchr(), *strrchr();
 #  define sqrt sqrtf
 #endif
 
-  #endif
+#endif
 
 #endif
 
-typedef real_t complex_t[2];
+	typedef real_t complex_t[2];
 #define RE(A) A[0]
 #define IM(A) A[1]
 
 
 /* common functions */
-int32_t int_log2(int32_t val);
-uint32_t random_int(void);
-uint8_t get_sr_index(uint32_t samplerate);
-uint8_t can_decode_ot(uint8_t object_type);
+	int32_t int_log2(int32_t val);
+	uint32_t random_int(void);
+	uint8_t get_sr_index(uint32_t samplerate);
+	uint8_t can_decode_ot(uint8_t object_type);
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif
-#ifndef M_PI_2 /* PI/2 */
+#ifndef M_PI_2					/* PI/2 */
 #define M_PI_2 1.57079632679489661923
 #endif
 #ifndef M_SQRT2
@@ -317,8 +317,8 @@ uint8_t can_decode_ot(uint8_t object_type);
 
 #ifdef __WATCOMC__
 
- float pow2(float x);
- #pragma aux pow2= \
+	float pow2(float x);
+#pragma aux pow2= \
   "fld   st"\
   "frndint"\
   "fxch  st(1)"\
@@ -330,8 +330,8 @@ uint8_t can_decode_ot(uint8_t object_type);
   "fstp st(1)"\
  value[8087] parm[8087];
 
- float aac_inline_pow(float x,float y);
- #pragma aux aac_inline_pow=\
+	float aac_inline_pow(float x, float y);
+#pragma aux aac_inline_pow=\
   "fyl2x"\
   "fld   st"\
   "frndint"\
@@ -346,8 +346,8 @@ uint8_t can_decode_ot(uint8_t object_type);
 
 #else
 
- #define pow2(x) pow(2.0,x)
- #define aac_inline_pow(x,y) pow(x,y)
+#define pow2(x) pow(2.0,x)
+#define aac_inline_pow(x,y) pow(x,y)
 
 #endif
 

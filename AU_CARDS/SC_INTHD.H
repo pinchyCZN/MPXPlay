@@ -37,20 +37,20 @@ enum {
 	AC_GRP_AUDIO_FUNCTION = 0x01,
 	AC_GRP_MODEM_FUNCTION = 0x02,
 };
-	
+
 /*
  * widget types
  */
 enum {
-	AC_WID_AUD_OUT,		/* Audio Out */
-	AC_WID_AUD_IN,		/* Audio In */
-	AC_WID_AUD_MIX,		/* Audio Mixer */
-	AC_WID_AUD_SEL,		/* Audio Selector */
-	AC_WID_PIN,		/* Pin Complex */
-	AC_WID_POWER,		/* Power */
-	AC_WID_VOL_KNB,		/* Volume Knob */
-	AC_WID_BEEP,		/* Beep Generator */
-	AC_WID_VENDOR = 0x0f	/* Vendor specific */
+	AC_WID_AUD_OUT,				/* Audio Out */
+	AC_WID_AUD_IN,				/* Audio In */
+	AC_WID_AUD_MIX,				/* Audio Mixer */
+	AC_WID_AUD_SEL,				/* Audio Selector */
+	AC_WID_PIN,					/* Pin Complex */
+	AC_WID_POWER,				/* Power */
+	AC_WID_VOL_KNB,				/* Volume Knob */
+	AC_WID_BEEP,				/* Beep Generator */
+	AC_WID_VENDOR = 0x0f		/* Vendor specific */
 };
 
 /*
@@ -195,15 +195,15 @@ enum {
 #define AC_PINCAP_VREF_100		(1<<5)	/* 100% */
 
 /* Amplifier capabilities */
-#define AC_AMPCAP_OFFSET		(0x7f<<0)  /* 0dB offset */
+#define AC_AMPCAP_OFFSET		(0x7f<<0)	/* 0dB offset */
 #define AC_AMPCAP_OFFSET_SHIFT		0
-#define AC_AMPCAP_NUM_STEPS		(0x7f<<8)  /* number of steps */
+#define AC_AMPCAP_NUM_STEPS		(0x7f<<8)	/* number of steps */
 #define AC_AMPCAP_NUM_STEPS_SHIFT	8
-#define AC_AMPCAP_STEP_SIZE		(0x7f<<16) /* step size 0-32dB
-						    * in 0.25dB
-						    */
+#define AC_AMPCAP_STEP_SIZE		(0x7f<<16)	/* step size 0-32dB
+											 * in 0.25dB
+											 */
 #define AC_AMPCAP_STEP_SIZE_SHIFT	16
-#define AC_AMPCAP_MUTE			(1<<31)    /* mute capable */
+#define AC_AMPCAP_MUTE			(1<<31)	/* mute capable */
 #define AC_AMPCAP_MUTE_SHIFT		31
 
 /* Connection list */
@@ -360,7 +360,7 @@ enum {
 	AC_JACK_LOC_EXTERNAL = 0x00,
 	AC_JACK_LOC_INTERNAL = 0x10,
 	AC_JACK_LOC_SEPARATE = 0x20,
-	AC_JACK_LOC_OTHER    = 0x30,
+	AC_JACK_LOC_OTHER = 0x30,
 };
 enum {
 	/* external on primary chasis */
@@ -403,18 +403,18 @@ enum {
 // from hda_int.c
 
 enum {
- AZX_DRIVER_ICH,
- AZX_DRIVER_PCH,
- AZX_DRIVER_SCH,
- AZX_DRIVER_ATI,
- AZX_DRIVER_ATIHDMI,
- AZX_DRIVER_VIA,
- AZX_DRIVER_SIS,
- AZX_DRIVER_ULI,
- AZX_DRIVER_NVIDIA,
- AZX_DRIVER_TERA,
- AZX_DRIVER_GENERIC,
- AZX_NUM_DRIVERS,
+	AZX_DRIVER_ICH,
+	AZX_DRIVER_PCH,
+	AZX_DRIVER_SCH,
+	AZX_DRIVER_ATI,
+	AZX_DRIVER_ATIHDMI,
+	AZX_DRIVER_VIA,
+	AZX_DRIVER_SIS,
+	AZX_DRIVER_ULI,
+	AZX_DRIVER_NVIDIA,
+	AZX_DRIVER_TERA,
+	AZX_DRIVER_GENERIC,
+	AZX_NUM_DRIVERS,
 };
 
 // registers
@@ -430,7 +430,7 @@ enum {
 #define ICH6_REG_INTCTL			0x20
 #define ICH6_REG_INTSTS			0x24
 #define ICH6_REG_WALCLK			0x30
-#define ICH6_REG_SYNC			0x34	
+#define ICH6_REG_SYNC			0x34
 #define ICH6_REG_CORBLBASE		0x40
 #define ICH6_REG_CORBUBASE		0x44
 #define ICH6_REG_CORBWP			0x48
@@ -501,9 +501,9 @@ enum {
 #define RIRB_INT_MASK		0x05
 
 /* INTCTL and INTSTS */
-#define ICH6_INT_ALL_STREAM	0xff	   /* all stream interrupts */
-#define ICH6_INT_CTRL_EN	0x40000000 /* controller interrupt enable bit */
-#define ICH6_INT_GLOBAL_EN	0x80000000 /* global interrupt enable bit */
+#define ICH6_INT_ALL_STREAM	0xff	/* all stream interrupts */
+#define ICH6_INT_CTRL_EN	0x40000000	/* controller interrupt enable bit */
+#define ICH6_INT_GLOBAL_EN	0x80000000	/* global interrupt enable bit */
 
 /* Defines for ATI HD Audio support in SB450 south bridge */
 #define ATI_SB450_HDAUDIO_MISC_CNTR2_ADDR   0x42
@@ -547,23 +547,23 @@ enum {
 typedef uint16_t hda_nid_t;
 
 struct hda_gnode {
- hda_nid_t nid;		/* NID of this widget */
- unsigned short nconns;	/* number of input connections */
- hda_nid_t conn_list[HDA_MAX_CONNECTIONS];
- unsigned int  wid_caps;	/* widget capabilities */
- unsigned char type;	/* widget type */
- unsigned char pin_ctl;	/* pin controls */
- unsigned char checked;	/* the flag indicates that the node is already parsed */
- unsigned int  pin_caps;	/* pin widget capabilities */
- unsigned int  def_cfg;	/* default configuration */
- unsigned int  amp_out_caps;	/* AMP out capabilities */
- unsigned int  amp_in_caps;	/* AMP in capabilities */
- unsigned long supported_formats; // format_val
+	hda_nid_t nid;				/* NID of this widget */
+	unsigned short nconns;		/* number of input connections */
+	hda_nid_t conn_list[HDA_MAX_CONNECTIONS];
+	unsigned int wid_caps;		/* widget capabilities */
+	unsigned char type;			/* widget type */
+	unsigned char pin_ctl;		/* pin controls */
+	unsigned char checked;		/* the flag indicates that the node is already parsed */
+	unsigned int pin_caps;		/* pin widget capabilities */
+	unsigned int def_cfg;		/* default configuration */
+	unsigned int amp_out_caps;	/* AMP out capabilities */
+	unsigned int amp_in_caps;	/* AMP in capabilities */
+	unsigned long supported_formats;	// format_val
 };
 
 struct pcm_vol_s {
- struct hda_gnode *node;  /* Node for PCM volume */
- unsigned int index;	  /* connection of PCM volume */
+	struct hda_gnode *node;		/* Node for PCM volume */
+	unsigned int index;			/* connection of PCM volume */
 };
 
-#endif /* __SOUND_HDA_CODEC_H */
+#endif							/* __SOUND_HDA_CODEC_H */

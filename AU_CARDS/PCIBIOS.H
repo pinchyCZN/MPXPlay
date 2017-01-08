@@ -1,23 +1,23 @@
 #ifndef pcibios_h
 #define pcibios_h
 
-#if defined(HAVE_INTTYPES_H) || (__WATCOMC__>=1240) // OW 1.4
+#if defined(HAVE_INTTYPES_H) || (__WATCOMC__>=1240)	// OW 1.4
 
 #include <inttypes.h>
 
 #else
 
 #ifndef uint8_t
-typedef unsigned char	uint8_t;
+typedef unsigned char uint8_t;
 #endif
 #ifndef uint16_t
-typedef unsigned short	uint16_t;
+typedef unsigned short uint16_t;
 #endif
 #ifndef int32_t
-typedef long            int32_t;
+typedef long int32_t;
 #endif
 #ifndef uint32_t
-typedef unsigned long	uint32_t;
+typedef unsigned long uint32_t;
 #endif
 
 #endif
@@ -73,47 +73,47 @@ typedef unsigned long	uint32_t;
 #define PCI_SET_FAILED		0x88
 #define PCI_BUFFER_SMALL	0x98
 
-#define PCIR_VID		0x00 // vendor id
-#define	PCIR_DID		0x02 // device id
-#define	PCIR_PCICMD		0x04 // command (read/write)
-#define PCIR_STATUS             0x06 // read status (16 bits)
-#define	PCIR_RID		0x08 // chiprev
+#define PCIR_VID		0x00	// vendor id
+#define	PCIR_DID		0x02	// device id
+#define	PCIR_PCICMD		0x04	// command (read/write)
+#define PCIR_STATUS             0x06	// read status (16 bits)
+#define	PCIR_RID		0x08	// chiprev
 #define	PCIR_CCODE		0x0A
-#define	PCIR_HEADT		0x0E // head type
-#define	PCIR_NAMBAR		0x10 // io baseport
-#define	PCIR_NABMBAR		0x14 // busmaster io baseport
-#define	PCIR_SSVID		0x2C // subsystem id + vendor id (serial)
-#define	PCIR_SSID		0x2E // subsystem id (model)
-#define	PCIR_INTR_LN		0x3C // irq number
+#define	PCIR_HEADT		0x0E	// head type
+#define	PCIR_NAMBAR		0x10	// io baseport
+#define	PCIR_NABMBAR		0x14	// busmaster io baseport
+#define	PCIR_SSVID		0x2C	// subsystem id + vendor id (serial)
+#define	PCIR_SSID		0x2E	// subsystem id (model)
+#define	PCIR_INTR_LN		0x3C	// irq number
 #define	PCIR_INTR_PIN		0x3D
 
-typedef struct pci_config_s{
- uint8_t bBus;
- uint8_t bDev;
- uint8_t bFunc;
- uint16_t vendor_id;
- uint16_t device_id;
- char *device_name;     // from pci_device_s
- uint16_t device_type;  // from pci_device_s
-}pci_config_s;
+typedef struct pci_config_s {
+	uint8_t bBus;
+	uint8_t bDev;
+	uint8_t bFunc;
+	uint16_t vendor_id;
+	uint16_t device_id;
+	char *device_name;			// from pci_device_s
+	uint16_t device_type;		// from pci_device_s
+} pci_config_s;
 
-typedef struct pci_device_s{
- char *device_name;     // a short id string
- uint16_t vendor_id;    // pci vendor id
- uint16_t device_id;    // pci device id
- uint16_t device_type;  // internal device type
-}pci_device_s;
+typedef struct pci_device_s {
+	char *device_name;			// a short id string
+	uint16_t vendor_id;			// pci vendor id
+	uint16_t device_id;			// pci device id
+	uint16_t device_type;		// internal device type
+} pci_device_s;
 
 //uint8_t  pcibios_GetBus(void);
-uint8_t	 pcibios_FindDevice(uint16_t, uint16_t, pci_config_s *);
-uint8_t  pcibios_search_devices(pci_device_s devices[],pci_config_s *);
-uint8_t	 pcibios_ReadConfig_Byte (pci_config_s *, uint16_t);
-uint16_t pcibios_ReadConfig_Word (pci_config_s *, uint16_t);
+uint8_t pcibios_FindDevice(uint16_t, uint16_t, pci_config_s *);
+uint8_t pcibios_search_devices(pci_device_s devices[], pci_config_s *);
+uint8_t pcibios_ReadConfig_Byte(pci_config_s *, uint16_t);
+uint16_t pcibios_ReadConfig_Word(pci_config_s *, uint16_t);
 uint32_t pcibios_ReadConfig_Dword(pci_config_s *, uint16_t);
-void	 pcibios_WriteConfig_Byte(pci_config_s *, uint16_t, uint8_t);
-void	 pcibios_WriteConfig_Word(pci_config_s *, uint16_t, uint16_t);
-//void	 pcibios_WriteConfig_Dword(pci_config_s *, uint16_t, uint32_t);
-void     pcibios_set_master(pci_config_s *);
-void     pcibios_enable_memmap_set_master(pci_config_s *);
+void pcibios_WriteConfig_Byte(pci_config_s *, uint16_t, uint8_t);
+void pcibios_WriteConfig_Word(pci_config_s *, uint16_t, uint16_t);
+//void   pcibios_WriteConfig_Dword(pci_config_s *, uint16_t, uint32_t);
+void pcibios_set_master(pci_config_s *);
+void pcibios_enable_memmap_set_master(pci_config_s *);
 
 #endif

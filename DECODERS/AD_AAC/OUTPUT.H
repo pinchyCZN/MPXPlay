@@ -32,12 +32,7 @@
 extern "C" {
 #endif
 
-void output_to_PCM(faacDecHandle hDecoder,
-                    real_t **input,
-                    void *samplebuffer,
-                    uint8_t channels,
-                    uint16_t frame_len,
-                    uint8_t format);
+	void output_to_PCM(faacDecHandle hDecoder, real_t ** input, void *samplebuffer, uint8_t channels, uint16_t frame_len, uint8_t format);
 
 #ifdef __cplusplus
 }

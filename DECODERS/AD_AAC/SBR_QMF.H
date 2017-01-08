@@ -32,23 +32,18 @@
 extern "C" {
 #endif
 
-qmfa_info *qmfa_init(uint8_t channels);
-void qmfa_end(qmfa_info *qmfa);
-qmfs_info *qmfs_init(uint8_t channels);
-void qmfs_end(qmfs_info *qmfs);
+	qmfa_info *qmfa_init(uint8_t channels);
+	void qmfa_end(qmfa_info * qmfa);
+	qmfs_info *qmfs_init(uint8_t channels);
+	void qmfs_end(qmfs_info * qmfs);
 
-void sbr_qmf_analysis_32(qmfa_info *qmfa, const real_t *input,
-                         qmf_t *X, uint8_t offset);
-void sbr_qmf_analysis_64(qmfa_info *qmfa, const real_t *input,
-                         qmf_t *X, uint8_t maxband, uint8_t offset);
-void sbr_qmf_synthesis_32(qmfs_info *qmfs, const qmf_t *X,
-                          real_t *output);
-void sbr_qmf_synthesis_64(qmfs_info *qmfs, const qmf_t *X,
-                          real_t *output);
+	void sbr_qmf_analysis_32(qmfa_info * qmfa, const real_t * input, qmf_t * X, uint8_t offset);
+	void sbr_qmf_analysis_64(qmfa_info * qmfa, const real_t * input, qmf_t * X, uint8_t maxband, uint8_t offset);
+	void sbr_qmf_synthesis_32(qmfs_info * qmfs, const qmf_t * X, real_t * output);
+	void sbr_qmf_synthesis_64(qmfs_info * qmfs, const qmf_t * X, real_t * output);
 
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

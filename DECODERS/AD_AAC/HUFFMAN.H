@@ -34,9 +34,9 @@ extern "C" {
 
 #include "bits.h"
 
-extern int32_t huffman_scale_factor(bitfile *ld);
-extern uint8_t huffman_spectral_data(bitfile *ld, int16_t *sp, uint32_t cb);
-extern uint8_t huffman_spectral_data_block(bitfile *ld, int16_t *sp, uint32_t cb, uint32_t len);
+	extern int32_t huffman_scale_factor(bitfile * ld);
+	extern uint8_t huffman_spectral_data(bitfile * ld, int16_t * sp, uint32_t cb);
+	extern uint8_t huffman_spectral_data_block(bitfile * ld, int16_t * sp, uint32_t cb, uint32_t len);
 
 #ifdef __cplusplus
 }

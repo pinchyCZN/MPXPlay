@@ -39,57 +39,57 @@
 typedef struct mpxplay_videoout_func_s;
 
 // common structure for
-typedef struct mpxplay_videoout_info_s{
- unsigned char *video_picture;
- unsigned long video_bytes;
- unsigned long video_res_x;
- unsigned long video_res_y;
- unsigned long video_bpp;
- unsigned long video_pixeltype;
+typedef struct mpxplay_videoout_info_s {
+	unsigned char *video_picture;
+	unsigned long video_bytes;
+	unsigned long video_res_x;
+	unsigned long video_res_y;
+	unsigned long video_bpp;
+	unsigned long video_pixeltype;
 
- char *config_screenhandler_name;
- unsigned long config_mode;
- unsigned long config_res_x;
- unsigned long config_res_y;
- unsigned long config_bpp;
+	char *config_screenhandler_name;
+	unsigned long config_mode;
+	unsigned long config_res_x;
+	unsigned long config_res_y;
+	unsigned long config_bpp;
 
- struct mpxplay_videoout_func_s *screen_handler;
- unsigned long screen_hwmix_capables;
- void          *screen_private_data;
- unsigned char *screen_linear_ptr;
- unsigned long screen_size;
- unsigned long screen_res_x;
- unsigned long screen_res_y;
- unsigned long screen_bpp;
- unsigned long screen_pixeltype;
-}mpxplay_videoout_info_s;
+	struct mpxplay_videoout_func_s *screen_handler;
+	unsigned long screen_hwmix_capables;
+	void *screen_private_data;
+	unsigned char *screen_linear_ptr;
+	unsigned long screen_size;
+	unsigned long screen_res_x;
+	unsigned long screen_res_y;
+	unsigned long screen_bpp;
+	unsigned long screen_pixeltype;
+} mpxplay_videoout_info_s;
 
-typedef struct mpxplay_videoout_func_s{
- char *name;
- unsigned long infobits;
- unsigned int (*init)(struct mpxplay_videoout_info_s *);     // init/alloc/check
- void         (*close)(struct mpxplay_videoout_info_s *);    // close/dealloc
- void         (*listmodes)(struct mpxplay_videoout_info_s *);// list available modes
- unsigned int (*searchmode)(struct mpxplay_videoout_info_s *,unsigned int x,unsigned int y,unsigned int bpp);// search mode for res/bpp
- unsigned int (*set)(struct mpxplay_videoout_info_s *,unsigned int clearmem); // set graph mode
- unsigned int (*reset)(struct mpxplay_videoout_info_s *);    // restore non-graph mode
- unsigned int (*write)(struct mpxplay_videoout_info_s *,unsigned long x,unsigned long y,unsigned char *data);
-}mpxplay_videoout_func_s;
+typedef struct mpxplay_videoout_func_s {
+	char *name;
+	unsigned long infobits;
+	unsigned int (*init) (struct mpxplay_videoout_info_s *);	// init/alloc/check
+	void (*close) (struct mpxplay_videoout_info_s *);	// close/dealloc
+	void (*listmodes) (struct mpxplay_videoout_info_s *);	// list available modes
+	unsigned int (*searchmode) (struct mpxplay_videoout_info_s *, unsigned int x, unsigned int y, unsigned int bpp);	// search mode for res/bpp
+	unsigned int (*set) (struct mpxplay_videoout_info_s *, unsigned int clearmem);	// set graph mode
+	unsigned int (*reset) (struct mpxplay_videoout_info_s *);	// restore non-graph mode
+	unsigned int (*write) (struct mpxplay_videoout_info_s *, unsigned long x, unsigned long y, unsigned char *data);
+} mpxplay_videoout_func_s;
 
-#include "au_mixer\au_mixer.h" // inittype & setmode values are the same
+#include "au_mixer\au_mixer.h"	// inittype & setmode values are the same
 
-typedef struct mpxplay_videomix_func_s{
- char *name;
- char *cmdlineopt;
- unsigned long infobits;
- unsigned int (*init)(struct mpxplay_videoout_info_s *,unsigned int inittype);
- unsigned int (*config)(struct mpxplay_videoout_info_s *,unsigned int setmode,int value);
- unsigned int (*checkfunc)(struct mpxplay_videoout_info_s *);
- void         (*process)(struct mpxplay_videoout_info_s *,unsigned long screen_beginpos,unsigned long screen_bytes);
-}mpxlay_videomix_func_s;
+typedef struct mpxplay_videomix_func_s {
+	char *name;
+	char *cmdlineopt;
+	unsigned long infobits;
+	unsigned int (*init) (struct mpxplay_videoout_info_s *, unsigned int inittype);
+	unsigned int (*config) (struct mpxplay_videoout_info_s *, unsigned int setmode, int value);
+	unsigned int (*checkfunc) (struct mpxplay_videoout_info_s *);
+	void (*process) (struct mpxplay_videoout_info_s *, unsigned long screen_beginpos, unsigned long screen_bytes);
+} mpxlay_videomix_func_s;
 
 extern void mpxplay_videoout_init(struct mpxplay_videoout_info_s *voi);
 extern void mpxplay_videoout_close(struct mpxplay_videoout_info_s *voi);
 extern void mpxplay_videoout_listmodes(struct mpxplay_videoout_info_s *voi);
 
-#endif // videoout_h
+#endif							// videoout_h

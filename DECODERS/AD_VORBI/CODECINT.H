@@ -25,12 +25,11 @@ typedef void vorbis_look_floor;
 typedef void vorbis_look_residue;
 typedef void vorbis_look_transform;
 
-typedef struct
-{
-  int blockflag;
-  int windowtype;
-  int transformtype;
-  int mapping;
+typedef struct {
+	int blockflag;
+	int windowtype;
+	int transformtype;
+	int mapping;
 } vorbis_info_mode;
 
 typedef void vorbis_info_floor;
@@ -39,36 +38,34 @@ typedef void vorbis_info_mapping;
 
 #include "backends.h"
 
-typedef struct backend_lookup_state
-{
-  ogg_double_t          *window[2];
-  vorbis_look_transform *transform[2];
-  //vorbis_look_transform **transform[2];
-  int                     modebits;
-  vorbis_look_floor     **flr;
-  vorbis_info_residue   **residue;
+typedef struct backend_lookup_state {
+	ogg_double_t *window[2];
+	vorbis_look_transform *transform[2];
+	//vorbis_look_transform **transform[2];
+	int modebits;
+	vorbis_look_floor **flr;
+	vorbis_info_residue **residue;
 } backend_lookup_state;
 
-typedef struct codec_setup_info
-{
-  unsigned long blocksizes[2];
+typedef struct codec_setup_info {
+	unsigned long blocksizes[2];
 
-  int        modes;
-  int        maps;
-  int        floors;
-  int        residues;
-  int        books;
+	int modes;
+	int maps;
+	int floors;
+	int residues;
+	int books;
 
-  codebook               *fullbooks;
+	codebook *fullbooks;
 
-  vorbis_info_mode       *mode_param[64];
-  int                     map_type[64];
-  vorbis_info_mapping    *map_param[64];
-  int                     floor_type[64];
-  vorbis_info_floor      *floor_param[64];
-  int                     residue_type[64];
-  vorbis_info_residue    *residue_param[64];
-  static_codebook        *book_param[256];
+	vorbis_info_mode *mode_param[64];
+	int map_type[64];
+	vorbis_info_mapping *map_param[64];
+	int floor_type[64];
+	vorbis_info_floor *floor_param[64];
+	int residue_type[64];
+	vorbis_info_residue *residue_param[64];
+	static_codebook *book_param[256];
 
 } codec_setup_info;
 

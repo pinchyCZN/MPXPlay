@@ -33,16 +33,15 @@ extern "C" {
 #endif
 
 
-void envelope_time_border_vector(sbr_info *sbr, uint8_t ch);
-void noise_floor_time_border_vector(sbr_info *sbr, uint8_t ch);
+	void envelope_time_border_vector(sbr_info * sbr, uint8_t ch);
+	void noise_floor_time_border_vector(sbr_info * sbr, uint8_t ch);
 
-static int16_t rel_bord_lead(sbr_info *sbr, uint8_t ch, uint8_t l);
-static int16_t rel_bord_trail(sbr_info *sbr, uint8_t ch, uint8_t l);
-static uint8_t middleBorder(sbr_info *sbr, uint8_t ch);
+	static int16_t rel_bord_lead(sbr_info * sbr, uint8_t ch, uint8_t l);
+	static int16_t rel_bord_trail(sbr_info * sbr, uint8_t ch, uint8_t l);
+	static uint8_t middleBorder(sbr_info * sbr, uint8_t ch);
 
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

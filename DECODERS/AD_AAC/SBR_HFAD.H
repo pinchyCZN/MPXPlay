@@ -32,43 +32,41 @@
 extern "C" {
 #endif
 
-typedef struct {
+	typedef struct {
 
-    real_t Q_mapped[64][5];
+		real_t Q_mapped[64][5];
 
-    uint8_t S_index_mapped[64][5];
-    uint8_t S_mapped[64][5];
+		uint8_t S_index_mapped[64][5];
+		uint8_t S_mapped[64][5];
 
-    real_t G_lim_boost[5][64];
-    real_t Q_M_lim_boost[5][64];
-    real_t S_M_boost[5][64];
+		real_t G_lim_boost[5][64];
+		real_t Q_M_lim_boost[5][64];
+		real_t S_M_boost[5][64];
 
-} sbr_hfadj_info;
+	} sbr_hfadj_info;
 
 
-void hf_adjustment(sbr_info *sbr, qmf_t *Xsbr
+	void hf_adjustment(sbr_info * sbr, qmf_t * Xsbr
 #ifdef SBR_LOW_POWER
-                   ,real_t *deg
+					   , real_t * deg
 #endif
-                   ,uint8_t ch);
+					   , uint8_t ch);
 
 
-static void map_envelope_data(sbr_info *sbr, sbr_hfadj_info *adj, uint8_t ch);
-static void map_noise_data(sbr_info *sbr, sbr_hfadj_info *adj, uint8_t ch);
-static void map_sinusoids(sbr_info *sbr, sbr_hfadj_info *adj, uint8_t ch);
-static void estimate_current_envelope(sbr_info *sbr, sbr_hfadj_info *adj, qmf_t *Xsbr,
-                                      uint8_t ch);
-static void additional_component_levels(sbr_info *sbr, sbr_hfadj_info *adj, uint8_t ch);
-static void calculate_gain(sbr_info *sbr, sbr_hfadj_info *adj, uint8_t ch);
+	static void map_envelope_data(sbr_info * sbr, sbr_hfadj_info * adj, uint8_t ch);
+	static void map_noise_data(sbr_info * sbr, sbr_hfadj_info * adj, uint8_t ch);
+	static void map_sinusoids(sbr_info * sbr, sbr_hfadj_info * adj, uint8_t ch);
+	static void estimate_current_envelope(sbr_info * sbr, sbr_hfadj_info * adj, qmf_t * Xsbr, uint8_t ch);
+	static void additional_component_levels(sbr_info * sbr, sbr_hfadj_info * adj, uint8_t ch);
+	static void calculate_gain(sbr_info * sbr, sbr_hfadj_info * adj, uint8_t ch);
 #ifdef SBR_LOW_POWER
-static void calc_gain_groups(sbr_info *sbr, sbr_hfadj_info *adj, real_t *deg, uint8_t ch);
-static void aliasing_reduction(sbr_info *sbr, sbr_hfadj_info *adj, real_t *deg, uint8_t ch);
+	static void calc_gain_groups(sbr_info * sbr, sbr_hfadj_info * adj, real_t * deg, uint8_t ch);
+	static void aliasing_reduction(sbr_info * sbr, sbr_hfadj_info * adj, real_t * deg, uint8_t ch);
 #endif
-static void hf_assembly(sbr_info *sbr, sbr_hfadj_info *adj, qmf_t *Xsbr, uint8_t ch);
+	static void hf_assembly(sbr_info * sbr, sbr_hfadj_info * adj, qmf_t * Xsbr, uint8_t ch);
 
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

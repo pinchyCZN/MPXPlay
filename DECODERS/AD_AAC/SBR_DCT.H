@@ -32,14 +32,13 @@
 extern "C" {
 #endif
 
-void DCT3_32_unscaled(real_t *y, real_t *x);
-void DCT2_64_unscaled(real_t *y, real_t *x);
-void DCT4_64(real_t *y, real_t *x);
-void DST4_64(real_t *y, real_t *x);
+	void DCT3_32_unscaled(real_t * y, real_t * x);
+	void DCT2_64_unscaled(real_t * y, real_t * x);
+	void DCT4_64(real_t * y, real_t * x);
+	void DST4_64(real_t * y, real_t * x);
 
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

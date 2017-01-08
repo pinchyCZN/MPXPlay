@@ -76,57 +76,52 @@ extern "C" {
 #define INTENSITY_HCB  15
 
 /* 1st step table */
-typedef struct
-{
-    uint8_t offset;
-    uint8_t extra_bits;
-} hcb;
+	typedef struct {
+		uint8_t offset;
+		uint8_t extra_bits;
+	} hcb;
 
 /* 2nd step table with quadruple data */
-typedef struct
-{
-    uint8_t bits;
-    int8_t x;
-    int8_t y;
-} hcb_2_pair;
+	typedef struct {
+		uint8_t bits;
+		int8_t x;
+		int8_t y;
+	} hcb_2_pair;
 
-typedef struct
-{
-    uint8_t bits;
-    int8_t x;
-    int8_t y;
-    int8_t v;
-    int8_t w;
-} hcb_2_quad;
+	typedef struct {
+		uint8_t bits;
+		int8_t x;
+		int8_t y;
+		int8_t v;
+		int8_t w;
+	} hcb_2_quad;
 
 /* binary search table */
-typedef struct
-{
-    uint8_t is_leaf;
-    int8_t data[4];
-} hcb_bin_quad;
+	typedef struct {
+		uint8_t is_leaf;
+		int8_t data[4];
+	} hcb_bin_quad;
 
-typedef struct
-{
-    uint8_t is_leaf;
-    int8_t data[2];
-} hcb_bin_pair;
+	typedef struct {
+		uint8_t is_leaf;
+		int8_t data[2];
+	} hcb_bin_pair;
 
-typedef struct huff_cbtable_s{
- hcb           *hcb_table;
- hcb_2_quad    *quad_table;
- uint32_t      quad_tab_size;
- hcb_2_pair    *pair_table;
- uint32_t      pair_tab_size;
- hcb_bin_pair  *bin_table;
- uint32_t      bin_tab_size;
- uint8_t       N;
- uint8_t       unsigned_cb;
-}huff_cbtable_s;
+	typedef struct huff_cbtable_s {
+		hcb *hcb_table;
+		hcb_2_quad *quad_table;
+		uint32_t quad_tab_size;
+		hcb_2_pair *pair_table;
+		uint32_t pair_tab_size;
+		hcb_bin_pair *bin_table;
+		uint32_t bin_tab_size;
+		uint8_t N;
+		uint8_t unsigned_cb;
+	} huff_cbtable_s;
 
-extern huff_cbtable_s huff_cbtables[12];
+	extern huff_cbtable_s huff_cbtables[12];
 
-extern hcb_bin_quad hcb3[];
+	extern hcb_bin_quad hcb3[];
 
 #ifdef __cplusplus
 }

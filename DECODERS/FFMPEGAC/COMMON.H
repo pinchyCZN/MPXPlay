@@ -8,17 +8,17 @@
 
 #ifdef __WATCOMC__
  //#define EMULATE_INTTYPES 1
- #define HAVE_AV_CONFIG_H 1
- #define CONFIG_DECODERS  1
- #define inline __inline
- #define snprintf _snprintf
- #define vsnprintf _vsnprintf
- #define strcasecmp stricmp
- #define int64_t_C(c)  ((int64_t) c )
- #define uint64_t_C(c) ((int64_t) c )
- #define rint(x) (floor((x)+0.5F))
- #define __attribute__(a)
- #include <malloc.h>
+#define HAVE_AV_CONFIG_H 1
+#define CONFIG_DECODERS  1
+#define inline __inline
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+#define strcasecmp stricmp
+#define int64_t_C(c)  ((int64_t) c )
+#define uint64_t_C(c) ((int64_t) c )
+#define rint(x) (floor((x)+0.5F))
+#define __attribute__(a)
+#include <malloc.h>
 #endif
 
 /*#ifndef INLINE
@@ -77,7 +77,7 @@
 #define AVOPTION_SUB(ptr) { .name = NULL, .help = (const char*)ptr }
 #define AVOPTION_END() AVOPTION_SUB(NULL)
 
-#endif /* HAVE_AV_CONFIG_H */
+#endif							/* HAVE_AV_CONFIG_H */
 
 /* Suppress restrict if it was not defined in config.h.  */
 #ifndef restrict
@@ -111,21 +111,21 @@
 #ifndef EMULATE_INTTYPES
 #   include <inttypes.h>
 #else
-    typedef signed char  int8_t;
-    typedef signed short int16_t;
-    typedef signed int   int32_t;
-    typedef unsigned char  uint8_t;
-    typedef unsigned short uint16_t;
-    typedef unsigned int   uint32_t;
+typedef signed char int8_t;
+typedef signed short int16_t;
+typedef signed int int32_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
 
 #   ifdef CONFIG_WIN32
-        typedef signed __int64   int64_t;
-        typedef unsigned __int64 uint64_t;
-#   else /* other OS */
-        typedef signed long long   int64_t;
-        typedef unsigned long long uint64_t;
-#   endif /* other OS */
-#endif /* HAVE_INTTYPES_H */
+typedef signed __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+#   else						/* other OS */
+typedef signed long long int64_t;
+typedef unsigned long long uint64_t;
+#   endif						/* other OS */
+#endif							/* HAVE_INTTYPES_H */
 
 #ifndef INT16_MIN
 #define INT16_MIN       (-0x7fff-1)
@@ -149,12 +149,12 @@
 
 #ifdef EMULATE_FAST_INT
 typedef signed char int_fast8_t;
-typedef signed int  int_fast16_t;
-typedef signed int  int_fast32_t;
+typedef signed int int_fast16_t;
+typedef signed int int_fast32_t;
 typedef unsigned char uint_fast8_t;
-typedef unsigned int  uint_fast16_t;
-typedef unsigned int  uint_fast32_t;
-typedef uint64_t      uint_fast64_t;
+typedef unsigned int uint_fast16_t;
+typedef unsigned int uint_fast32_t;
+typedef uint64_t uint_fast64_t;
 #endif
 
 #ifndef INT_BIT
@@ -166,8 +166,9 @@ typedef uint64_t      uint_fast64_t;
 #endif
 
 #if defined(CONFIG_OS2) || defined(CONFIG_SUNOS)
-static inline float floorf(float f) { 
-    return floor(f); 
+static inline float floorf(float f)
+{
+	return floor(f);
 }
 #endif
 
@@ -186,7 +187,7 @@ static inline float floorf(float f) {
 #    else
 #        define int64_t_C(c)     (c ## LL)
 #        define uint64_t_C(c)    (c ## ULL)
-#    endif /* __MINGW32__ */
+#    endif						/* __MINGW32__ */
 
 #    ifdef HAVE_AV_CONFIG_H
 #        ifdef _DEBUG
@@ -214,7 +215,7 @@ static inline float floorf(float f) {
 
 #include <float.h>
 
-#endif /* HAVE_AV_CONFIG_H */
+#endif							/* HAVE_AV_CONFIG_H */
 
 /* CONFIG_OS2 end */
 #else
@@ -231,9 +232,9 @@ static inline float floorf(float f) {
 #        ifdef USE_FASTMEMCPY
 #            include "fastmemcpy.h"
 #        endif
-#    endif /* HAVE_AV_CONFIG_H */
+#    endif						/* HAVE_AV_CONFIG_H */
 
-#endif /* !CONFIG_WIN32 && !CONFIG_OS2 */
+#endif							/* !CONFIG_WIN32 && !CONFIG_OS2 */
 
 #ifdef HAVE_AV_CONFIG_H
 
@@ -265,7 +266,9 @@ static inline float floorf(float f) {
 /* dprintf macros */
 #    if defined(CONFIG_WIN32) && !defined(__MINGW32__) && !defined(__CYGWIN__)
 
-inline void dprintf(const char* fmt,...) {}
+inline void dprintf(const char *fmt, ...)
+{
+}
 
 #    else
 
@@ -275,7 +278,7 @@ inline void dprintf(const char* fmt,...) {}
 #            define dprintf()
 #        endif
 
-#    endif /* !CONFIG_WIN32 */
+#    endif						/* !CONFIG_WIN32 */
 
 #    define av_abort()      do { av_log(NULL, AV_LOG_ERROR, "Abort at %s:%d\n", __FILE__, __LINE__); abort(); } while (0)
 
@@ -306,7 +309,7 @@ extern const uint32_t inverse[256];
 #else
 #    define FASTDIV(a,b)   ((a)/(b))
 #endif
- 
+
 /* define it to include statistics code (useful only for optimizing
    codec efficiency */
 //#define STATS
@@ -314,14 +317,14 @@ extern const uint32_t inverse[256];
 #ifdef STATS
 
 enum {
-    ST_UNKNOWN,
-    ST_DC,
-    ST_INTRA_AC,
-    ST_INTER_AC,
-    ST_INTRA_MB,
-    ST_INTER_MB,
-    ST_MV,
-    ST_NB,
+	ST_UNKNOWN,
+	ST_DC,
+	ST_INTRA_AC,
+	ST_INTER_AC,
+	ST_INTRA_MB,
+	ST_INTER_MB,
+	ST_MV,
+	ST_NB,
 };
 
 extern int st_current_index;
@@ -336,77 +339,83 @@ extern const uint8_t ff_log2_tab[256];
 
 static inline int av_log2(unsigned int v)
 {
-    int n;
+	int n;
 
-    n = 0;
-    if (v & 0xffff0000) {
-        v >>= 16;
-        n += 16;
-    }
-    if (v & 0xff00) {
-        v >>= 8;
-        n += 8;
-    }
-    n += ff_log2_tab[v];
+	n = 0;
+	if(v & 0xffff0000) {
+		v >>= 16;
+		n += 16;
+	}
+	if(v & 0xff00) {
+		v >>= 8;
+		n += 8;
+	}
+	n += ff_log2_tab[v];
 
-    return n;
+	return n;
 }
 
 static inline int av_log2_16bit(unsigned int v)
 {
-    int n;
+	int n;
 
-    n = 0;
-    if (v & 0xff00) {
-        v >>= 8;
-        n += 8;
-    }
-    n += ff_log2_tab[v];
+	n = 0;
+	if(v & 0xff00) {
+		v >>= 8;
+		n += 8;
+	}
+	n += ff_log2_tab[v];
 
-    return n;
+	return n;
 }
 
 /* median of 3 */
 static inline int mid_pred(int a, int b, int c)
 {
 #if 0
-    int t= (a-b)&((a-b)>>31);
-    a-=t;
-    b+=t;
-    b-= (b-c)&((b-c)>>31);
-    b+= (a-b)&((a-b)>>31);
+	int t = (a - b) & ((a - b) >> 31);
+	a -= t;
+	b += t;
+	b -= (b - c) & ((b - c) >> 31);
+	b += (a - b) & ((a - b) >> 31);
 
-    return b;
+	return b;
 #else
-    if(a>b){
-        if(c>b){
-            if(c>a) b=a;
-            else    b=c;
-        }
-    }else{
-        if(b>c){
-            if(c>a) b=c;
-            else    b=a;
-        }
-    }
-    return b;
+	if(a > b) {
+		if(c > b) {
+			if(c > a)
+				b = a;
+			else
+				b = c;
+		}
+	} else {
+		if(b > c) {
+			if(c > a)
+				b = c;
+			else
+				b = a;
+		}
+	}
+	return b;
 #endif
 }
 
 static inline int clip(int a, int amin, int amax)
 {
-    if (a < amin)
-        return amin;
-    else if (a > amax)
-        return amax;
-    else
-        return a;
+	if(a < amin)
+		return amin;
+	else if(a > amax)
+		return amax;
+	else
+		return a;
 }
 
 static inline int clip_uint8(int a)
 {
-    if (a&(~255)) return (-a)>>31;
-    else          return a;
+	if(a & (~255))
+		return (-a) >> 31;
+	else
+		return a;
 }
 
 /* math */
@@ -416,29 +425,31 @@ int64_t ff_gcd(int64_t a, int64_t b);
 
 static inline int ff_sqrt(int a)
 {
-    int ret=0;
-    int s;
-    int ret_sq=0;
-    
-    if(a<128) return ff_sqrt_tab[a];
-    
-    for(s=15; s>=0; s--){
-        int b= ret_sq + (1<<(s*2)) + (ret<<s)*2;
-        if(b<=a){
-            ret_sq=b;
-            ret+= 1<<s;
-        }
-    }
-    return ret;
+	int ret = 0;
+	int s;
+	int ret_sq = 0;
+
+	if(a < 128)
+		return ff_sqrt_tab[a];
+
+	for(s = 15; s >= 0; s--) {
+		int b = ret_sq + (1 << (s * 2)) + (ret << s) * 2;
+		if(b <= a) {
+			ret_sq = b;
+			ret += 1 << s;
+		}
+	}
+	return ret;
 }
 
 /**
  * converts fourcc string to int
  */
-static inline int ff_get_fourcc(const char *s){
-    assert( strlen(s)==4 );
+static inline int ff_get_fourcc(const char *s)
+{
+	assert(strlen(s) == 4);
 
-    return (s[0]) + (s[1]<<8) + (s[2]<<16) + (s[3]<<24);
+	return (s[0]) + (s[1] << 8) + (s[2] << 16) + (s[3] << 24);
 }
 
 #define MKTAG(a,b,c,d) (a | (b << 8) | (c << 16) | (d << 24))
@@ -484,38 +495,28 @@ if((y)<(x)){\
 static inline uint64_t read_time(void)
 {
 	uint64_t a, d;
-	asm volatile(	"rdtsc\n\t"
-		: "=a" (a), "=d" (d)
-	);
+	asm volatile ("rdtsc\n\t":"=a" (a), "=d"(d)
+		);
 	return (d << 32) | (a & 0xffffffff);
 }
 #elif defined(ARCH_X86)
 static inline long long read_time(void)
 {
 	long long l;
-	asm volatile(	"rdtsc\n\t"
-		: "=A" (l)
-	);
+	asm volatile ("rdtsc\n\t":"=A" (l)
+		);
 	return l;
 }
-#else //FIXME check ppc64
+#else							//FIXME check ppc64
 static inline uint64_t read_time(void)
 {
-    uint32_t tbu, tbl, temp;
+	uint32_t tbu, tbl, temp;
 
-     /* from section 2.2.1 of the 32-bit PowerPC PEM */
-     __asm__ __volatile__(
-         "1:\n"
-         "mftbu  %2\n"
-         "mftb   %0\n"
-         "mftbu  %1\n"
-         "cmpw   %2,%1\n"
-         "bne    1b\n"
-     : "=r"(tbl), "=r"(tbu), "=r"(temp)
-     :
-     : "cc");
+	/* from section 2.2.1 of the 32-bit PowerPC PEM */
+	__asm__ __volatile__("1:\n" "mftbu  %2\n" "mftb   %0\n" "mftbu  %1\n" "cmpw   %2,%1\n" "bne    1b\n":"=r"(tbl), "=r"(tbu), "=r"(temp)
+						 ::"cc");
 
-     return (((uint64_t)tbu)<<32) | (uint64_t)tbl;
+	return (((uint64_t) tbu) << 32) | (uint64_t) tbl;
 }
 #endif
 
@@ -539,7 +540,7 @@ tend= read_time();\
   }\
 }
 #else
-#define START_TIMER 
+#define START_TIMER
 #define STOP_TIMER(id) {}
 #endif
 
@@ -566,6 +567,6 @@ tend= read_time();\
     }\
 }
 
-#endif /* HAVE_AV_CONFIG_H */
+#endif							/* HAVE_AV_CONFIG_H */
 
-#endif /* COMMON_H */
+#endif							/* COMMON_H */

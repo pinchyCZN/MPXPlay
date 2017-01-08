@@ -34,11 +34,9 @@ extern "C" {
 
 #include "syntax.h"
 
-void ms_decode(ic_stream *ics, ic_stream *icsr, real_t *l_spec, real_t *r_spec,
-               uint16_t frame_len);
+	void ms_decode(ic_stream * ics, ic_stream * icsr, real_t * l_spec, real_t * r_spec, uint16_t frame_len);
 
-void is_decode(ic_stream *ics, ic_stream *icsr, real_t *l_spec, real_t *r_spec,
-               uint16_t frame_len);
+	void is_decode(ic_stream * ics, ic_stream * icsr, real_t * l_spec, real_t * r_spec, uint16_t frame_len);
 
 #define is_intensity(ics,group,sfb) (ics->sfb_cb[group][sfb]==INTENSITY_HCB)?1:(ics->sfb_cb[group][sfb]==INTENSITY_HCB2)?-1:0
 #define invert_intensity(ics,group,sfb) (ics->ms_mask_present==1)?(1-2*ics->ms_used[group][sfb]):1

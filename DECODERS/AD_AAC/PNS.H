@@ -37,17 +37,15 @@ extern "C" {
 #include "syntax.h"
 
 #define NOISE_OFFSET 90
-/* #define MEAN_NRG 1.537228e+18 */ /* (2^31)^2 / 3 */
+	/* #define MEAN_NRG 1.537228e+18 *//* (2^31)^2 / 3 */
 #ifdef FIXED_POINT
-#define ISQRT_MEAN_NRG 0x1DC7 /* sqrt(1/sqrt(MEAN_NRG)) */
+#define ISQRT_MEAN_NRG 0x1DC7	/* sqrt(1/sqrt(MEAN_NRG)) */
 #else
-#define ISQRT_MEAN_NRG 8.0655e-10 /* 1/sqrt(MEAN_NRG) */
+#define ISQRT_MEAN_NRG 8.0655e-10	/* 1/sqrt(MEAN_NRG) */
 #endif
 
 
-void pns_decode(ic_stream *ics_left, ic_stream *ics_right,
-                real_t *spec_left, real_t *spec_right, uint16_t frame_len,
-                uint8_t channel_pair);
+	void pns_decode(ic_stream * ics_left, ic_stream * ics_right, real_t * spec_left, real_t * spec_right, uint16_t frame_len, uint8_t channel_pair);
 
 #define is_noise(ics,group,sfb) (ics->sfb_cb[group][sfb]==NOISE_HCB)?1:0
 

@@ -52,20 +52,19 @@ extern "C" {
 #define NOISE_FLOOR_OFFSET 6.0
 
 
-uint8_t sbr_extension_data(bitfile *ld, sbr_info *sbr, uint8_t id_aac);
-static void sbr_header(bitfile *ld, sbr_info *sbr, uint8_t id_aac);
-static void sbr_data(bitfile *ld, sbr_info *sbr, uint8_t id_aac);
-static void sbr_single_channel_element(bitfile *ld, sbr_info *sbr);
-static void sbr_channel_pair_element(bitfile *ld, sbr_info *sbr);
-static void sbr_grid(bitfile *ld, sbr_info *sbr, uint8_t ch);
-static void sbr_dtdf(bitfile *ld, sbr_info *sbr, uint8_t ch);
-static void invf_mode(bitfile *ld, sbr_info *sbr, uint8_t ch);
-static void sbr_envelope(bitfile *ld, sbr_info *sbr, uint8_t ch);
-static void sbr_noise(bitfile *ld, sbr_info *sbr, uint8_t ch);
-static void sinusoidal_coding(bitfile *ld, sbr_info *sbr, uint8_t ch);
+	uint8_t sbr_extension_data(bitfile * ld, sbr_info * sbr, uint8_t id_aac);
+	static void sbr_header(bitfile * ld, sbr_info * sbr, uint8_t id_aac);
+	static void sbr_data(bitfile * ld, sbr_info * sbr, uint8_t id_aac);
+	static void sbr_single_channel_element(bitfile * ld, sbr_info * sbr);
+	static void sbr_channel_pair_element(bitfile * ld, sbr_info * sbr);
+	static void sbr_grid(bitfile * ld, sbr_info * sbr, uint8_t ch);
+	static void sbr_dtdf(bitfile * ld, sbr_info * sbr, uint8_t ch);
+	static void invf_mode(bitfile * ld, sbr_info * sbr, uint8_t ch);
+	static void sbr_envelope(bitfile * ld, sbr_info * sbr, uint8_t ch);
+	static void sbr_noise(bitfile * ld, sbr_info * sbr, uint8_t ch);
+	static void sinusoidal_coding(bitfile * ld, sbr_info * sbr, uint8_t ch);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* __SBR_SYNTAX_H__ */
-
+#endif							/* __SBR_SYNTAX_H__ */

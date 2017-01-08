@@ -68,4 +68,4 @@ Error Codes
 // unknown error
 #define APEDEC_ERROR_UNDEFINED				    -1
 
-#endif // #ifndef APE_ALL_H
+#endif							// #ifndef APE_ALL_H

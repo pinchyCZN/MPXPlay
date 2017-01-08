@@ -58,52 +58,52 @@
 
 #ifdef MDCT_INTEGERIZED
 
- #define DATA_TYPE int
- #define REG_TYPE  register int
- #define TRIGBITS 14
- #define cPI3_8 6270
- #define cPI2_8 11585
- #define cPI1_8 15137
+#define DATA_TYPE int
+#define REG_TYPE  register int
+#define TRIGBITS 14
+#define cPI3_8 6270
+#define cPI2_8 11585
+#define cPI1_8 15137
 
- #define FLOAT_CONV(x) ((int)((x)*(1<<TRIGBITS)+.5))
- #define MULT_NORM(x) ((x)>>TRIGBITS)
- #define HALVE(x) ((x)>>1)
+#define FLOAT_CONV(x) ((int)((x)*(1<<TRIGBITS)+.5))
+#define MULT_NORM(x) ((x)>>TRIGBITS)
+#define HALVE(x) ((x)>>1)
 
 #else
 
- #define DATA_TYPE ogg_double_t
- #define REG_TYPE  ogg_double_t
- #ifndef MDCT_ASM
-  #define cPI3_8 .38268343236508977175F
-  #define cPI2_8 .70710678118654752441F
-  #define cPI1_8 .92387953251128675613F
- #endif
+#define DATA_TYPE ogg_double_t
+#define REG_TYPE  ogg_double_t
+#ifndef MDCT_ASM
+#define cPI3_8 .38268343236508977175F
+#define cPI2_8 .70710678118654752441F
+#define cPI1_8 .92387953251128675613F
+#endif
 
- #define FLOAT_CONV(x) (x)
- #define MULT_NORM(x) (x)
- #define HALVE(x) ((x)*.5F)
+#define FLOAT_CONV(x) (x)
+#define MULT_NORM(x) (x)
+#define HALVE(x) ((x)*.5F)
 
 #endif
 
 typedef struct {
- int n;
- int log2n;
- DATA_TYPE *trig;
- int       *bitrev;
+	int n;
+	int log2n;
+	DATA_TYPE *trig;
+	int *bitrev;
 
 #ifdef MDCT_FORWARD
- DATA_TYPE scale;
- DATA_TYPE *forward_buffer;
+	DATA_TYPE scale;
+	DATA_TYPE *forward_buffer;
 #endif
-}mdct_lookup;
+} mdct_lookup;
 
 extern void *oggdec_mdct_init(unsigned int n);
-extern void oggdec_mdct_clear(mdct_lookup *l);
-extern void oggdec_mdct_backward(mdct_lookup *init, DATA_TYPE *in, DATA_TYPE *out);
+extern void oggdec_mdct_clear(mdct_lookup * l);
+extern void oggdec_mdct_backward(mdct_lookup * init, DATA_TYPE * in, DATA_TYPE * out);
 #ifdef MDCT_FORWARD
-extern void oggdec_mdct_forward(mdct_lookup *init, DATA_TYPE *in, DATA_TYPE *out);
+extern void oggdec_mdct_forward(mdct_lookup * init, DATA_TYPE * in, DATA_TYPE * out);
 #endif
 
-#endif // USE_AAC_MDCT
+#endif							// USE_AAC_MDCT
 
-#endif // _OGG_mdct_H
+#endif							// _OGG_mdct_H

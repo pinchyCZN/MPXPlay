@@ -25,22 +25,22 @@
 #define A52_H
 
 #ifndef inline
- #define inline __inline
+#define inline __inline
 #endif
 
-#if defined(HAVE_INTTYPES_H) || (__WATCOMC__>=1240) // OW 1.4
+#if defined(HAVE_INTTYPES_H) || (__WATCOMC__>=1240)	// OW 1.4
 
- #include <inttypes.h>
+#include <inttypes.h>
 
 #else
- typedef unsigned long  uint32_t;
- typedef unsigned short uint16_t;
- typedef unsigned char  uint8_t;
+typedef unsigned long uint32_t;
+typedef unsigned short uint16_t;
+typedef unsigned char uint8_t;
 
  //typedef long long      int64_t;
- typedef signed long    int32_t;
- typedef signed short   int16_t;
- typedef signed char    int8_t;
+typedef signed long int32_t;
+typedef signed short int16_t;
+typedef signed char int8_t;
 #endif
 
 #undef malloc
@@ -76,17 +76,14 @@ typedef struct a52_state_s a52_state_t;
 #define A52_LFE 16
 #define A52_ADJUST_LEVEL 32
 
-a52_state_t * a52_init (uint32_t mm_accel);
-sample_t * a52_samples (a52_state_t * state);
-int a52_syncinfo (uint8_t * buf, int * flags,
-		  int * sample_rate, int * bit_rate);
-int a52_frame (a52_state_t * state, uint8_t * buf, int * flags,
-	       level_t * level, sample_t bias, int frame_size);
-void a52_dynrng (a52_state_t * state,
-		 level_t (* call) (level_t, void *), void * data);
-int a52_block (a52_state_t * state);
-void a52_free (a52_state_t * state);
+a52_state_t *a52_init(uint32_t mm_accel);
+sample_t *a52_samples(a52_state_t * state);
+int a52_syncinfo(uint8_t * buf, int *flags, int *sample_rate, int *bit_rate);
+int a52_frame(a52_state_t * state, uint8_t * buf, int *flags, level_t * level, sample_t bias, int frame_size);
+void a52_dynrng(a52_state_t * state, level_t(*call) (level_t, void *), void *data);
+int a52_block(a52_state_t * state);
+void a52_free(a52_state_t * state);
 
-void a52_reset(a52_state_t *state);
+void a52_reset(a52_state_t * state);
 
-#endif /* A52_H */
+#endif							/* A52_H */

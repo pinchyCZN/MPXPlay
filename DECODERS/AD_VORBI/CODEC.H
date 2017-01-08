@@ -19,98 +19,96 @@
 #define _vorbis_codec_h_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "ogg.h"
 
-typedef struct vorbis_info{
-  int channels;
-  int outchannels;
-  long rate;
+	typedef struct vorbis_info {
+		int channels;
+		int outchannels;
+		long rate;
 
-  long bitrate_nominal;
+		long bitrate_nominal;
 
-  void *codec_setup;
-} vorbis_info;
+		void *codec_setup;
+	} vorbis_info;
 
-typedef struct vorbis_dsp_state
-{
-  vorbis_info *vi;
+	typedef struct vorbis_dsp_state {
+		vorbis_info *vi;
 
-  ogg_double_t **pcm;
-  ogg_double_t **pcmret;
-  int      pcm_storage;
-  int      pcm_current;
-  int      pcm_returned;
+		ogg_double_t **pcm;
+		ogg_double_t **pcmret;
+		int pcm_storage;
+		int pcm_current;
+		int pcm_returned;
 
-  int  eofflag;
+		int eofflag;
 
-  long lW;
-  long W;
-  long nW;
-  long centerW;
+		long lW;
+		long W;
+		long nW;
+		long centerW;
 
-  ogg_int64_t granulepos;
-  ogg_int64_t sequence;
+		ogg_int64_t granulepos;
+		ogg_int64_t sequence;
 
-  void       *backend_state;
-} vorbis_dsp_state;
+		void *backend_state;
+	} vorbis_dsp_state;
 
-typedef struct vorbis_block{
-  ogg_double_t  **pcm;       /* this is a pointer into local storage */
-  oggpack_buffer opb;
+	typedef struct vorbis_block {
+		ogg_double_t **pcm;		/* this is a pointer into local storage */
+		oggpack_buffer opb;
 
-  long  lW;
-  long  W;
-  long  nW;
-  int   pcmend;
-  int   mode;
+		long lW;
+		long W;
+		long nW;
+		int pcmend;
+		int mode;
 
-  int         eofflag;
-  ogg_int64_t granulepos;
-  ogg_int64_t sequence;
-  vorbis_dsp_state *vd; /* For read-only access of configuration */
+		int eofflag;
+		ogg_int64_t granulepos;
+		ogg_int64_t sequence;
+		vorbis_dsp_state *vd;	/* For read-only access of configuration */
 
-} vorbis_block;
+	} vorbis_block;
 
-typedef struct vorbis_comment{
-  char **user_comments;
-  int   *comment_lengths;
-  int    comments;
-  char  *vendor;
+	typedef struct vorbis_comment {
+		char **user_comments;
+		int *comment_lengths;
+		int comments;
+		char *vendor;
 
-} vorbis_comment;
+	} vorbis_comment;
 
 
 /* Vorbis PRIMITIVES: general ***************************************/
 
-extern void  vorbis_info_init(vorbis_info *vi);
-extern void  vorbis_info_clear(vorbis_info *vi);
-extern void  vorbis_comment_init(vorbis_comment *vc);
-extern char *vorbis_comment_query(vorbis_comment *vc, char *tag, int count);
-extern void  vorbis_comment_clear(vorbis_comment *vc);
+	extern void vorbis_info_init(vorbis_info * vi);
+	extern void vorbis_info_clear(vorbis_info * vi);
+	extern void vorbis_comment_init(vorbis_comment * vc);
+	extern char *vorbis_comment_query(vorbis_comment * vc, char *tag, int count);
+	extern void vorbis_comment_clear(vorbis_comment * vc);
 
-extern int   vorbis_block_init(vorbis_dsp_state *v, vorbis_block *vb);
-extern int   vorbis_block_clear(vorbis_block *vb);
-extern void  vorbis_dsp_clear(vorbis_dsp_state *v);
+	extern int vorbis_block_init(vorbis_dsp_state * v, vorbis_block * vb);
+	extern int vorbis_block_clear(vorbis_block * vb);
+	extern void vorbis_dsp_clear(vorbis_dsp_state * v);
 
-extern void vorbis_fscale_block(ogg_double_t *a,unsigned int len,float scale);
-extern void vorbis_fclear_block(ogg_double_t *a,unsigned int len);
-extern void vorbis_fcopy_block(ogg_double_t *a,ogg_double_t *b,unsigned int len);
-extern void vorbis_fmulwin_add_block(ogg_double_t *a,ogg_double_t *b,ogg_double_t *w,unsigned int len);
-extern void vorbis_fcopy_and_scale_block(ogg_double_t *a,ogg_double_t *b,unsigned int len,float scale);
+	extern void vorbis_fscale_block(ogg_double_t * a, unsigned int len, float scale);
+	extern void vorbis_fclear_block(ogg_double_t * a, unsigned int len);
+	extern void vorbis_fcopy_block(ogg_double_t * a, ogg_double_t * b, unsigned int len);
+	extern void vorbis_fmulwin_add_block(ogg_double_t * a, ogg_double_t * b, ogg_double_t * w, unsigned int len);
+	extern void vorbis_fcopy_and_scale_block(ogg_double_t * a, ogg_double_t * b, unsigned int len, float scale);
 
 /* Vorbis PRIMITIVES: synthesis layer *******************************/
-extern int      vorbis_synthesis_headerin(vorbis_info *vi,vorbis_comment *vc,ogg_packet *op);
+	extern int vorbis_synthesis_headerin(vorbis_info * vi, vorbis_comment * vc, ogg_packet * op);
 
-extern void     vorbis_synthesis_restart(vorbis_dsp_state *v,vorbis_info *vi);
-extern int      vorbis_synthesis_init(vorbis_dsp_state *v,vorbis_info *vi);
-extern int      vorbis_synthesis(vorbis_block *vb,ogg_packet *op);
-extern int      vorbis_synthesis_blockin(vorbis_dsp_state *v,vorbis_block *vb);
-extern int      vorbis_synthesis_pcmout(vorbis_dsp_state *v,ogg_double_t ***pcm);
-extern int      vorbis_synthesis_read(vorbis_dsp_state *v,int samples);
+	extern void vorbis_synthesis_restart(vorbis_dsp_state * v, vorbis_info * vi);
+	extern int vorbis_synthesis_init(vorbis_dsp_state * v, vorbis_info * vi);
+	extern int vorbis_synthesis(vorbis_block * vb, ogg_packet * op);
+	extern int vorbis_synthesis_blockin(vorbis_dsp_state * v, vorbis_block * vb);
+	extern int vorbis_synthesis_pcmout(vorbis_dsp_state * v, ogg_double_t *** pcm);
+	extern int vorbis_synthesis_read(vorbis_dsp_state * v, int samples);
 
 /* Vorbis ERRORS and return codes ***********************************/
 
@@ -133,5 +131,4 @@ extern int      vorbis_synthesis_read(vorbis_dsp_state *v,int samples);
 #ifdef __cplusplus
 }
 #endif
-
 #endif

@@ -20,7 +20,7 @@ Tasks:
 5) check for the peak value
 *****************************************************************************/
 
-extern void apedec_UnprepareNew(int X,int Y,struct tWAVEFORMATEX *pWaveFormatEx,unsigned char *pOutput,unsigned int * pCRC);
-extern int apedec_UnprepareOld(int *pInputX, int *pInputY, int nBlocks,struct tWAVEFORMATEX *pWaveFormatEx, unsigned char *pRawData, unsigned int *pCRC, int *pSpecialCodes, int nFileVersion);
+extern void apedec_UnprepareNew(int X, int Y, struct tWAVEFORMATEX *pWaveFormatEx, unsigned char *pOutput, unsigned int *pCRC);
+extern int apedec_UnprepareOld(int *pInputX, int *pInputY, int nBlocks, struct tWAVEFORMATEX *pWaveFormatEx, unsigned char *pRawData, unsigned int *pCRC, int *pSpecialCodes, int nFileVersion);
 
-#endif // #ifndef APE_PREPARE_H
+#endif							// #ifndef APE_PREPARE_H
