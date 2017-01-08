@@ -614,11 +614,12 @@ unsigned int getbits_24(int);
 	"shr  eax,cl"\
 	parm [ebx] value [eax] modify [ecx];
 #else
-__inline int getbits_24()
+__inline int getbits_24(int _index)
 {
 	__asm{
 		mov  eax,mpxdec_bitindex
 		mov  ecx,eax
+		mov	 ebx,_index
 		add  mpxdec_bitindex,ebx
 		shr  eax,3
 		add  eax,mpxdec_wordpointer
@@ -651,11 +652,12 @@ unsigned int getbits_8(int);
 	"shr  eax,cl"\
 	parm [ebx] value [eax] modify [ecx];
 #else
-__inline int getbits_8()
+__inline int getbits_8(int _index)
 {
 	__asm{
 		mov  eax,mpxdec_bitindex
 		mov  ecx,eax
+		mov  ebx,_index
 		add  mpxdec_bitindex,ebx
 		shr  eax,3
 		add  eax,mpxdec_wordpointer
