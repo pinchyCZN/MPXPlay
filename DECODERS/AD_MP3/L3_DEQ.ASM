@@ -17,6 +17,7 @@
 
 ;set __WASM__=\WATCOM\binnt\wasm.exe
 ;%__WASM__% -q -w2 -fo=$(IntDir)\$(InputName).obj $(InputPath)
+;EDITBIN.EXE $(IntDir)\$(InputName).obj
 ;$(OutDir)\$(InputName).obj
 
 .387
@@ -42,6 +43,14 @@
         PUBLIC  _mpxdec_l3deq_gainpow2_4
         PUBLIC  _mpxdec_l3deq_ispow32_2
         PUBLIC  _mpxdec_l3deq_ispow32_4
+
+        PUBLIC	_mpxdec_l3deq_init
+        PUBLIC	_mpxdec_l3deq_dequantize
+		PUBLIC	_mpxdec_l3deq_dequantize_ms
+		PUBLIC	_mpxdec_l3deq_dequantize_bt2
+		PUBLIC	_mpxdec_l3deq_dequantize_ms_bt2
+		PUBLIC	_mpxdec_l3deq_dequantize_bt2_js
+		PUBLIC	_mpxdec_l3deq_dequantize_ms_bt2_js
 
 		EXTRN	_mpxdec_bitindex:BYTE
 		EXTRN	_mpxdec_wordpointer:BYTE
@@ -74,6 +83,7 @@ _TEXT		SEGMENT	BYTE PUBLIC USE32 'CODE'
 
 mpxdec_l3deq_init:
 mpxdec_l3deq_init_:
+_mpxdec_l3deq_init:
 push      eax
 push      ecx
 push      edx
@@ -3446,6 +3456,7 @@ III_deq_nop:                        ; do not remove!
     nop
 
 mpxdec_l3deq_dequantize:
+_mpxdec_l3deq_dequantize:
 push eax
 push edx
 push ebx
@@ -3462,6 +3473,7 @@ pop eax
 ret
 
 mpxdec_l3deq_dequantize_ms:
+_mpxdec_l3deq_dequantize_ms:
 push eax
 push edx
 push ebx
@@ -3478,6 +3490,7 @@ pop eax
 ret
 
 mpxdec_l3deq_dequantize_bt2:
+_mpxdec_l3deq_dequantize_bt2:
 push eax
 push edx
 push ebx
@@ -3494,6 +3507,7 @@ pop eax
 ret
 
 mpxdec_l3deq_dequantize_ms_bt2:
+_mpxdec_l3deq_dequantize_ms_bt2:
 push eax
 push edx
 push ebx
@@ -3510,6 +3524,7 @@ pop eax
 ret
 
 mpxdec_l3deq_dequantize_bt2_js:
+_mpxdec_l3deq_dequantize_bt2_js:
 push eax
 push edx
 push ebx
@@ -3526,6 +3541,7 @@ pop eax
 ret
 
 mpxdec_l3deq_dequantize_ms_bt2_js:
+_mpxdec_l3deq_dequantize_ms_bt2_js:
 push eax
 push edx
 push ebx

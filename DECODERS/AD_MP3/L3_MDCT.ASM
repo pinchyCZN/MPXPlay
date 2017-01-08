@@ -21,8 +21,11 @@
 		PUBLIC	mpxdec_l3mdct_init_
 		PUBLIC	mpxdec_l3mdct_hybrid_
 
-        PUBLIC	mpxdec_l3mdct_init
+		PUBLIC	mpxdec_l3mdct_init
 		PUBLIC	mpxdec_l3mdct_hybrid
+
+		PUBLIC	_mpxdec_l3mdct_init
+		PUBLIC	_mpxdec_l3mdct_hybrid
 
 DGROUP		GROUP	CONST,CONST2,_DATA,_BSS
 _TEXT		SEGMENT	BYTE PUBLIC USE32 'CODE'
@@ -31,6 +34,7 @@ _TEXT		SEGMENT	BYTE PUBLIC USE32 'CODE'
 ;-------------------------------------------------------------------------
 mpxdec_l3mdct_init:
 mpxdec_l3mdct_init_:
+_mpxdec_l3mdct_init:
 push  eax
 push  ebx
 push  ecx
@@ -641,6 +645,7 @@ pop   esi                      ;
 ret                            ;
 
 mpxdec_l3mdct_hybrid:
+_mpxdec_l3mdct_hybrid:
 push eax
 push edx
 push ebx

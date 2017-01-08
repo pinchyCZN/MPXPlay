@@ -122,9 +122,13 @@ typedef float synth_rollb_t;
 #endif
 
 void f80bit_put_asm(mpxdec_float80_t * ptr, float val);
-#pragma aux f80bit_put_asm parm[esi][8087] = "fstp tbyte ptr [esi]"
+#ifdef __WATCOMC__
+	#pragma aux f80bit_put_asm parm[esi][8087] = "fstp tbyte ptr [esi]"
+#endif
 float f80bit_get_asm(mpxdec_float80_t * ptr);
-#pragma aux f80bit_get_asm parm[esi] value[8087] = "fld tbyte ptr [esi]"
+#ifdef __WATCOMC__
+	#pragma aux f80bit_get_asm parm[esi] value[8087] = "fld tbyte ptr [esi]"
+#endif
 #define f80bit_put_c(p,v) *(p)=(v)
 #define f80bit_get_c(p)   (*(p))
 

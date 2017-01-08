@@ -24,8 +24,11 @@
 		PUBLIC	mpxdec_synth_granule_
 		PUBLIC	mpxdec_synth_init_
 
-                PUBLIC	mpxdec_synth_granule
+		PUBLIC	mpxdec_synth_granule
 		PUBLIC	mpxdec_synth_init
+
+		PUBLIC	_mpxdec_synth_granule
+		PUBLIC	_mpxdec_synth_init
 
 DGROUP		GROUP	CONST,CONST2,_DATA,_BSS
 _TEXT		SEGMENT	BYTE PUBLIC USE32 'CODE'
@@ -33,6 +36,7 @@ _TEXT		SEGMENT	BYTE PUBLIC USE32 'CODE'
 
 ;-------------------------------------------------------------------------
 mpxdec_synth_granule:
+_mpxdec_synth_granule:
 push edx
 push ebx
 push ecx
@@ -1183,6 +1187,7 @@ L$34:                                    ;
  ret
 
 mpxdec_synth_init:
+_mpxdec_synth_init:
 push eax
 mov  eax,dword ptr  [esp+4+4];
 call mpxdec_synth_init_

@@ -597,6 +597,7 @@ void mpxdec_preinit(void)
 //--------------------------------------------------------------
 
 // number of bits must be between 1 and 24, you have to check this before calling
+#ifdef __WATCOMC__
 unsigned int getbits_24(int);
 #pragma aux getbits_24=\
 	"mov  eax,mpxdec_bitindex"\
@@ -612,8 +613,28 @@ unsigned int getbits_24(int);
 	"sub  cl,bl"\
 	"shr  eax,cl"\
 	parm [ebx] value [eax] modify [ecx];
+#else
+__inline int getbits_24()
+{
+	__asm{
+		mov  eax,mpxdec_bitindex
+		mov  ecx,eax
+		add  mpxdec_bitindex,ebx
+		shr  eax,3
+		add  eax,mpxdec_wordpointer
+		mov  eax,dword ptr [eax]
+		and  ecx,7
+		bswap eax
+		shl  eax,cl
+		mov  cl,32
+		sub  cl,bl
+		shr  eax,cl
+	}
+}
+#endif
 
 // number of bits must be between 0 and 8
+#ifdef __WATCOMC__
 unsigned int getbits_8(int);
 #pragma aux getbits_8=\
 	"mov  eax,mpxdec_bitindex"\
@@ -629,7 +650,27 @@ unsigned int getbits_8(int);
 	"sub  cl,bl"\
 	"shr  eax,cl"\
 	parm [ebx] value [eax] modify [ecx];
+#else
+__inline int getbits_8()
+{
+	__asm{
+		mov  eax,mpxdec_bitindex
+		mov  ecx,eax
+		add  mpxdec_bitindex,ebx
+		shr  eax,3
+		add  eax,mpxdec_wordpointer
+		movzx eax,word ptr [eax]
+		and  ecx,7
+		xchg al,ah
+		shl  ax,cl
+		mov  cl,16
+		sub  cl,bl
+		shr  eax,cl
+	}
+}
+#endif
 
+#ifdef __WATCOMC__
 unsigned int get1bit(void);
 #pragma aux get1bit=\
 	"mov  eax,mpxdec_bitindex"\
@@ -642,7 +683,22 @@ unsigned int get1bit(void);
 	"shl  eax,cl"\
 	"and  eax,128"\
 	value [eax] modify [ecx];
-
+#else
+__inline int get1bit()
+{
+	__asm{
+		mov  eax,mpxdec_bitindex
+		mov  ecx,eax
+		inc  mpxdec_bitindex
+		shr  eax,3
+		add  eax,dword ptr mpxdec_wordpointer
+		and  ecx,7
+		movzx eax,byte ptr [eax]
+		shl  eax,cl
+		and  eax,128
+	}
+}
+#endif
 
 static void III_correct_regions(struct gr_info_s *gr_info)
 {
@@ -1571,12 +1627,20 @@ void mpxdec_decode_part2(struct mpxsynth_data_s *synthdata, unsigned char *pcm_m
 	unsigned int granules = synthdata->granules;
 #ifdef SYNTH_FPUC
 	int tmp;
+#ifdef __WATCOMC__
 #pragma aux asm_fpusetround_chop=\
   "fstcw word ptr tmp"\
   "or word ptr tmp,0x0c00"\
   "fldcw word ptr tmp"\
   modify[];
 	asm_fpusetround_chop();
+#else
+	__asm{
+		fstcw word ptr tmp
+		or word ptr tmp,0x0c00
+		fldcw word ptr tmp
+	}
+#endif
 #endif
 
 	do {
@@ -1598,11 +1662,20 @@ void mpxdec_decode_part2(struct mpxsynth_data_s *synthdata, unsigned char *pcm_m
 	} while(--granules);
 
 #ifdef SYNTH_FPUC
+#ifdef __WATCOMC__
 #pragma aux asm_fpusetround_near=\
   "fstcw word ptr tmp"\
   "and word ptr tmp,0xf3ff"\
   "fldcw word ptr tmp"\
   modify[];
 	asm_fpusetround_near();
+#else
+	__asm{
+		fstcw word ptr tmp
+		and word ptr tmp,0xf3ff
+		fldcw word ptr tmp
+	}
+
+#endif
 #endif
 }

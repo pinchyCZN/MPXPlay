@@ -577,6 +577,57 @@ SOURCE=.\AU_MIXER\MX_VOLUM.C
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\DECODERS\AD_MP3\L3_DEQ.ASM
+
+!IF  "$(CFG)" == "mpxplay - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build
+IntDir=.\Debug
+OutDir=.\Debug
+InputPath=.\DECODERS\AD_MP3\L3_DEQ.ASM
+InputName=L3_DEQ
+
+"$(OutDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	set __WASM__=E:\DEV\WATCOM\binnt\wasm.exe 
+	%__WASM__% -q -w2 -fo=$(IntDir)\$(InputName).obj $(InputPath) 
+	rem copy /Y $(IntDir)\$(InputName).obj $(IntDir)\$(InputName).___ 
+	EDITBIN.EXE $(IntDir)\$(InputName).obj 
+	
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_MP3\L3_MDCT.ASM
+
+!IF  "$(CFG)" == "mpxplay - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build
+IntDir=.\Debug
+OutDir=.\Debug
+InputPath=.\DECODERS\AD_MP3\L3_MDCT.ASM
+InputName=L3_MDCT
+
+"$(OutDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	set __WASM__=E:\DEV\WATCOM\binnt\wasm.exe 
+	%__WASM__% -q -w2 -fo=$(IntDir)\$(InputName).obj $(InputPath) 
+	EDITBIN.EXE $(IntDir)\$(InputName).obj 
+	
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\DECODERS\AD_MP3\LAYER2.C
 
 !IF  "$(CFG)" == "mpxplay - Win32 Release"
@@ -617,6 +668,31 @@ InputName=SYNTH
 	nasmw.exe -t -f  win32 -o$(IntDir)\$(InputName).obj -Xvc $(InputName).asm
 
 # End Custom Build
+
+!ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build
+IntDir=.\Debug
+OutDir=.\Debug
+InputPath=.\DECODERS\AD_MP3\SYNTH.ASM
+InputName=SYNTH
+
+"$(OutDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	set __WASM__=E:\DEV\WATCOM\binnt\wasm.exe 
+	%__WASM__% -q -w2 -fo=$(IntDir)\$(InputName).obj $(InputPath) 
+	EDITBIN.EXE $(IntDir)\$(InputName).obj 
+	
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_MP3\SYNTHIO.ASM
+
+!IF  "$(CFG)" == "mpxplay - Win32 Release"
 
 !ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
 
