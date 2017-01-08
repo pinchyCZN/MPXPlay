@@ -17,7 +17,7 @@
 //         and ALSA (http://www.alsa-project.org) drivers
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define SBL_DEBUG_OUTPUT stdout
+#define SBL_DEBUG_OUTPUT stdout
 
 #include "au_cards.h"
 

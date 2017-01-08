@@ -15,7 +15,7 @@
 //function: keyboard handling (by bios memory area)
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define KEYBOARD_DEBUG_OUTPUT NULL
+#define KEYBOARD_DEBUG_OUTPUT NULL
 #include "newfunc.h"
 #include <mpxplay.h>
 

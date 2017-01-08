@@ -15,7 +15,7 @@
 //function: Wibdows WavOut sound output
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define WAVOUT_DEBUG_OUTPUT NULL
+#define WAVOUT_DEBUG_OUTPUT NULL
 
 #include "au_cards.h"
 

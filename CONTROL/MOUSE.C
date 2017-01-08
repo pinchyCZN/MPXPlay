@@ -15,7 +15,7 @@
 //function: mouse functions
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define MOUSE_DEBUG_OUTPUT NULL
+#define MOUSE_DEBUG_OUTPUT NULL
 
 #include "control.h"
 #include "cntfuncs.h"

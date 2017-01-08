@@ -17,7 +17,7 @@
 // doesn't work yet
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define XFI_DEBUG_OUTPUT stdout
+#define XFI_DEBUG_OUTPUT stdout
 
 #include "au_cards.h"
 

@@ -16,7 +16,7 @@
 //requires the dec_aac\aacdec.lib and faad.h files
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define MPXPLAY_DEBUG_OUTPUT stdout
+#define MPXPLAY_DEBUG_OUTPUT stdout
 
 #include "in_file.h"
 

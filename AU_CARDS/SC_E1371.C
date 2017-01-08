@@ -16,7 +16,7 @@
 //based on ALSA (http://www.alsa-project.org)
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define ENS_DEBUG_OUTPUT stdout
+#define ENS_DEBUG_OUTPUT stdout
 
 #include "au_cards.h"
 

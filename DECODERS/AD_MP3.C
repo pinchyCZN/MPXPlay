@@ -16,7 +16,7 @@
 //requires the ad_mp3\mp3dec.lib and mp3dec.h files
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define ADMP3_DEBUG_OUTPUT stdout
+#define ADMP3_DEBUG_OUTPUT stdout
 
 #include "in_file.h"
 

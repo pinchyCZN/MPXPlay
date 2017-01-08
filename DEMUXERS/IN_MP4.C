@@ -17,7 +17,7 @@
 
 //#define MPXPLAY_USE_DEBUGF 1
 //#define MPXPLAY_USE_DEBUGMSG
-//#define MPXPLAY_DEBUG_OUTPUT NULL
+#define MPXPLAY_DEBUG_OUTPUT NULL
 
 #include "in_file.h"
 

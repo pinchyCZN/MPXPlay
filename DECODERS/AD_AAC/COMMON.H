@@ -37,7 +37,7 @@ extern "C" {
 #ifdef MPXPLAY_USE_DEBUGF
 #include "..\..\newfunc\newfunc.h"
 #else
-#define mpxplay_debugf()
+//#define mpxplay_debugf()
 #endif
 
 #define FAAD_USE_ASM 1

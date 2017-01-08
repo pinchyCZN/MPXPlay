@@ -16,7 +16,7 @@
 //based on: ALSA (http://www.alsa-project.org) and ICH-DOS wav player from Jeff Leyda
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define ICH_DEBUG_OUTPUT stdout
+#define ICH_DEBUG_OUTPUT stdout
 
 #include "au_cards.h"
 #include <time.h>

@@ -15,7 +15,7 @@
 //function: FFMPEG codec handling
 
 //#define MPXPLAY_USE_DEBUGF 1
-//#define MPXPLAY_DEBUG_OUTPUT stdout
+#define MPXPLAY_DEBUG_OUTPUT stdout
 
 #include "in_file.h"
 
