@@ -2,4 +2,4 @@
 .c.obj: .AUTODEPEND
         wcc386 $[* -zq -bt=DOS -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -i\wc\h -i..\
 
-newfunc.exe : newfunc.obj bitstrm.obj cpu.obj dll_load.obj dpmi.obj drivehnd.obj errorhnd.obj filehand.obj fpu.obj keyboard.obj memory.obj mixed.obj string.obj textdisp.obj time.obj timer.obj makedos
+newfunc.exe : newfunc.obj bitstrm.obj cpu.obj dll_load.obj dpmi.obj drivehnd.obj errorhnd.obj filehand.obj fpu.obj n_keyboard.obj memory.obj mixed.obj string.obj textdisp.obj time.obj timer.obj makedos
