@@ -336,9 +336,13 @@ void AU_ini_interrupts(struct mpxplay_audioout_info_s *aui)
 	if(aui->card_handler->infobits & SNDCARD_INT08_ALLOWED) {
 		newfunc_newhandler08_init();
 		if(aui->card_handler->cardbuf_int_monitor)
-			mpxplay_timer_addfunc(&aucards_dma_monitor, NULL, MPXPLAY_TIMERTYPE_INT08 | MPXPLAY_TIMERTYPE_REPEAT | MPXPLAY_TIMERFLAG_OWNSTACK | MPXPLAY_TIMERFLAG_STI, 0);
+			mpxplay_timer_addfunc(&aucards_dma_monitor, NULL,
+			MPXPLAY_TIMERTYPE_INT08 | MPXPLAY_TIMERTYPE_REPEAT | MPXPLAY_TIMERFLAG_OWNSTACK | MPXPLAY_TIMERFLAG_STI,
+			0);
 		if(intsoundconfig & INTSOUND_DECODER) {
-			mpxplay_timer_addfunc(&aucards_interrupt_decoder, NULL, MPXPLAY_TIMERTYPE_INT08 | MPXPLAY_TIMERTYPE_REPEAT | MPXPLAY_TIMERFLAG_OWNSTACK | MPXPLAY_TIMERFLAG_STI, 0);
+			mpxplay_timer_addfunc(&aucards_interrupt_decoder, NULL,
+				MPXPLAY_TIMERTYPE_INT08 | MPXPLAY_TIMERTYPE_REPEAT | MPXPLAY_TIMERFLAG_OWNSTACK | MPXPLAY_TIMERFLAG_STI,
+				0);
 			aucards_writedata_func = &aucards_writedata_intsound;
 		}
 	}
