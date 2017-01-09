@@ -304,6 +304,7 @@ void pds_textdisplay_printf(char *outtext)
 		len -= textscreen_maxx;
 		outtext += textscreen_maxx;
 	} while(1);
+	printf("%s\n",outtext);
 }
 
 unsigned int pds_textdisplay_getbkcolorxy(unsigned int outx, unsigned int outy)

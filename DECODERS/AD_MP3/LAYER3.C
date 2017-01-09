@@ -15,7 +15,7 @@
 //function: Audio MPEG Layer III decoding
 //based on the MPG123 MPEG decoder source
 
-//#define MPXPLAY_USE_DEBUGF 1
+#define MPXPLAY_USE_DEBUGF 1
 #define MPXDEC_DEBUG_OUTPUT stdout
 
 #include "newfunc\newfunc.h"

@@ -19,7 +19,7 @@
 #include "newfunc\dll_load.h"
 #include "display\display.h"
 
-//#define MPX_DEBUG_SERIAL 1
+#define MPX_DEBUG_SERIAL 1
 
 #ifdef MPX_DEBUG_SERIAL
  //#define MPX_DEBUG_SER_IRQ 1
@@ -599,7 +599,7 @@ static void serial_com_port_close(struct serial_port_data_s *portdatas)
 
 static unsigned int serial_com_port_read(struct serial_port_data_s *portdatas, unsigned char *readbuf, unsigned int readlen, unsigned int usewait)
 {
-	//DWORD EvtMask=0,b=0;
+	DWORD EvtMask=0,b=0;
 	DWORD k = 0;
 	DWORD nb_bytes_read = 0;
 	//OVERLAPPED o;

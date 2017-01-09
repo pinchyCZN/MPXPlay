@@ -149,6 +149,7 @@ static void mpxplay_init_run(void)
 
 static void mpxplay_init_run(void)
 {
+	printf("1111\n");
 	if(funcbit_test(intsoundconfig, INTSOUND_TSR)) {
 		do {
 			mpxplay_empty();
@@ -158,6 +159,7 @@ static void mpxplay_init_run(void)
 			mpxplay_main_cycle();
 		} while(mvps.partselect != 0);
 	}
+	printf("xxxxxxx\n");
 }
 #endif
 

@@ -15,7 +15,7 @@
 //function: Intel HD audio driver for Mpxplay
 //based on ALSA (http://www.alsa-project.org)
 
-//#define MPXPLAY_USE_DEBUGF 1
+#define MPXPLAY_USE_DEBUGF 1
 #define IHD_DEBUG_OUTPUT stdout
 
 #include "au_cards.h"

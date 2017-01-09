@@ -697,6 +697,7 @@ static void mpxplay_debugf(FILE * fp, const char *format, ...)
 			fprintf(flog, "%s\n", sout);
 			fflush(flog);
 		}
+		printf("%s\n",sout);
 
 	} else
 #ifdef MPXPLAY_USE_DEBUGMSG
