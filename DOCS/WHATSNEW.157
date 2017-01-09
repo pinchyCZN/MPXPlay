@@ -1,0 +1,217 @@
+diffs between v1.57 final and beta 9
+- no modifications
+
+-----------------------------------------------------------------------------
+diffs between v1.57 beta 9 and beta 8
+-bugfixes/modifications:
+ -fullbuffer (-bl) fault at every second file (went wrong at v1.56a3) (mpxplay.c, in_file.h)
+ -freezing at win32/multicore (especially at playing audio from video files) (now the program uses 1 core only (but with 3 threads)) (timer.c, memory.c, newfunc.h, mpxplay.c, mpxinbuf.c)
+ -added M4V to MP4 extension list (M4V files are displayed in directory browser) (in_mp4.c)
+ -demuxing at buffer underrun (au_cards.c, in_file.c, in_mp4.c)
+ -aac decoder (the program didn't play some MP4/AAC files) (syntax.c)
+ -F2: added error message at invalid/false (not supported playlist or unknown) savefile extension (savelist.c)
+ -current song (id3,index) info update at sublist/playside change (playlist.c, ...)
+ -cue: preffered INDEX command (instead of INDB) if the value is out of INDB/INDEX precision (loadlist.c)
+ -filecopy: editorhighline re-positioning at overwrite (diskfile.c)
+
+------------------------------------------------------------------------------
+diffs between v1.57 beta 8 and beta 7
+-bugfixes/modifications:
+ -lowlevel priority window handling (open ftp, file copy/move/del): sometimes the window didn't appear (added a "waiting" window too) (diskfile.c)
+ -faster playlist load & save (load: reduced calling to look_extgetch, save: using write buffer) (diskdriv.c, loadlist.c)
+ -F5, ctrl-Ins: overflow (and freezing) at full playlist (editlist.c)
+ -group select/unselect (alt-'+',alt-'-',ctrl-'-') (editlist.c, string.c)
+ -directory rename, if that dir is opened on other side (filenames are also renamed on the other side) (locked dirs are not handled) (diskfile.c)
+ -false playlist entry checking of subdirectories (ie: creating subdir while file-checking process is running) (chkentry.c)
+
+------------------------------------------------------------------------------
+diffs between v1.57 beta 7 and beta 6
+-new/modifications:
+ -'E' key has a completely new function: switch between player and commander mode (show filename, filesize, filedate in playlist editor) (keyboard.c, control.c, display.c, playlist.c, chkentry.c)
+ -new sort modes at ctrl-F1-F4 in commander mode (see readme.txt) (keyboard.c, sortlist.c)
+ -desktopmode +4: show all filenames in directory browser (not only supported audio/container) (loaddir.c, display.c, diskfile.c)
+ -CUE: LENGTH and INDEX EE lines have been changed to one "REM MPXPINFO LNMS=nnnn;INDE=nnnn" line (for better compatibility with other players) and it's written at manual playlist saves too (not only at Mpxplay's auto save)
+ -CUE: added filesize (FISI), filedate (FIDA) and more precise index begin (INDB) infos (savelist.c, loadlist.c)
+ -added partial "-8ucp" support for CP932 and "-8ccp" setting for CP932,CP936,CP949,CP950 (but probably the graphical-desktop of Mpxplay will be incorrect in these CPs) (textconv.c)
+-bugfixes/modifications:
+ -ftp-client modifications/bugfixes (message communication, file and directory handling, DOS (MPXP157T) version uses a new SWSSOCK library instead of WATTCP) (drv_ftp.c, mpxplay.h, mpxp_dos.lnk)
+ -F2: wrong auto-listname in directories (clearing old listname from commandline at dir change) (playlist.c)
+ -F5: -io 8 didn't worked at drive/subdir scans (missing filesize info at subdir scans) and at entry copy (loaddir.c, editlist.c)
+ -editor-bar auto-moving (re)positioning (playlist.c)
+ -modified program-crash error messages (mpxplay.c)
+
+-------------------------------------------------------------------------------
+diffs betwen v1.57 beta 6 and beta 5
+-bugfixes/modifications:
+ -id3tag read error playing (mp3) from cd/dvd (drv_cd.c)
+ -CUE: INDEX EE and LENGTH commands value read/write (and program makes standard cue at manual (F2) playlist save, doesn't write LENGTH lines) (savelist.c, loadlist.c)
+ -F3: wrong total time calculation at indexed files (cue playlist) (diskfile.c)
+ -F4: false "cannot save" message at the bottom of window in some cases (chkentry.c, control.c)
+
+-------------------------------------------------------------------------------
+diffs between v1.57 beta 5 and beta 4
+-bugfixes/modifications:
+ -drive & subdir scan (-ds or d:\*.*\*.*) (string.c, diskdriv.c)
+ -CDW (audio cd) playing (drv_cd.c, mpxinbuf.c)
+ -data loss at the begin of first song (buffer control bug) (mpxinbuf.c, in_file.c)
+ -auto playlist save using -ds with (the default) -psu 19 (startup.c)
+ -playlist from stdin (-@i) (loadlist.c)
+ -better random play at start (ie: -prn -ds cde) especially under win32 (mixed.c)
+ -surround in lq mode (HQmode=0) (fx_surr.c)
+ -'l' key in sublist (now it doesn't jump out from sublist, if it doesn't find the file in the playlist) (keyboard.c)
+ -xce option is not saved automatically in Desktopmode ("confirm exit" is not enabled always after using -xce option once) (control.c)
+ -displaying of startup "Virtual drive error" window caused messy desktop (re-ordered init callings) (control.c, mpxplay.c)
+ -mpxplay.ini: better handling/saving of global variables (at unknown variables, if exe and ini version don't match) (control.c)
+ -mpxplay.ini: loading if it's read-only (with warning message) (control.c)
+ -WDS: modified default -scc value from 3 to 1 (disabled loc_hardware flag) (because it doesn't work everywhere) (sc_winds.c)
+ -WDS: the loc_hardware flag is disabled at multichannel output too (was always enabled at -oc > 2) (sc_winds.c)
+ -WDS: removed false "primary buf" error message at -scc 0 (sc_winds.c)
+
+-------------------------------------------------------------------------------
+diffs between v1.57 beta 4 and beta 3
+-new/modifications:
+ -added AIF file playing (in_wav.c, ad_pcm.c)
+ -added W64 (Sony's Wave64) file playing (but Mpxplay cannot play >2Gb files yet) (in_wav.c)
+ -added float64 pcm data handling to WAV,W64,AIF files (lossy downsampled to float32 yet) (in_wav.c, ad_pcm.c, cv_bits.c)
+ -added -scc NUM option: soundcard sub-config (currently for Win32/WDS: +1 use primary buffer, +2 loc-hardware) (control.c, sc_winds.c)
+ -CP437 is the default output codepage (-8ccp) (if -8 is not used) (textconv.c)
+ -FPL list loading is updated to the structure of Foobar2000 v1.0.1, but it's not backward compatible and loads the filenames only (loadlist.c)
+ -win32: modified directsound (WDS) configuration (possible small quality improvement under Win2k/XP) (sc_winds.c)
+ -win32: -scd option works at WDS output too (sc_winds.c)
+ -DOS: added 3 new pci-ids (motherboards) to Intel HDA device list (sc_inthd.c)
+-bugfixes/modifications:
+ -flac header handling (faster and less error sensitive) (in_flac.c)
+ -WAV file output in float32 format (-o -obf) (the header was incorrect, other players didn't play these files) (sc_wav.c)
+ -lfn to id3: updir is not used for album or artist if it doesn't contain '-' and the file already has title (chkentry.c)
+ -F2: creating of savefilename (from updir) and saving playlist without path (savelist.c)
+ -utf16 to char conversion (eol at id3v2) (textconv.c)
+ -display bug (writing bufpos in wrong pos) in dos-shell using -bb,-bbm options (display.c)
+ -win32: optimized spectrum analyser and playlist editor drawing (faster and less flashing) (display.c)
+ -making the source compatible with OW 1.9 (but Mpxplay v1.57 is compiled with OW 1.3 yet)
+
+-------------------------------------------------------------------------------
+diffs between v1.57 beta 3 and beta 2
+-new/modifications:
+ -added MP4/ALAC decoding (in_mp4.c, ad_alac.c, mp4ff\mp4atom.c)
+ -added -8w option: sets (fills) automatically -8ucp/-8ccp by the ansi and oem codepages of windows (win32 version only) (control.c, textconv.c)
+ -8ccp option: NUM argument has changed to CPNAME (-8ccp CPNAME) (control.c, textconv.c)
+ -8ucp/8ccp options can set a source/target codepage for the codepage conversion instead of using WinChars/DosChars (textconv.c)
+ -F2: saving playlist from directory browser (pressing F2 in a directory), program automatically creates playlistname from parent/up dir (instead of mpxplay.m3u) (savelist.c)
+ -FTP: program uses anonymous login if no loginname/password has given (drv_ftp.c)
+ -FTP: modified -drfc flags (+4: use anon login, +8 use UTF8) and default value (3 to 7) (drv_ftp.c)
+ -ctrl-f: removed default local testing address (loaddir.c)
+-bugfixes:
+ -FTP: LIST command handling (if server doesn't support FEAT/MLSD) (drv_ftp.c)
+ -FTP: '@' (ie: email address) can be used in loginname/password (host address selector searching from right, not from left) (drv_ftp.c)
+ -LoadId3Tag: using different flags at F3/F4 (only reading of file-tags is forced now, others can configured/disabled) (fileinfo.c)
+ -LoadId3Tag: +8 (prefer list tags) had no effect at LFN->ID3 conv (chkentry.c)
+ -F2: wrong savelist-name (*.m3u) after scannig subdirs (F5) for playlist-names (ie: writing *.m3u in the "Source filter") (savelist.c)
+ -forced/wrong UTF8 decoding (after an UTF16 decoding too) using -8ucp and -8uv options (control.c)
+ -partially handled unicode (wrong) filenames in directories (filename containing '?' is not detected as sub-list) (loadsub.c)
+ -win32: optimized desktop handling/writing (was flashing screen at text windows and very slow file copy) (textwin.c, textdisp.c)
+
+---------------------------------------------------------------------------------
+diffs between v1.57 beta 2 and beta 1
+-new/modifications:
+ -sort: new key: filedate (-io 12) (but doesn't work at playlists, only at drive/dir scan) (sortlist.c, chkentry.c)
+ -DesktopMode: new function: 18. display date of directories in directory browser (display.c, loaddir.c)
+ -playlist-save (F2): new switches ([x]) to configure playlist format: UTF text encoding (type is depending on the original format too), fullpath for remote and fullpath for all filenames (savelist.c, textwin.c)
+ -FTP: filenames in playlist and in commandline with leading "ftp:" (or ftps,ftpes) are opened by the ftp-client (it opens a hidden session for the filename if cannot assign it to an existent one) (drv_ftp.c, chkentry.c, loaddir.c, playlist.c, string.c)
+ -FTP: saving playlist with ftpdrive-filenames (like "0:\subdir\filename") to an other/local drive, filenames will contain the complete ftp-path (ftp://user:pass@server/subdir/filename) (M3U,CUE only) (savelist.c, drv_ftp.c)
+ -FTP: program gives back the server error responses in the id3-window (drv_ftp.c)
+ -50 lines mode handling with -fs option (alt-F9 has nothing effect under WinXP at 50 lines, now it reduces the analyser/buttons field) (display.c)
+-bugfixes:
+ -FTP: UTF8 switch-off didn't disable the UTF8 on the server side (-drfc 3 has no real effect) (drv_ftp.c)
+ -FTP: displaying of file-time at F3 (it works in a visible ftp-session only, doesn't work at ftp-files in playlist) (string.c)
+ -FLAC: handling (skiping) of id3v2 header (couldn't play such files) (in_flac.c)
+ -MP3: skiping zeroes (max 256kbytes) at the begin of file (better xing-vbr handling and song-length calculation) (in_mp3.c)
+ -OGG: shorter file detection (not till the end of file) (caused very slow autodetection at unknown files) (in_ogg.c)
+ -PLS list loading (loadlist.c)
+ -startup: song position restore for single files in the (default) StartupEnabled=+16 mode (startup.c)
+ -MXU save: UTF text encoding is always disabled (MXU field selector problem) (savelist.c)
+ -reseting entry(s) status (unknown/notexists) pressing enter on it (reseting all entries, if all were unknown (and couldn't play anything) -> no need to press ctrl-r to reset playlist entries if media was missing at play start) (chkentry.c, skiplist.c, mpxplay.c)
+ -handled some sort/display bugs by added some auto-keys (sort by path\file and index after user-keys) (sortlist.c)
+ -manual playlist load & auto playlist save/restore conflict (starting mpxplay with and without listfile argument) (savelist.c, chkentry.c, playlist.h)
+ -id3v2 genre number handling (not only "(num)", "num" format too) (tagging.c)
+ -CUE and file id3info mixing in non -bp mode (ie: CUE input + encoder-file output with -oat) (skiplist.c)
+ -rename-by-id3 function (ctrl-e) with prefer-lists option (Loadid3tag+8) (ie: file rename using an extm3u playlist) (diskfile.c)
+ -reopening input file after file/dir move/rename fault (diskfile.c)
+ -faster playlist editor refresh at file checking (when sort is disabled) (has visible effect in win32/windowed mode with -ipl option) (display.c, chkentry.c)
+ -win32: faster spectrum analyser, volume indicator and id3-scroll (faster surface) (display.c, textdisp.c)
+
+--------------------------------------------------------------------------------
+diffs between v1.57 alfa 4 and beta
+-new:
+ -added SSL/TLS (ftps,ftpes) support to FTP-client with OpenSSL library/dlls (in win32 version only) (drv_ftp.c)
+ -option: -drfc NUM : FTP-client configuration (NUM: +1 use passive mode, +2 auto reconnect, +4 use UTF8 filenames, default=3) (drv_ftp.c, control.c)
+-modifications:
+ -FTP-client uses passive mode, does auto-reconnect if connection losts, and doesn't use utf8 filenames by default (drv_ftp.c)
+ -added auto-retry (window) to FTP-client (virtual drive) open (ctrl-'f') (loaddir.c)
+ -file output (-o) + indexed files (CUE): -oni option is automatically enabled (mpxplay.c)
+ -CUE loading: main PERFORMER is used for track-performer if the latter not exists (sometimes this is not good, but it's the correct way) (loadlist.c)
+-bugfixes:
+ -better/gapless file output (-o) at indexed files (mpxplay.c)
+ -editor refresh at skip album back/forward in directories in -inl,-ihl modes (chkentry.c)
+ -ctrl-enter in pause mode (to change playside only pressing it on a non-audio file) (skiplist.c)
+ -unknown chars at unicode to char conversion ('?' changed to '_' to avoid wrong filenames at -8f) (textconv.c)
+
+--------------------------------------------------------------------------------
+diffs between v1.57 alfa 4 and alfa 3
+-bugfixes:
+ -APETag write (wrong/shorter tag-lens at APETAGv2) (tagging.c)
+ -file-move update in playlist (filename is always renamed in playlist at move, never removed) (diskfile.c)
+ -"sound freezing" (no sound) at surround + bad audio file (a short and loud click could kill the surround process) (fx_plsur.c)
+ -alt-'+' : if filename/metadata is shorter than select-mask (wildchar_cmp in string.c)
+ -saving and loading CUE at non sequential indexes (better handling of INDEX EE and LENGTH commands) (loadlist.c,savelist.c)
+ -mxlo: wrong dB to linear calculation (mx_volum.c)
+ -display bug at -bb + -fe (fullscreen editor) (display.c)
+
+--------------------------------------------------------------------------------
+diffs between v1.57 alfa 3 and alfa 2
+-new options: 
+ -mxlo NUM : volume limiter overflow value (0-18 dB) (def: 0) (mx_volum.c, control.c)
+ -mxmd NUM : mute volume divisor (1-999) (def:8) (mx_volum.c,control.c)
+
+-modifications:
+ -UseVariables=3 is the default setting in mpxplay.ini (program saves the desktop/mixer settings in mpxplay.ini)
+ -gray-'/','*' and 'A-','A+' buttons (step-back-album and step-forward-album) work like ctrl-gray-'/','*' (search paralell dir) in directories (keyboard.c)
+ -no crossfade between continuous indexes at end of song (end point of curr index = start point of next index -> fade-out process doesn't start) (mpxplay.c)
+
+-bugfixes:
+ -program can handle structure modifications in the [global] section of mpxplay.ini at UseVariables=3 (but still not recommended to break the structure/fields/coloumns) (control.c)
+ -mute ('m'-key) in win32 version (timer problems) (mx_volum.c)
+ -mute + limiter + highvolume (mute had no effect) (mx_volum.c)
+ -LFN to ID3 (updir is not album if there's no tracknumber) (chkentry.c)
+ -corrected pds_ftoi (caused small incorrect calculations in some functions, ie: in limiter) (newfunc.h)
+ -minor multithread (win32) fixes in mixer (au_mixer.c, mx_volum.c)
+
+---------------------------------------------------------------------------------
+diffs between v1.57 alfa 2 and alfa 1
+-new:
+ -file back/rewind buffer (-bb,-bbm options) (control.c,mpxinbuf.c,display.c)
+-modifications:
+ -desktop button Hq (HQ-mixer) has changed to Ln (loudness) (buttons.c,display.c,fx_tone.c)
+ -removed -hq commandline option (use HQmode setting in mpxplay.ini) (control.c)
+ -removed H-key (KeyHQmode1 and KeyHQmode2 are still exist, just have 0xffff setting) (keyboard.c, mpxplay.ini)
+ -filecopy: new mode at copy from playlist (alt-F5): copy with subdirectory (create one more subdir level in target dir) (diskfile.c)
+ -filecopy: new button to create target directory if it doesn't exist (in "copy without extension" window) (diskfile.c)
+-bugfixes:
+ -false "Cannot save modifications in audio file!" message at F4 (chkentry.c)
+ -no header (freq,bit,etc.) infos at program start (display.c)
+ -case sensitive rename (ie: "ABC" to "abc") of directories (was "Cannot move to itself") (diskfile.c)
+ -rename of parent/up directory of currently playing file (was "Couldn't rename file") (diskfile.c)
+ -auto filename sort is now disabled at manual copy (like F5) to directory browser (keyboard.c, sortlist.c)
+ -minor drive handling (mscd,filefind,get_volumelabel) modifications (cd_mscd.c,drivehand.c)
+ -ID3v2 writing (shorter tags (without trailing zero), added missing error message at lost of tags) (tagging.c)
+ -UTF8 reading/decoding (textconv.c)
+ -Intel HDA config (added more delays for freq change) (sc_inthd.c)
+
+---------------------------------------------------------------------------------
+diffs between v1.57 alfa 1 and v1.56 final
+-new:
+ -added Ensoniq ES1371/ES1373 (ENS) soundcard support to DOS version (sc_e1371.c)
+-modification:
+ -(simple wide stereo) surround has changed to prologic surround (from MX_PLSUR.DLL) in mpxplay.exe (works in hq mode only) (fx_surr.c)
+-bugfixes:
+ -more precise LFN to ID3 conversion (chkentry.c)
+ -added/corrected some IHD board/card ids (sc_inthd.c)
