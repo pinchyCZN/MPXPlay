@@ -1,3 +1,6 @@
+#include "dosstuff.h"
+#include "au_cards.h"
+
 
 int play_wav_buf(unsigned char *buf,int len)
 {

@@ -1,6 +1,11 @@
 #------------ Mpxplay main (root) files ----------------------------
 FILE mpxplay.obj
 FILE audio.obj
+FILE dmairq.obj
+FILE pcibios.obj
+FILE sc_inthd.obj
+FILE dosstuff.obj
+
 
 #------------- Link config -----------------------------------------
 option osname='32-bit protected mode DOS'

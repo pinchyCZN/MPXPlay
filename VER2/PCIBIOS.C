@@ -14,6 +14,7 @@
 //**************************************************************************
 //function: PCI-BIOS handling
 //based on a code of Taichi Sugiyama (YAMAHA)
+#ifndef _WIN32
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,6 +23,7 @@
 #include <dos.h>
 #include <i86.h>
 #include "pcibios.h"
+#include "dosstuff.h"
 
 #define PCIDEVNUM(bParam)      (bParam >> 3)
 #define PCIFUNCNUM(bParam)     (bParam & 0x07)
@@ -187,3 +189,4 @@ void pcibios_enable_memmap_set_master(pci_config_s * ppkey)
 	cmd |= 0x02 | 0x04;			// enable memory mapping and set master
 	pcibios_WriteConfig_Byte(ppkey, PCIR_PCICMD, cmd);
 }
+#endif

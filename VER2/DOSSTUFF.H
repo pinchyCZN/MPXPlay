@@ -654,34 +654,19 @@ extern void newfunc_newhandler08_close(void);
 #define funcbit_smp_value_decrement(var) var--
 #endif
 
+#define pds_memcpy(t,s,l)   memcpy(t,s,l)
+#define pds_memset(t,v,l)   memset(t,v,l)
+
 #ifdef MPXPLAY_USE_DEBUGF
 
 #include <stdarg.h>
 
 static void mpxplay_debugf(FILE * fp, const char *format, ...)
 {
-	static FILE *flog = 0;
-	va_list ap;
-	char sout[1024];
-
-	va_start(ap, format);
-	vsprintf(sout, format, ap);
-	va_end(ap);
-
-	if(fp) {
-		//if(flog==0)
-		//flog=fopen("c:\mpxlog.txt","a");
-		if(flog != 0) {
-			fprintf(flog, "%s\n", sout);
-			fflush(flog);
-		}
-		printf("%s\n",sout);
-
-	} else
 #ifdef MPXPLAY_USE_DEBUGMSG
-		display_message(1, 0, sout);
-#else
-		pds_textdisplay_printf(sout);
+	va_list list;
+	va_start(list,format);
+	vprintf(format,list);
 #endif
 }
 

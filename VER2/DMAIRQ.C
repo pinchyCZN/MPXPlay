@@ -23,7 +23,20 @@
 #include <malloc.h>
 #include <string.h>
 
-#include "newfunc\newfunc.h"
+#define MPXPLAY_WAVEID_PCM_FLOAT 0x0003	// 32-bit float le
+#define PCM_OUTSAMPLES    1152	// at 44100Hz
+#define INT08_DIVISOR_DEFAULT  65536
+#define INT08_CYCLES_DEFAULT   (1000.0/55.0)	// 18.181818
+#define INT08_DIVISOR_NEW      10375	// = 18.181818*65536 / (3 * 44100/1152)
+#define MPXERROR_XMS_MEM           9
+#define MPXERROR_CONVENTIONAL_MEM 10
+#define MPXPLAY_INTSOUNDDECODER_DISALLOW intsoundcntrl_save=intsoundcontrol;funcbit_disable(intsoundcontrol,INTSOUND_DECODER);
+#define MPXPLAY_INTSOUNDDECODER_ALLOW    if(intsoundconfig&INTSOUND_DECODER) funcbit_copy(intsoundcontrol,intsoundcntrl_save,INTSOUND_DECODER);
+#define INTSOUND_DECODER   1	// interrupt decoder
+#define IRQ_STACK_SIZE 16384	// size of irq (errorhand and soundcard) stacks
+
+
+#include "dosstuff.h"
 #include "au_cards.h"
 #include "dmairq.h"
 
