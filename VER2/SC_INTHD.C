@@ -18,6 +18,7 @@
 #define MPXPLAY_USE_DEBUGF 1
 #define IHD_DEBUG_OUTPUT stdout
 
+#include <stdlib.h>
 #include <string.h>
 #include "dmairq.h"
 #include "pcibios.h"

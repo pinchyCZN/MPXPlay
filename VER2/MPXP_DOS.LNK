@@ -1,5 +1,6 @@
 #------------ Mpxplay main (root) files ----------------------------
 FILE mpxplay.obj
+FILE audio.obj
 
 #------------- Link config -----------------------------------------
 option osname='32-bit protected mode DOS'

@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+char DOS4GOPTIONS[] = "dos4g=StartupBanner:OFF\n";	// for DOS4G v2.xx
+
+int play_wav_buf(unsigned char *buf,int len);
 
 int play_file(char *fname)
 {
