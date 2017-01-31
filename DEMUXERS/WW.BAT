@@ -2,7 +2,7 @@
 echo --------------- Creating DEMUXERS library for Win32 version --------------
 
 del demuxers.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 wlib -q demuxers.lib +in_asf.obj

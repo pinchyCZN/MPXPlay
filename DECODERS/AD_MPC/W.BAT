@@ -1,5 +1,5 @@
 @echo off
-del *.err
+del *.err 2> NUL
 wmake -h
 del mpcdec.lib
 wlib -q mpcdec.lib +mpcdec.obj

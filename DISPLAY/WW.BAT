@@ -2,7 +2,7 @@
 echo ---------- Creating DISPLAY library for Win32 console version ----------
 
 del display.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 wlib -q display.lib +display.obj

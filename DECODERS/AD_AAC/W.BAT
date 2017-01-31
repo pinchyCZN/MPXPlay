@@ -1,6 +1,6 @@
 @echo off
 del aacdec.lib
-del *.err
+del *.err 2> NUL
 wmake -h
 rem goto end
 wlib -q aacdec.lib +BITS.OBJ

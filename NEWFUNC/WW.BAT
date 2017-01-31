@@ -2,7 +2,7 @@
 echo --------------- Creating NEWFUNC library for Win32 version ---------------
 
 del newfunc.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 wlib -q newfunc.lib +newfunc.obj

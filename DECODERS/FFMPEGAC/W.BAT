@@ -1,5 +1,5 @@
 @echo off
-del *.err
+del *.err 2> NUL
 wmake -h
 del avcodec.lib
 wlib -q avcodec.lib +UTILS.OBJ

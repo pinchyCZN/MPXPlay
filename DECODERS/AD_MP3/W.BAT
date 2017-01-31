@@ -1,6 +1,6 @@
 @echo off
 del mp3dec.lib
-del *.err
+del *.err 2> NUL
 wasm -q -w2 l3_deq.asm
 wasm -q -w2 l3_mdct.asm
 wasm -q -w2 synth.asm

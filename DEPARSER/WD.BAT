@@ -2,7 +2,7 @@
 echo --------------- Creating DEPARSER library for DOS version ---------------
 
 del deparser.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makedos
 wlib -q deparser.lib +in_aac.obj

@@ -2,7 +2,7 @@
 echo --------------- Creating DECODERS library for DOS version ---------------
 
 del decoders.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makedos
 wlib -q decoders.lib +decoders.obj

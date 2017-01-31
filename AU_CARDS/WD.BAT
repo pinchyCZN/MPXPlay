@@ -2,7 +2,7 @@
 echo ------------- Creating soundcard library for DOS version ----------------
 
 del au_cards.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makedos
 

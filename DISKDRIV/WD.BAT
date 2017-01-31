@@ -2,7 +2,7 @@
 echo --------------- Creating DISKDRIV library for DOS version ---------------
 
 del diskdriv.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makedos
 wlib -q diskdriv.lib +diskdriv.obj

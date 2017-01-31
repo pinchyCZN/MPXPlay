@@ -1,6 +1,6 @@
 @echo off
 del a52dec.lib
-del *.err
+del *.err 2> NUL
 wmake -h
 rem goto skiplib
 wlib -q a52dec.lib +bit_allo.obj

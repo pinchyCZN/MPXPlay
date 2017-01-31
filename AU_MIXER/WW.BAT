@@ -2,7 +2,7 @@
 echo --------------- Creating MIXER library for Win32 version ----------------
 
 del au_mixer.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 

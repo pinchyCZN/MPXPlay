@@ -3,7 +3,7 @@ echo --------------- Creating MPXPLAY executable for DOS ---------------
 set DOS4G=QUIET
 
 del mpxplay.exe > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makedos
 

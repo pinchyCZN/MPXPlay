@@ -2,7 +2,7 @@
 echo --------------- Creating PLAYLIST library for DOS version ---------------
 
 del playlist.lib
-del *.err
+del *.err 2> NUL
 
 wmake -h -f makedos
 wlib -q playlist.lib +playlist.obj

@@ -2,7 +2,7 @@
 echo --------------- Creating PLAYLIST library for Win32 version --------------
 
 del playlist.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 wlib -q playlist.lib +playlist.obj

@@ -1,6 +1,6 @@
 @echo off
 del apedec.lib
-del *.err
+del *.err 2> NUL
 wmake -h
 wlib -q apedec.lib +apeinfo.obj
 wlib -q apedec.lib +dec_new.obj

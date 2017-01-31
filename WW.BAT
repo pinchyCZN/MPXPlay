@@ -2,7 +2,7 @@
 echo ------------- Creating MPXPLAY executable for Win32 console -------------
 
 del mpxplay.exe > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 

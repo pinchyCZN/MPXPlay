@@ -2,7 +2,7 @@
 echo --------------- Creating NEWFUNC library for DOS version ---------------
 
 del newfunc.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makedos
 wlib -q newfunc.lib +newfunc.obj

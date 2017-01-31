@@ -2,7 +2,7 @@
 echo --------------- Creating VIDEOOUT library for Win32 ---------------
 
 del videoout.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 wlib -q videoout.lib +videoout.obj

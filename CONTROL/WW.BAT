@@ -2,7 +2,7 @@
 echo --------------- Creating CONTROL library for Win32 version ---------------
 
 del control.lib > NUL
-del *.err > NUL
+del *.err 2> NUL
 
 wmake -h -f makewin
 
