@@ -15,5 +15,5 @@ wlib -q control.lib +serial.obj
 wlib -q control.lib +joy.obj
 wlib -q control.lib +startup.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

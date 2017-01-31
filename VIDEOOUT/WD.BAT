@@ -8,5 +8,5 @@ wmake -h -f makedos
 wlib -q videoout.lib +videoout.obj
 wlib -q videoout.lib +vo_vesa.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

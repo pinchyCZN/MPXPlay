@@ -30,5 +30,5 @@ wlib -q au_cards.lib +sc_midas.obj
 wlib -q au_cards.lib +sc_wav.obj
 wlib -q au_cards.lib +sc_null.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

@@ -21,5 +21,5 @@ wlib -q playlist.lib +skiplist.obj
 wlib -q playlist.lib +sortlist.obj
 wlib -q playlist.lib +textconv.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

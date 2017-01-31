@@ -11,5 +11,5 @@ wlib -q display.lib +lcd.obj
 wlib -q display.lib +textwin.obj
 wlib -q display.lib +visualpi.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

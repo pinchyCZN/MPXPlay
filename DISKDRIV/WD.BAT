@@ -11,5 +11,5 @@ wlib -q diskdriv.lib +drv_hd.obj
 wlib -q diskdriv.lib +drv_ftp.obj
 wlib -q diskdriv.lib +cd_mscd.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

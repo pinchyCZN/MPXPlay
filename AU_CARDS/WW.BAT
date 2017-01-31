@@ -15,5 +15,5 @@ wlib -q au_cards.lib +sc_null.obj
 wlib -q au_cards.lib +sc_winds.obj
 wlib -q au_cards.lib +sc_winwo.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

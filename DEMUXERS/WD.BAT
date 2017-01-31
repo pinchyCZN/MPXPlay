@@ -12,5 +12,5 @@ wlib -q demuxers.lib +in_ogg.obj
 wlib -q demuxers.lib +in_wav.obj
 rem wlib -q demuxers.lib +in_ffmpg.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

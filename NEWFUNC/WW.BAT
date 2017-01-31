@@ -23,5 +23,5 @@ wlib -q newfunc.lib +textdisp.obj
 wlib -q newfunc.lib +time.obj
 wlib -q newfunc.lib +timer.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

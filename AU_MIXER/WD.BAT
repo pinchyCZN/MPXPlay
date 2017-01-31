@@ -18,5 +18,5 @@ wlib -q au_mixer.lib +cv_chan.obj
 wlib -q au_mixer.lib +fx_surr.obj
 wlib -q au_mixer.lib +fx_tone.obj
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

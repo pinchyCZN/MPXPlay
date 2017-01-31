@@ -25,5 +25,5 @@ wlib -q newfunc.lib +timer.obj
 
 wlib -q newfunc.lib +dos32wcr.lib
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL

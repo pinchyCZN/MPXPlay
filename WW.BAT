@@ -6,5 +6,5 @@ del *.err 2> NUL
 
 wmake -h -f makewin
 
-del *.obj > NUL
-del *.bak > NUL
+del *.obj 2> NUL
+del *.bak 2> NUL
