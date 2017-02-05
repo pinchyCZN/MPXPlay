@@ -5,6 +5,7 @@ FILE dmairq.obj
 FILE pcibios.obj
 FILE sc_inthd.obj
 FILE dosstuff.obj
+FILE wss.obj
 
 
 #------------- Link config -----------------------------------------
