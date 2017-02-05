@@ -1,10 +1,10 @@
 #------------ Mpxplay main (root) files ----------------------------
 FILE mpxplay.obj
 FILE audio.obj
-FILE dmairq.obj
-FILE pcibios.obj
-FILE sc_inthd.obj
-FILE dosstuff.obj
+#FILE dmairq.obj
+#FILE pcibios.obj
+#FILE sc_inthd.obj
+#FILE dosstuff.obj
 FILE wss.obj
 
 

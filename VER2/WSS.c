@@ -1,17 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <go32.h>
+#include <i86.h>
 #include <dpmi.h>
 #include <time.h>
 #include <string.h>
 #include <math.h>
-#include <sys/farptr.h>
+//#include <sys/farptr.h>
 //#include <pc.h>
-//#include <ctype.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include "WSS.h"
 
 #define UCLOCKS_PER_SEC 1193180
+#ifndef ALLEGRO_DJGPP
+typedef  unsigned char uint8_t;
+typedef  unsigned short uint16_t;
+typedef  unsigned int uint32_t;
+   #define _farsetsel(seg)	(seg)
+   #define _farnspokeb(addr, val)   (*((uint8_t  *)(addr)) = (val))
+   #define _farnspokew(addr, val)   (*((uint16_t *)(addr)) = (val))
+   #define _farnspokel(addr, val)   (*((uint32_t *)(addr)) = (val))
+   #define _farnspeekb(addr)        (*((uint8_t  *)(addr)))
+   #define _farnspeekw(addr)        (*((uint16_t *)(addr)))
+   #define _farnspeekl(addr)        (*((uint32_t *)(addr)))
+   #define __attribute__()
+   #define __inline__ _inline
+   #define __dpmi_int(a,b) int386(a,b,b)
+   #define __dpmi_regs union REGS
+   int _dos_ds=0;
+#endif
 
 static void logerror_(const char *text,...)
 {
@@ -405,16 +422,16 @@ static BOOL pci_read_config_byte(PCI_DEV *pci, int idx, BYTE *data)
 	__dpmi_regs r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B108;						/* read config byte */
-	r.d.ebx = (DWORD)pci->device_bus_number;
-	r.d.edi = (DWORD)idx;
+	r.w.ax = 0xB108;						/* read config byte */
+	r.w.bx = (DWORD)pci->device_bus_number;
+	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		logerror_("pci read config byte failed\n");
 		result = FALSE;
-		r.d.ecx = 0;
+		r.w.cx = 0;
 	}
-	*data = (BYTE)r.d.ecx;
+	*data = (BYTE)r.w.cx;
 	return result;
 }
 
@@ -423,16 +440,16 @@ static BOOL pci_read_config_word(PCI_DEV *pci, int idx, WORD *data)
 	__dpmi_regs r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B109;						/* read config word */
-	r.d.ebx = (DWORD)pci->device_bus_number;
-	r.d.edi = (DWORD)idx;
+	r.w.ax = 0xB109;						/* read config word */
+	r.w.bx = (DWORD)pci->device_bus_number;
+	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		logerror_("pci read config word failed\n");
 		result = FALSE;
-		r.d.ecx = 0;
+		r.w.cx = 0;
 	}
-	*data = (WORD)r.d.ecx;
+	*data = (WORD)r.w.cx;
 	return result;
 }
 
@@ -441,16 +458,16 @@ static BOOL pci_read_config_dword(PCI_DEV *pci, int idx, DWORD *data)
 	__dpmi_regs r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B10A;						/* read config dword */
-	r.d.ebx = (DWORD)pci->device_bus_number;
-	r.d.edi = (DWORD)idx;
+	r.w.ax = 0xB10A;						/* read config dword */
+	r.w.bx = (DWORD)pci->device_bus_number;
+	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		logerror_("pci read config dword failed\n");
 		result = FALSE;
-		r.d.ecx = 0;
+		r.w.cx = 0;
 	}
-	*data = (DWORD)r.d.ecx;
+	*data = (DWORD)r.w.cx;
 	return result;
 }
 
@@ -459,10 +476,10 @@ static BOOL pci_write_config_byte(PCI_DEV *pci, int idx, BYTE data)
 	__dpmi_regs r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B10B;						/* write config byte */
-	r.d.ebx = (DWORD)pci->device_bus_number;
-	r.d.ecx = (DWORD)data;
-	r.d.edi = (DWORD)idx;
+	r.w.ax = 0xB10B;						/* write config byte */
+	r.w.bx = (DWORD)pci->device_bus_number;
+	r.w.cx = (DWORD)data;
+	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		logerror_("pci write config byte failed\n");
@@ -476,10 +493,10 @@ static BOOL pci_write_config_word(PCI_DEV *pci, int idx, WORD data)
 	__dpmi_regs r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B10C;						/* write config word */
-	r.d.ebx = (DWORD)pci->device_bus_number;
-	r.d.ecx = (DWORD)data;
-	r.d.edi = (DWORD)idx;
+	r.w.ax = 0xB10C;						/* write config word */
+	r.w.bx = (DWORD)pci->device_bus_number;
+	r.w.cx = (DWORD)data;
+	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		logerror_("pci write config word failed\n");
@@ -493,10 +510,10 @@ static BOOL pci_write_config_dword(PCI_DEV *pci, int idx, DWORD data)
 	__dpmi_regs r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B10D;						/* write config dword */
-	r.d.ebx = (DWORD)pci->device_bus_number;
-	r.d.ecx = (DWORD)data;
-	r.d.edi = (DWORD)idx;
+	r.w.ax = 0xB10D;						/* write config dword */
+	r.w.bx = (DWORD)pci->device_bus_number;
+	r.w.cx = (DWORD)data;
+	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		logerror_("pci write config dword failed\n");
@@ -507,15 +524,16 @@ static BOOL pci_write_config_dword(PCI_DEV *pci, int idx, DWORD data)
 
 static BOOL set_pci_hardware_interrupt(PCI_DEV *pci, BYTE int_pin, BYTE irq)
 {
-	__dpmi_regs r;
+	union REGPACK r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B10F;						/* set pci hardware interrupt */
-	r.d.ebx = (DWORD)pci->device_bus_number;
+	memset(&r,0,sizeof(r));
+	r.w.ax = 0xB10F;						/* set pci hardware interrupt */
+	r.w.bx = (DWORD)pci->device_bus_number;
 	r.h.cl	= int_pin;
 	r.h.ch	= irq;
 	r.x.ds	= 0xF000;
-	__dpmi_int(0x1a, &r);
+	intr(0x1a, &r);
 	if( r.h.ah != 0 ){
 		logerror_("set pci hardware interrupt failed.\n");
 		result = FALSE;
@@ -530,10 +548,10 @@ static BOOL check_pci_bios(void)
 	__dpmi_regs r;
 	BOOL result = TRUE;
 
-	r.d.eax = 0x0000B101;					// PCI BIOS - INSTALLATION CHECK
-	r.d.edi = 0x00000000;
+	r.w.ax = 0xB101;					// PCI BIOS - INSTALLATION CHECK
+	r.w.di = 0x00000000;
 	__dpmi_int(0x1a, &r);
-	if( r.d.edx != 0x20494350 ){			// ' ICP'
+	if( r.x.edx != 0x20494350 ){			// ' ICP'
 		result = FALSE;
 	}
 	return result;
@@ -545,15 +563,15 @@ static BOOL find_pci_device(PCI_DEV *pci)
 	__dpmi_regs r;
 	WORD wdata;
 
-	r.d.eax = 0x0000B102;					// PCI BIOS - FIND PCI DEVICE
-	r.d.ecx = pci->device_id;				// device ID
-	r.d.edx = pci->vender_id;				// vendor ID
-	r.d.esi = 0x00000000;					// device index
+	r.w.ax = 0xB102;					// PCI BIOS - FIND PCI DEVICE
+	r.w.cx = pci->device_id;				// device ID
+	r.w.dx = pci->vender_id;				// vendor ID
+	r.x.esi = 0x00000000;					// device index
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		return FALSE;						// no specified device found
 	}
-	pci->device_bus_number = r.x.bx;		// save the device & bus number
+	pci->device_bus_number = r.w.bx;		// save the device & bus number
 	if(pci->sub_vender_id != PCI_ANY_ID){
 		/* get subsystem vender id */
 		if(pci_read_config_word(pci, 0x2C, &wdata) == FALSE) return FALSE;
@@ -612,9 +630,9 @@ static BOOL detect_windows(void)
 
 	__dpmi_regs r;
 
-	r.x.ax = 0x1600;
+	r.w.ax = 0x1600;
 	__dpmi_int(0x2F, &r);
-//	  printf("ax = %04x\n", r.x.ax);
+//	  printf("ax = %04x\n", r.w.ax);
 	if( (r.h.al & 0x7F) != 0 ){
 		return TRUE;
 	}
@@ -634,7 +652,7 @@ void w_enter_critical(void)
 
 	tasmania += 1;
 	if(tasmania == 1){
-		r.x.ax = 0x1681;
+		r.w.ax = 0x1681;
 		__dpmi_int(0x2F, &r);
 		__asm {
 			cli
@@ -648,7 +666,7 @@ void w_exit_critical(void)
 
 	tasmania -= 1;
 	if(tasmania == 0){
-		r.x.ax = 0x1682;
+		r.w.ax = 0x1682;
 		__dpmi_int(0x2F, &r);
 		__asm { sti };
 	}
@@ -764,7 +782,7 @@ static void restore_irq_handler(void)
 /********************************************************************
  *	VDS helper func
  ********************************************************************/
-
+_Packed
 typedef struct {
 	DWORD Region_Size		__attribute__ ((packed));
 	DWORD Offset			__attribute__ ((packed));
@@ -784,11 +802,11 @@ static BOOL is_vds_available(void)
 
 	if(available != 0){
 		// get vds verson nunber
-		r.x.ax = 0x8102;
-		r.x.dx = 0x0000;
+		r.w.ax = 0x8102;
+		r.w.dx = 0x0000;
 		__dpmi_int(0x4B, &r);
-		if((r.x.flags & 0x01) == 0){		// carry is clear if successful
-			if(r.x.ax != 0x8102){
+		if((r.x.cflag & 0x01) == 0){		// carry is clear if successful
+			if(r.w.ax != 0x8102){
 				flag = TRUE;
 			}
 		}
@@ -799,7 +817,7 @@ static BOOL is_vds_available(void)
 
 static BOOL vds_helper_lock(DWORD buffer_addr, DWORD *physical_addr_table, int pages)
 {
-	__dpmi_regs r;
+	union REGPACK r;
 	DWORD temp;
 	DDS dds;
 	int d0;
@@ -807,6 +825,7 @@ static BOOL vds_helper_lock(DWORD buffer_addr, DWORD *physical_addr_table, int p
 	unsigned long dos_addr;
 	BOOL vds_available;
 
+	memset(&r,0,sizeof(r));
 	vds_available = is_vds_available();
 
 	if(_dma_allocate_mem4k(&sel, &dos_addr) == FALSE){
@@ -825,11 +844,11 @@ static BOOL vds_helper_lock(DWORD buffer_addr, DWORD *physical_addr_table, int p
 			dds.Seg_or_Select = temp >> 4;
 //			printf("%08x : %08x : %08x\n", temp, dds.Offset, dds.Seg_or_Select);
 			copy_to_dos_memory(dos_addr, (BYTE*)&dds, sizeof(dds));
-			r.x.ax = 0x8103;			// LOCK DMA BUFFER REGION
-			r.x.dx = 0x0000;
-			r.x.di = dos_addr & 0xF;
+			r.w.ax = 0x8103;			// LOCK DMA BUFFER REGION
+			r.w.dx = 0x0000;
+			r.w.di = dos_addr & 0xF;
 			r.x.es = dos_addr >> 4;
-			__dpmi_int(0x4B, &r);
+			intr(0x4B, &r);
 			if((r.x.flags & 0x01) != 0){
 				set_error_message("vds_helper_lock: LOCK DMA BUFFER REGION error\n");
 				__dpmi_free_dos_memory(sel);
@@ -855,7 +874,7 @@ static BOOL vds_helper_lock(DWORD buffer_addr, DWORD *physical_addr_table, int p
 
 static BOOL vds_helper_unlock(DWORD buffer_addr, DWORD *physical_addr_table, int pages)
 {
-	__dpmi_regs r;
+	union REGPACK r;
 	DWORD temp;
 	DDS dds;
 	int d0;
@@ -863,6 +882,7 @@ static BOOL vds_helper_unlock(DWORD buffer_addr, DWORD *physical_addr_table, int
 	unsigned long dos_addr;
 	BOOL vds_available;
 
+	memset(&r,0,sizeof(r));
 	vds_available = is_vds_available();
 
 	if(_dma_allocate_mem4k(&sel, &dos_addr) == FALSE){
@@ -883,12 +903,12 @@ static BOOL vds_helper_unlock(DWORD buffer_addr, DWORD *physical_addr_table, int
 			dds.Physical_Address = physical_addr_table[d0];
 //			printf("%08x : %08x : %08x\n", temp, dds.Offset, dds.Seg_or_Select);
 			copy_to_dos_memory(dos_addr, (BYTE*)&dds, sizeof(dds));
-			r.x.ax = 0x8104;			// UNLOCK DMA BUFFER REGION
-			r.x.dx = 0x0000;
-			r.x.di = dos_addr & 0xF;
+			r.w.ax = 0x8104;			// UNLOCK DMA BUFFER REGION
+			r.w.dx = 0x0000;
+			r.w.di = dos_addr & 0xF;
 			r.x.es = dos_addr >> 4;
-			__dpmi_int(0x4B, &r);
-			if((r.x.flags & 0x01) != 0){
+			intr(0x4B, &r);
+			if((r.w.flags & 0x01) != 0){
 				set_error_message("vds_helper_unlock: UNLOCK DMA BUFFER REGION error\n");
 				__dpmi_free_dos_memory(sel);
 				return FALSE;
@@ -5073,61 +5093,61 @@ static int detectCMI8x38(void)
 {
 	__dpmi_regs 	r;
 
-	r.d.eax = 0x0000b101;						// PCI BIOS - INSTALLATION CHECK
-	r.d.edi = 0x00000000;
+	r.w.ax = 0xB101;						// PCI BIOS - INSTALLATION CHECK
+	r.w.di = 0x00000000;
 	__dpmi_int(0x1a, &r);
-	if( r.d.edx != 0x20494350 ){				// ' ICP'
+	if( r.x.edx != 0x20494350 ){				// ' ICP'
 		return FALSE;
 	}
 
 	while(1){
-		r.d.eax = 0x0000b102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00000100;						// device ID
-		r.d.edx = 0x000013F6;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00000100;						// device ID
+		r.x.edx = 0x000013F6;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 		if( r.h.ah == 0 ) break;
 
-		r.d.eax = 0x0000b102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00000101;						// device ID
-		r.d.edx = 0x000013F6;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00000101;						// device ID
+		r.x.edx = 0x000013F6;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 		if( r.h.ah == 0 ) break;
 
-		r.d.eax = 0x0000b102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00000111;						// device ID
-		r.d.edx = 0x000013F6;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00000111;						// device ID
+		r.x.edx = 0x000013F6;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 		if( r.h.ah == 0 ) break;
 
-		r.d.eax = 0x0000b102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00000101;						// device ID
-		r.d.edx = 0x000010B9;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00000101;						// device ID
+		r.x.edx = 0x000010B9;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 
 		if( r.h.ah == 0 ) break;
-		r.d.eax = 0x0000b102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00000111;						// device ID
-		r.d.edx = 0x000010B9;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00000111;						// device ID
+		r.x.edx = 0x000010B9;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 		if( r.h.ah == 0 ) break;
 
 		return FALSE;
 	}
 
-	r.d.eax = 0x0000b10a;						// READ CONFIGURATION DWORD
+	r.w.ax = 0xB10a;						// READ CONFIGURATION DWORD
 												// BH = bus number
 												// BL = device/function number
-	r.d.edi = 0x00000010;						// register number
+	r.w.di = 0x00000010;						// register number
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		return FALSE;
 	}
-	cmi8x38_iobase = r.d.ecx & ~0xFF;
+	cmi8x38_iobase = r.w.cx & ~0xFF;
 
 	return TRUE;
 }
@@ -5136,48 +5156,48 @@ static int detectTrid4DWave(void)
 {
 	__dpmi_regs 	r;
 
-	r.d.eax = 0x0000b101;						// PCI BIOS - INSTALLATION CHECK
-	r.d.edi = 0x00000000;
+	r.w.ax = 0xB101;						// PCI BIOS - INSTALLATION CHECK
+	r.w.di = 0x00000000;
 	__dpmi_int(0x1a, &r);
-	if( r.d.edx != 0x20494350 ){				// ' ICP'
+	if( r.x.edx != 0x20494350 ){				// ' ICP'
 		return FALSE;
 	}
 
 	do{
-		r.d.eax = 0x0000b102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00002000;						// device ID
-		r.d.edx = 0x00001023;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00002000;						// device ID
+		r.x.edx = 0x00001023;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 		if( r.h.ah == 0 ) break;					// DX found
 
-		r.d.eax = 0x0000b102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00002001;						// device ID
-		r.d.edx = 0x00001023;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00002001;						// device ID
+		r.x.edx = 0x00001023;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 		if( r.h.ah == 0 ) break;					// NX found
 
-		r.d.eax = 0x0000B102;						// PCI BIOS - FIND PCI DEVICE
-		r.d.ecx = 0x00007018;						// device ID
-		r.d.edx = 0x00001039;						// vendor ID
-		r.d.esi = 0x00000000;						// device index
+		r.w.ax = 0xB102;						// PCI BIOS - FIND PCI DEVICE
+		r.w.cx = 0x00007018;						// device ID
+		r.x.edx = 0x00001039;						// vendor ID
+		r.x.esi = 0x00000000;						// device index
 		__dpmi_int(0x1a, &r);
 		if( r.h.ah == 0 ) break;					// SiS Audio 7018 found
 
 		return FALSE;
 	}while(0);
 
-	r.d.eax = 0x0000b10a;						// READ CONFIGURATION DWORD
+	r.w.ax = 0xB10a;						// READ CONFIGURATION DWORD
 												// BH = bus number
 												// BL = device/function number
-	r.d.edi = 0x00000010;						// register number
+	r.w.di = 0x00000010;						// register number
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
 		return FALSE;
 	}
 
-	trid4dwave_iobase = r.d.ecx & ~0xFF;
+	trid4dwave_iobase = r.w.cx & ~0xFF;
 	return TRUE;
 }
 
