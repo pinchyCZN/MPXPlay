@@ -737,6 +737,7 @@ static void mask_irq(int irq)
 	}
 }
 
+/*
 static int install_irq_handler(int irq, void *my_handler)
 {
 	int bl = TRUE;
@@ -771,11 +772,115 @@ static void restore_irq_handler(void)
 		old_handler_irq_vector = -1;
 	}
 }
-
+*/
 
 /********************************************************************
  *	VDS helper func
  ********************************************************************/
+int __dpmi_free_dos_memory(int sel)
+{
+	union REGS regs={0};
+	regs.x.eax=0x0101;
+	regs.x.edx=sel;
+	int386(0x31,&regs,&regs);
+	return 0;
+}
+int __dpmi_free_ldt_descriptor(int sel)
+{
+	union REGS regs={0};
+	regs.x.eax=0x0001;
+	regs.x.ebx=sel;
+	int386(0x31,&regs,&regs);
+	return 0;
+}
+int __dpmi_allocate_ldt_descriptors(int num)
+{
+	int result=-1;
+	union REGS regs={0};
+	regs.x.eax=0x0000;
+	regs.x.ecx=num;
+	int386(0x31,&regs,&regs);
+	if(regs.x.cflag==0)
+		result=regs.x.eax;
+	return result;
+}
+int __dpmi_unlock_linear_region(__dpmi_meminfo *minfo)
+{
+	union REGS regs={0};
+	regs.x.eax=0x0601;
+	regs.w.bx=minfo->address>>16;
+	regs.w.cx=minfo->address&0xFFFF;
+	regs.w.si=minfo->size>>16;
+	regs.w.di=minfo->size&0xFFFF;
+	int386(0x31,&regs,&regs);
+	return 0;
+}
+int __dpmi_lock_linear_region(__dpmi_meminfo *minfo)
+{
+	int result=FALSE;
+	union REGS regs={0};
+	regs.x.eax=0x0600;
+	regs.w.bx=minfo->address>>16;
+	regs.w.cx=minfo->address&0xFFFF;
+	regs.w.si=minfo->size>>16;
+	regs.w.di=minfo->size&0xFFFF;
+	int386(0x31,&regs,&regs);
+	if(regs.x.cflag==0){
+		result=TRUE;
+	}
+	return result;
+}
+
+int __dpmi_free_physical_address_mapping(__dpmi_meminfo *minfo)
+{
+	union REGS regs={0};
+	regs.x.eax=0x0801;
+	regs.w.bx=minfo->address>>16;
+	regs.w.cx=minfo->address&0xFFFF;
+	int386(0x31,&regs,&regs);
+	return 0;
+}
+int __dpmi_physical_address_mapping(__dpmi_meminfo *minfo)
+{
+	int result=FALSE;
+	union REGS regs={0};
+	regs.x.eax=0x0800;
+	regs.w.bx=minfo->address>>16;
+	regs.w.cx=minfo->address&0xFFFF;
+	int386(0x31,&regs,&regs);
+	if(regs.x.cflag==0){
+		minfo->address=(regs.w.bx<<16)+regs.w.cx;
+		result=TRUE;
+	}
+	return result;
+}
+int __dpmi_set_segment_base_address(int sel,unsigned long base)
+{
+	int result=1;
+	union REGS regs={0};
+	regs.x.eax=0x0007;
+	regs.x.ebx=sel;
+	regs.w.cx=base>>16;
+	regs.w.dx=base&0xFFFF;
+	int386(0x31,&regs,&regs);
+	if(regs.x.cflag==0)
+		result=0;
+	return result;
+}
+int __dpmi_set_segment_limit(int sel,unsigned long limit)
+{
+	int result=1;
+	union REGS regs={0};
+	regs.x.eax=0x0008;
+	regs.x.ebx=sel;
+	regs.w.cx=limit>>16;
+	regs.w.dx=limit&0xFFFF;
+	int386(0x31,&regs,&regs);
+	if(regs.x.cflag==0)
+		result=0;
+	return result;
+}
+
 _Packed
 typedef struct {
 	DWORD Region_Size		__attribute__ ((packed));
@@ -784,7 +889,6 @@ typedef struct {
 	WORD  Buffer_ID 		__attribute__ ((packed));
 	DWORD Physical_Address	__attribute__ ((packed));
 } DDS;
-
 
 static BOOL is_vds_available(void)
 {
@@ -1063,9 +1167,21 @@ static int _dma_allocate_mem(int bytes, int *sel, unsigned long *phys)
 
 static int _dma_allocate_mem(int *sel, unsigned long *phys)
 {
+	int result=FALSE;
+	union REGS regs;
+	regs.x.eax = 0x0100;
+	regs.x.ebx = 131072 >> 4;
+	regs.x.cflag = 1;
+	int386(0x31, &regs, &regs);
+	if(regs.x.cflag)
+		return result;
+	*sel = regs.x.edx;
+	*phys = (void *)(regs.x.eax << 4);
+	result=TRUE;
+	return result;
+	/*
 	int seg;
 
-	/* allocate twice as much memory as we really need */
 	seg = __dpmi_allocate_dos_memory(131072 >> 4, sel); 	// 128K
 
 	if (seg < 0) {
@@ -1077,15 +1193,27 @@ static int _dma_allocate_mem(int *sel, unsigned long *phys)
    *phys = seg << 4;
 
    *phys = (*phys + 65535) & ~0xFFFF ;						// 64K boundary
-
    return TRUE;
+	*/
 }
 
 static BOOL _dma_allocate_mem4k(int *sel, unsigned long *phys)
 {
+	int result=FALSE;
+	union REGS regs;
+	regs.x.eax = 0x0100;
+	regs.x.ebx = 8192 >> 4;
+	regs.x.cflag = 1;
+	int386(0x31, &regs, &regs);
+	if(regs.x.cflag)
+		return result;
+	*sel = regs.x.edx;
+	*phys = (void *)(regs.x.eax << 4);
+	result=TRUE;
+	return result;
+/*
 	int seg;
 
-	/* allocate twice as much memory as we really need */
 	seg = __dpmi_allocate_dos_memory(8192 >> 4, sel);	  // 8K
 
 	if (seg < 0) {
@@ -1099,6 +1227,7 @@ static BOOL _dma_allocate_mem4k(int *sel, unsigned long *phys)
    *phys = (*phys + 4095) & ~0x0FFF ;					   // 4K boundary
 
    return TRUE;
+*/
 }
 
 
@@ -1196,6 +1325,8 @@ typedef struct {
 } DEVICE_LIST;
 
 
+
+
 /***********************  VIA SOUND  ************************/
 
 
@@ -1243,6 +1374,7 @@ static DEVICE_LIST via686_dev_list[] = {
 
 static int via686_device_type = DEVICE_VT82C686;
 
+#if 0
 
 static DWORD via686_ReadAC97Codec_sub(void)
 {
@@ -1562,7 +1694,7 @@ static BOOL via686_start_no_chip_init(int rate)
 	return via686_start(rate, FALSE);
 }
 
-
+#endif
 
 
 /***********************   ************************/
@@ -4409,12 +4541,14 @@ static BOOL allocate_dosmem4k(void)
 
 static void free_dosmem4k(void)
 {
+	union REGS regs;
 	if(g_dosmem4k_sel  == 0) return;
 	if(g_dosmem4k_addr == 0) return;
-//	  if(info4k.address != NULL){
-//		  __dpmi_unlock_linear_region(&info4k);
-//	  }
-	__dpmi_free_dos_memory(g_dosmem4k_sel);
+
+	regs.x.eax = 0x0101;
+	regs.x.edx = g_dosmem4k_sel;
+	regs.x.cflag = 1;
+	int386(0x31, &regs, &regs);
 	g_dosmem4k_sel = 0;
 	g_dosmem4k_addr = 0;
 }
@@ -4477,12 +4611,20 @@ static BOOL allocate_dosmem64k_for_dma(int format)
 
 static void free_dosmem64k_for_dma(void)
 {
+	union REGS regs;
 	if(g_wss_dma_sel  == 0) return;
 	if(g_wss_dma_addr == 0) return;
 	if(info64k.address != 0){
+		/*
+		regs.x.eax=0x0005;
+		regs.x.ebx=
 		__dpmi_unlock_linear_region(&info64k);
+		*/
 	}
-	__dpmi_free_dos_memory(g_wss_dma_sel);
+
+	regs.x.eax=0x0101;
+	regs.x.edx=g_wss_dma_sel;
+	int386(0x31,&regs,&regs);
 	g_wss_dma_sel = 0;
 	g_wss_dma_addr = 0;
 }
@@ -4856,7 +4998,7 @@ static DWORD ultrasound_current_pos(void)
 
 	return d0;
 }
-
+/*
 static int ultrasound_start(int rate)
 {
 	DWORD curr;
@@ -4903,7 +5045,6 @@ static int ultrasound_start(int rate)
 static void ultrasound_exit(void)
 {
 	int d0;
-
 	d0 = 0;
 	while(d0 < 2){
 		u_voice_stop(d0);
@@ -4917,7 +5058,7 @@ static void ultrasound_exit(void)
 	free_dosmem64k_for_dma();
 	wavedevice_struct_init();
 }
-
+*/
 
 /*	from Allegro sndscape.c  */
 static int get_ini_config_entry(char *entry, char *dest, FILE *fp)
@@ -6092,14 +6233,12 @@ int w_sound_device_init(int device_no, int rate)
 		case 1:
 			result = sb_auto_detect_start(rate);
 			break;
-			*/
 		case 2:
 			result = ac97_auto_detect_start(rate, FALSE);
 			break;
 		case 3:
 			result = ac97_auto_detect_start(rate, TRUE);
 			break;
-			/*
 		case 4:
 			result = ultramax_start(rate);
 			break;
@@ -6148,7 +6287,6 @@ int w_sound_device_init(int device_no, int rate)
 		case 23:
 			result = sbpro_interrupt_driven_start(rate);
 			break;
-			*/
 		case 24:
 			result = via686_start_chip_init(rate);
 			break;
@@ -6161,12 +6299,16 @@ int w_sound_device_init(int device_no, int rate)
 		case 27:
 			result = intel_ich_start_no_chip_init(rate);
 			break;
+			*/
+
 		case 28:
 			result = hda_start(rate);
 			break;
+/*
 		case 29:
 			result = hda_start_no_speaker(rate);
 			break;
+*/
 		default:
 			result = FALSE;
 			set_error_message("invalid sound device number.\n");
