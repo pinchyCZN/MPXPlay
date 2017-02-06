@@ -17,7 +17,6 @@
 typedef  unsigned char uint8_t;
 typedef  unsigned short uint16_t;
 typedef  unsigned int uint32_t;
-   #define _farsetsel(seg)	(seg)
    #define _farnspokeb(addr, val)   (*((uint8_t  *)(addr)) = (val))
    #define _farnspokew(addr, val)   (*((uint16_t *)(addr)) = (val))
    #define _farnspokel(addr, val)   (*((uint32_t *)(addr)) = (val))
@@ -39,7 +38,12 @@ static void logerror_(const char *text,...)
 	  vfprintf(stdout,text,arg);
 	  va_end(arg);
 }
-
+int _farsetsel(short sel)
+{
+	_asm{
+		mov fs,sel
+	}
+}
 /***********************	TICKER	*************************/
 
 typedef signed long long	   	 INT64;
@@ -417,15 +421,15 @@ static BOOL pci_read_config_byte(PCI_DEV *pci, int idx, BYTE *data)
 	BOOL result = TRUE;
 
 	r.w.ax = 0xB108;						/* read config byte */
-	r.w.bx = (DWORD)pci->device_bus_number;
+	r.x.ebx = (DWORD)pci->device_bus_number;
 	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
-	if( r.h.ah != 0 ){
+	if(r.x.cflag!=0){
 		logerror_("pci read config byte failed\n");
 		result = FALSE;
 		r.w.cx = 0;
 	}
-	*data = (BYTE)r.w.cx;
+	*data = (BYTE)r.h.cl;
 	return result;
 }
 
@@ -435,7 +439,7 @@ static BOOL pci_read_config_word(PCI_DEV *pci, int idx, WORD *data)
 	BOOL result = TRUE;
 
 	r.w.ax = 0xB109;						/* read config word */
-	r.w.bx = (DWORD)pci->device_bus_number;
+	r.x.ebx = (DWORD)pci->device_bus_number;
 	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
 	if( r.h.ah != 0 ){
@@ -453,15 +457,15 @@ static BOOL pci_read_config_dword(PCI_DEV *pci, int idx, DWORD *data)
 	BOOL result = TRUE;
 
 	r.w.ax = 0xB10A;						/* read config dword */
-	r.w.bx = (DWORD)pci->device_bus_number;
+	r.x.ebx = (DWORD)pci->device_bus_number;
 	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
-	if( r.h.ah != 0 ){
+	if(r.x.cflag!=0){
 		logerror_("pci read config dword failed\n");
 		result = FALSE;
 		r.w.cx = 0;
 	}
-	*data = (DWORD)r.w.cx;
+	*data = (DWORD)r.x.ecx;
 	return result;
 }
 
@@ -471,7 +475,7 @@ static BOOL pci_write_config_byte(PCI_DEV *pci, int idx, BYTE data)
 	BOOL result = TRUE;
 
 	r.w.ax = 0xB10B;						/* write config byte */
-	r.w.bx = (DWORD)pci->device_bus_number;
+	r.x.ebx = (DWORD)pci->device_bus_number;
 	r.w.cx = (DWORD)data;
 	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
@@ -488,7 +492,7 @@ static BOOL pci_write_config_word(PCI_DEV *pci, int idx, WORD data)
 	BOOL result = TRUE;
 
 	r.w.ax = 0xB10C;						/* write config word */
-	r.w.bx = (DWORD)pci->device_bus_number;
+	r.x.ebx = (DWORD)pci->device_bus_number;
 	r.w.cx = (DWORD)data;
 	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
@@ -505,7 +509,7 @@ static BOOL pci_write_config_dword(PCI_DEV *pci, int idx, DWORD data)
 	BOOL result = TRUE;
 
 	r.w.ax = 0xB10D;						/* write config dword */
-	r.w.bx = (DWORD)pci->device_bus_number;
+	r.x.ebx = (DWORD)pci->device_bus_number;
 	r.w.cx = (DWORD)data;
 	r.w.di = (DWORD)idx;
 	__dpmi_int(0x1a, &r);
@@ -817,7 +821,7 @@ int __dpmi_unlock_linear_region(__dpmi_meminfo *minfo)
 }
 int __dpmi_lock_linear_region(__dpmi_meminfo *minfo)
 {
-	int result=FALSE;
+	int result=1;
 	union REGS regs={0};
 	regs.x.eax=0x0600;
 	regs.w.bx=minfo->address>>16;
@@ -826,7 +830,7 @@ int __dpmi_lock_linear_region(__dpmi_meminfo *minfo)
 	regs.w.di=minfo->size&0xFFFF;
 	int386(0x31,&regs,&regs);
 	if(regs.x.cflag==0){
-		result=TRUE;
+		result=0;
 	}
 	return result;
 }
@@ -2828,7 +2832,9 @@ static BOOL hda_codec_init(DWORD codecaddr)
 	DWORD d0;
 	int d1, d2;
 	
+	printf("codec init\n");
 	d0 = hda_send_codec_cmd(HDAPARAM1(codecaddr, 0, GET_PARAM, VENDOR_ID), TRUE);
+	printf("2\n");
 	
 	codecvid = d0 >> 16;
 	codecdid = d0 & 0xffff;
@@ -2865,12 +2871,12 @@ static BOOL hda_init(void)
 	d0 = 0;	
 	while(d0 < HDA_MAX_CODECS)
 	{
+		printf("code=%08X\n",codecmask);
 		if(codecmask & (1 << d0))
 			if (hda_codec_init(d0) == TRUE)
 				return TRUE;
 		d0 += 1;
 	}	
-		
 	set_error_message("HDA: no suitable codec was found.\n");
 	
 	return FALSE;
@@ -2902,6 +2908,7 @@ static int hda_map_iobase(void)
 	
 	/* get io base address */
 	pci_read_config_dword(&g_pci, HDBARL, &minfo.address);
+
 	if((minfo.address &= 0xfffffff9) == 0)
 	{
 		set_error_message("HDA: device found, but disabled.\n");
@@ -3112,6 +3119,7 @@ static BOOL hda_start(int rate)
 	
 	hda_device_type = hda_dev_list[d0].type;
 	device_name_hda = hda_dev_list[d0].string;
+	printf("hda type=%08X\n",hda_device_type);
 	
 	hda_init_pci_regs();
 	

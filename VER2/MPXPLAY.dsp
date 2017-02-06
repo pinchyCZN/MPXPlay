@@ -119,6 +119,10 @@ SOURCE=.\SC_INTHD.C
 
 SOURCE=.\SC_INTHD.H
 # End Source File
+# Begin Source File
+
+SOURCE=.\WSS.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
