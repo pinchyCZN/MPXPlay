@@ -16,10 +16,10 @@
 //based on ALSA (http://www.alsa-project.org)
 
 #define MPXPLAY_USE_DEBUGF 1
-#define IHD_DEBUG_OUTPUT stdout
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "dmairq.h"
 #include "pcibios.h"
 #include "sc_inthd.h"
@@ -27,6 +27,14 @@
 
 #define INTHD_MAX_CHANNELS 8
 #define AZX_PERIOD_SIZE 4096
+int mpxplay_debugf(char *fmt,...)
+{
+	va_list args;
+	va_start(args,fmt);
+	vprintf(fmt,args);
+	printf("\n");
+	return 0;
+}
 
 struct intelhd_card_s {
 	unsigned long iobase;
@@ -157,7 +165,7 @@ static int azx_single_send_cmd(struct intelhd_card_s *chip, uint32_t val)
 		}
 		pds_delay_10us(1);
 	}
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "send cmd timeout");
+	mpxplay_debugf("send cmd timeout");
 	return -1;
 }
 
@@ -229,7 +237,7 @@ static void snd_hda_search_audio_node(struct intelhd_card_s *card)
 		}
 	}
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "total_nodes:%d afg_nodenum:%d", total_nodes, (int)card->afg_root_nodenum);
+	mpxplay_debugf("total_nodes:%d afg_nodenum:%d", total_nodes, (int)card->afg_root_nodenum);
 }
 
 static int snd_hda_get_connections(struct intelhd_card_s *card, hda_nid_t nid, hda_nid_t * conn_list, int max_conns)
@@ -322,7 +330,7 @@ static int snd_hda_add_new_node(struct intelhd_card_s *card, struct hda_gnode *n
 		node->supported_formats = snd_hda_param_read(card, node->nid, AC_PAR_PCM);
 	}
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "node:%2d cons:%2d wc:%8.8X t:%2d aoc:%8.8X ot:%2d sf:%8.8X st:%2d of:%2d",
+	mpxplay_debugf("node:%2d cons:%2d wc:%8.8X t:%2d aoc:%8.8X ot:%2d sf:%8.8X st:%2d of:%2d",
 				   (int)nid, nconns, node->wid_caps,
 				   node->type, node->amp_out_caps, (node->wid_caps & AC_WCAP_OUT_AMP), node->supported_formats, ((node->amp_out_caps >> 8) & 0x7f), (node->amp_out_caps & AC_AMPCAP_OFFSET));
 
@@ -529,19 +537,19 @@ static unsigned int azx_reset(struct intelhd_card_s *chip)
 {
 	int count;
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "azx_reset start");
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "gctl1:%8.8X", azx_readl(chip, GCTL));
+	mpxplay_debugf("azx_reset start");
+	mpxplay_debugf("gctl1:%8.8X", azx_readl(chip, GCTL));
 
 	azx_writeb(chip, STATESTS, STATESTS_INT_MASK);
 	azx_writel(chip, GCTL, azx_readl(chip, GCTL) & ~ICH6_GCTL_RESET);
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "gctl2b:%8.8X gctl2d:%8.8X", (unsigned long)azx_readb(chip, GCTL), azx_readl(chip, GCTL));
+	mpxplay_debugf("gctl2b:%8.8X gctl2d:%8.8X", (unsigned long)azx_readb(chip, GCTL), azx_readl(chip, GCTL));
 
 	count = 50;
 	while(azx_readb(chip, GCTL) && (--count))
 		pds_delay_10us(100);
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "gctl3:%8.8X count:%d", azx_readl(chip, GCTL), count);
+	mpxplay_debugf("gctl3:%8.8X count:%d", azx_readl(chip, GCTL), count);
 
 	pds_delay_10us(300);
 
@@ -553,7 +561,7 @@ static unsigned int azx_reset(struct intelhd_card_s *chip)
 
 	pds_delay_10us(300);
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "gctl4:%8.8X count:%d ", (unsigned long)azx_readb(chip, GCTL), count);
+	mpxplay_debugf("gctl4:%8.8X count:%d ", (unsigned long)azx_readb(chip, GCTL), count);
 
 	if(!azx_readb(chip, GCTL))
 		return 0;
@@ -566,8 +574,8 @@ static unsigned int azx_reset(struct intelhd_card_s *chip)
 
 	chip->codec_mask = azx_readw(chip, STATESTS);
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "codec_mask:%8.8X", chip->codec_mask);
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "azx_reset end");
+	mpxplay_debugf("codec_mask:%8.8X", chip->codec_mask);
+	mpxplay_debugf("azx_reset end");
 
 	return 1;
 }
@@ -638,12 +646,12 @@ static unsigned int snd_ihd_mixer_init(struct intelhd_card_s *card)
 	unsigned int i;
 	hda_nid_t nid;
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "snd_ihd_mixer_init start");
+	mpxplay_debugf("snd_ihd_mixer_init start");
 
 	card->codec_vendor_id = snd_hda_param_read(card, AC_NODE_ROOT, AC_PAR_VENDOR_ID);
 	if(card->codec_vendor_id <= 0)
 		card->codec_vendor_id = snd_hda_param_read(card, AC_NODE_ROOT, AC_PAR_VENDOR_ID);
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "codec vendor id:%8.8X", card->codec_vendor_id);
+	mpxplay_debugf("codec vendor id:%8.8X", card->codec_vendor_id);
 
 	snd_hda_search_audio_node(card);
 	if(!card->afg_root_nodenum)
@@ -655,7 +663,7 @@ static unsigned int snd_ihd_mixer_init(struct intelhd_card_s *card)
 	if((card->afg_num_nodes <= 0) || !nid)
 		goto err_out_mixinit;
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "outcaps:%8.8X incaps:%8.8X afgsubnodes:%d anid:%d", card->def_amp_out_caps, card->def_amp_in_caps, card->afg_num_nodes, (int)nid);
+	mpxplay_debugf("outcaps:%8.8X incaps:%8.8X afgsubnodes:%d anid:%d", card->def_amp_out_caps, card->def_amp_in_caps, card->afg_num_nodes, (int)nid);
 
 	card->afg_nodes = (struct hda_gnode *)calloc(card->afg_num_nodes, sizeof(struct hda_gnode));
 	if(!card->afg_nodes)
@@ -681,14 +689,14 @@ static unsigned int snd_ihd_mixer_init(struct intelhd_card_s *card)
 			ihd_master_vol.submixerchans[i].submixch_max = (card->pcm_vols[i].node->amp_out_caps & AC_AMPCAP_NUM_STEPS) >> AC_AMPCAP_NUM_STEPS_SHIFT;
 		}
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "dac0:%d dac1:%d out0:%d out1:%d vol0:%d vol1:%d",
+	mpxplay_debugf("dac0:%d dac1:%d out0:%d out1:%d vol0:%d vol1:%d",
 				   (int)((card->dac_node[0]) ? card->dac_node[0]->nid : 0),
 				   (int)((card->dac_node[1]) ? card->dac_node[1]->nid : 0),
 				   (int)((card->out_pin_node[0]) ? card->out_pin_node[0]->nid : 0),
 				   (int)((card->out_pin_node[1]) ? card->out_pin_node[1]->nid : 0),
 				   (int)((card->pcm_vols[0].node) ? card->pcm_vols[0].node->nid : 0), (int)((card->pcm_vols[1].node) ? card->pcm_vols[1].node->nid : 0));
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "snd_ihd_mixer_init end with success");
+	mpxplay_debugf("snd_ihd_mixer_init end with success");
 
 	return 1;
 
@@ -697,7 +705,7 @@ static unsigned int snd_ihd_mixer_init(struct intelhd_card_s *card)
 		free(card->afg_nodes);
 		card->afg_nodes = NULL;
 	}
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "snd_ihd_mixer_init failed");
+	mpxplay_debugf("snd_ihd_mixer_init failed");
 	return 0;
 }
 
@@ -717,7 +725,7 @@ static void azx_setup_periods(struct intelhd_card_s *card)
 
 	card->pcmout_num_periods = card->pcmout_dmasize / card->pcmout_period_size;
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "setup_periods: dmasize:%d periods:%d prsize:%d", card->pcmout_dmasize, card->pcmout_num_periods, card->pcmout_period_size);
+	mpxplay_debugf("setup_periods: dmasize:%d periods:%d prsize:%d", card->pcmout_dmasize, card->pcmout_num_periods, card->pcmout_period_size);
 
 	azx_sd_writel(card, SD_BDLPL, 0);
 	azx_sd_writel(card, SD_BDLPU, 0);
@@ -746,7 +754,7 @@ static void azx_setup_controller(struct intelhd_card_s *card)
 	while(!((val = azx_sd_readb(card, SD_CTL)) & SD_CTL_STREAM_RESET) && --timeout)
 		pds_delay_10us(1);
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "controller timeout1:%d ", timeout);
+	mpxplay_debugf("controller timeout1:%d ", timeout);
 
 	val &= ~SD_CTL_STREAM_RESET;
 	azx_sd_writeb(card, SD_CTL, val);
@@ -756,7 +764,7 @@ static void azx_setup_controller(struct intelhd_card_s *card)
 	while(((val = azx_sd_readb(card, SD_CTL)) & SD_CTL_STREAM_RESET) && --timeout)
 		pds_delay_10us(1);
 
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "timeout2:%d format:%8.8X", timeout, (int)card->format_val);
+	mpxplay_debugf("timeout2:%d format:%8.8X", timeout, (int)card->format_val);
 
 	azx_sd_writel(card, SD_CTL, (azx_sd_readl(card, SD_CTL) & ~SD_CTL_STREAM_TAG_MASK) | (stream_tag << SD_CTL_STREAM_TAG_SHIFT));
 	azx_sd_writel(card, SD_CBL, card->pcmout_dmasize);
@@ -962,9 +970,7 @@ static int INTELHD_adetect(struct mpxplay_audioout_info_s *aui)
 		goto err_adetect;
 
 	aui->card_DMABUFF = card->pcmout_buffer;
-
-	mpxplay_debugf(IHD_DEBUG_OUTPUT, "IHD board type: %s (%4.4X%4.4X) ", card->pci_dev->device_name, (long)card->pci_dev->vendor_id, (long)card->pci_dev->device_id);
-
+	mpxplay_debugf("IHD board type: %s (%4.4X%4.4X) ", card->pci_dev->device_name, (long)card->pci_dev->vendor_id, (long)card->pci_dev->device_id);
 	snd_ihd_hw_init(card);
 
 	for(i = 0; i < AZX_MAX_CODECS; i++) {
@@ -978,6 +984,7 @@ static int INTELHD_adetect(struct mpxplay_audioout_info_s *aui)
 	return 1;
 
   err_adetect:
+	printf("error detect\n");
 	INTELHD_close(aui);
 	return 0;
 }
@@ -1043,7 +1050,7 @@ static long INTELHD_getbufpos(struct mpxplay_audioout_info_s *aui)
 
 	bufpos = azx_sd_readl(card, SD_LPIB);
 
-	//mpxplay_debugf(IHD_DEBUG_OUTPUT,"bufpos1:%d sts:%8.8X ctl:%8.8X cbl:%d ds:%d ps:%d pn:%d",bufpos,azx_sd_readb(card, SD_STS),azx_sd_readl(card, SD_CTL),azx_sd_readl(card, SD_CBL),aui->card_dmasize,
+	//mpxplay_debugf("bufpos1:%d sts:%8.8X ctl:%8.8X cbl:%d ds:%d ps:%d pn:%d",bufpos,azx_sd_readb(card, SD_STS),azx_sd_readl(card, SD_CTL),azx_sd_readl(card, SD_CBL),aui->card_dmasize,
 	// card->pcmout_period_size,card->pcmout_num_periods);
 
 	if(bufpos < aui->card_dmasize)
@@ -1096,3 +1103,22 @@ one_sndcard_info IHD_sndcard_info = {
 	&INTELHD_readMIXER,
 	&ihd_mixerset
 };
+
+int dump_card_data()
+{
+	extern mpxplay_audioout_info_s au_infos;
+	int i,j;
+	int *data;
+	struct intelhd_card_s *card;
+	card=au_infos.card_private_data;
+	if(card==0)
+		return 0;
+	data=card->iobase;
+	for(i=0;i<0xC0/4;i++){
+		if((i%4)==0)
+			printf("\n%02X: ",i*4);
+		printf("%08X ",data[i]);
+	}
+	printf("\n");
+	return 0;
+}

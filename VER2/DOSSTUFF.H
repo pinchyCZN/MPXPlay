@@ -657,25 +657,4 @@ extern void newfunc_newhandler08_close(void);
 #define pds_memcpy(t,s,l)   memcpy(t,s,l)
 #define pds_memset(t,v,l)   memset(t,v,l)
 
-#ifdef MPXPLAY_USE_DEBUGF
-
-#include <stdarg.h>
-
-static void mpxplay_debugf(FILE * fp, const char *format, ...)
-{
-#ifdef MPXPLAY_USE_DEBUGMSG
-	va_list list;
-	va_start(list,format);
-	vprintf(format,list);
-#endif
-}
-
-#else
-	#ifdef __WATCOMC__
-		#define mpxplay_debugf()
-	#else
-		#define mpxplay_debugf (void)sizeof
-	#endif
-#endif							// MPXPLAY_USE_DEBUGF
-
-#endif							// mpxplay_newfunc_h
+#endif //mpxplay_newfunc_h
