@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <i86.h>
+#include <conio.h>
 #include <dpmi.h>
 #include <time.h>
 #include <string.h>
@@ -11,8 +12,8 @@
 #include <stdarg.h>
 #include "WSS.h"
 
-#define UCLOCKS_PER_SEC 1193180
 #ifndef ALLEGRO_DJGPP
+#pragma off (unreferenced);
 typedef  unsigned char uint8_t;
 typedef  unsigned short uint16_t;
 typedef  unsigned int uint32_t;
@@ -20,6 +21,7 @@ typedef  unsigned int uint32_t;
    #define _farnspokeb(addr, val)   (*((uint8_t  *)(addr)) = (val))
    #define _farnspokew(addr, val)   (*((uint16_t *)(addr)) = (val))
    #define _farnspokel(addr, val)   (*((uint32_t *)(addr)) = (val))
+	#define _farpeekb(seg,addr) (*((uint8_t  *)(addr)))
    #define _farnspeekb(addr)        (*((uint8_t  *)(addr)))
    #define _farnspeekw(addr)        (*((uint16_t *)(addr)))
    #define _farnspeekl(addr)        (*((uint32_t *)(addr)))
@@ -46,8 +48,8 @@ typedef INT64 cycles_t;
 
 	
 #define uclock_t cycles_t
-#define osd_cycles() uclock()
-#define osd_cycles_per_second() UCLOCKS_PER_SEC
+#define osd_cycles() clock()
+#define osd_cycles_per_second() CLOCKS_PER_SEC
 
 
 
@@ -179,7 +181,7 @@ static void clear_error_message(void)
 
 /***********************  COMMON END  *********************/
 
-
+#if 0
 /***********************  Window Sound System  ************/
 
 static char device_name_soundscape[] = "Ensoniq Soundscape";
@@ -304,11 +306,6 @@ static int sb100_interrupt_driven_interrupt(void);
 static int sbpro_interrupt_driven_interrupt(void);
 static void wdm_sbpro_interrupt(void);
 
-
-
-
-
-
 static int wdm_sbpro_start(int rate_no);
 static int sb201_start(int rate_no);
 static int sbpro_start(int rate_no);
@@ -325,9 +322,6 @@ static unsigned long sb100_get_next_addr(void);
 
 static void sb_exit(void);
 
-
-
-
 static int detectTrid4DWave(void);
 static int trid4dwave_as_sb16_start(int rate_no);
 
@@ -336,6 +330,8 @@ static char device_name_trid4dwave[]  = "Trident 4DWave DX/NX as SB16";
 
 
 /***********************  BLASTER END  ********************/
+
+#endif
 
 
 
@@ -361,8 +357,6 @@ static DWORD convert_to_16bit(DWORD address);
 static void u_abort_dma_upload(void);
 
 
-
-
 static int u_prim_voice = 0;
 static int u_base = -1;
 static int u_cmd;
@@ -378,7 +372,7 @@ static DWORD u_nextaddr;
 static WORD  u_nextcount;
 static DWORD u_nextgusaddr;
 
-
+#if 0
 
 /***********************  ULTRASOUND END  *****************/
 
@@ -391,7 +385,7 @@ static void ess_exit(void);
 
 
 /***********************  ESS AUDIODRIVE END  *************/
-
+#endif
 
 
 /********************************************************************
@@ -711,22 +705,22 @@ static void copy_from_dos_memory(DWORD dos_address, BYTE *dest, DWORD length)
 
 static void eoi(int irq)
 {
-	outportb(0x20, 0x20);
-	if (irq > 7) outportb(0xA0, 0x20);
+	outp(0x20, 0x20);
+	if (irq > 7) outp(0xA0, 0x20);
 }
 
 static void unmask_irq(int irq)
 {
 	BYTE d0;
 
-	d0 = inportb(0x21);
+	d0 = inp(0x21);
 
 	if (irq > 7) {
-		outportb(0x21, d0 & 0xFB);
-		d0 = inportb(0xA1);
-		outportb(0xA1, d0 & ~(1<<(irq-8)) );
+		outp(0x21, d0 & 0xFB);
+		d0 = inp(0xA1);
+		outp(0xA1, d0 & ~(1<<(irq-8)) );
    }else{
-	  outportb(0x21, d0 & (~(1<<irq)) );
+	  outp(0x21, d0 & (~(1<<irq)) );
    }
 }
 
@@ -735,11 +729,11 @@ static void mask_irq(int irq)
 	BYTE d0;
 
 	if (irq > 7) {
-		d0 = inportb(0xA1);
-		outportb(0xA1, d0 | (1<<(irq-8)));
+		d0 = inp(0xA1);
+		outp(0xA1, d0 | (1<<(irq-8)));
 	}else{
-		d0 = inportb(0x21);
-		outportb(0x21, d0 | (1<<irq));
+		d0 = inp(0x21);
+		outp(0x21, d0 | (1<<irq));
 	}
 }
 
@@ -1132,22 +1126,22 @@ static void _dma_start(int channel, unsigned long addr, int size, int auto_init,
    if (auto_init)
 	  mode |= 0x10;
 
-   outportb(tdma->single, tdma->dma_disable);
-   outportb(tdma->mode, mode);
-   outportb(tdma->clear_ff, 0);
-   outportb(tdma->addr, offset & 0xFF);
-   outportb(tdma->addr, offset >> 8);
-   outportb(tdma->page, page);
-   outportb(tdma->clear_ff, 0);
-   outportb(tdma->count, size & 0xFF);
-   outportb(tdma->count, size >> 8);
-   outportb(tdma->single, tdma->dma_enable);
+   outp(tdma->single, tdma->dma_disable);
+   outp(tdma->mode, mode);
+   outp(tdma->clear_ff, 0);
+   outp(tdma->addr, offset & 0xFF);
+   outp(tdma->addr, offset >> 8);
+   outp(tdma->page, page);
+   outp(tdma->clear_ff, 0);
+   outp(tdma->count, size & 0xFF);
+   outp(tdma->count, size >> 8);
+   outp(tdma->single, tdma->dma_enable);
 }
 
 static void _dma_stop(int channel)
 {
    DMA_S *tdma = &mydma[channel];
-   outportb(tdma->single, tdma->dma_disable);
+   outp(tdma->single, tdma->dma_disable);
 }
 
 static DWORD _dma_todo(int channel)
@@ -1156,12 +1150,12 @@ static DWORD _dma_todo(int channel)
 	DMA_S *tdma = &mydma[channel];
 	int _dma_todo_limit = 0;
 
-	outportb(tdma->clear_ff, 0xff);
+	outp(tdma->clear_ff, 0xff);
 	while(_dma_todo_limit < 1024){
-		val1  = inportb(tdma->count);
-		val1 |= inportb(tdma->count) << 8;
-		val2  = inportb(tdma->count);
-		val2 |= inportb(tdma->count) << 8;
+		val1  = inp(tdma->count);
+		val1 |= inp(tdma->count) << 8;
+		val2  = inp(tdma->count);
+		val2 |= inp(tdma->count) << 8;
 		val1 -= val2;
 		if(0 <= val1 && val1 < 8) break;
 		_dma_todo_limit += 1;
@@ -1257,14 +1251,14 @@ static DWORD via686_ReadAC97Codec_sub(void)
 
 	/* wait for ready */
 	do{
-		d0 = inportl(g_pci.base0 + VIA686_AC97ControllerCommand);
+		d0 = inpd(g_pci.base0 + VIA686_AC97ControllerCommand);
 //		  printf("read debug %x\n", d0);
 		/* always valid, maybe */
 		if( (d0 & VIA686_PrimaryCodecDataValid) != 0 ) break;
 		udelay(100);
 	}while(limit-- > 0);
 
-	d0 = inportl(g_pci.base0 + VIA686_AC97ControllerCommand);
+	d0 = inpd(g_pci.base0 + VIA686_AC97ControllerCommand);
 	return d0;
 }
 
@@ -1276,18 +1270,18 @@ static void via686_WriteAC97Codec_sub(DWORD value_to_write)
 
 	/* wait for ready (writing) */
 	do{
-		d0 = inportl(g_pci.base0 + VIA686_AC97ControllerCommand);
+		d0 = inpd(g_pci.base0 + VIA686_AC97ControllerCommand);
 //		  printf("%x\n", d0);
 		if( (d0 & VIA686_AC97ControllerBusy) == 0 ) break;
 		udelay(100);
 	}while(limit-- > 0);
 
-	outportl(g_pci.base0 + VIA686_AC97ControllerCommand, value_to_write);
+	outpd(g_pci.base0 + VIA686_AC97ControllerCommand, value_to_write);
 
 	/* wait for ready (reading) */
 	limit = 1024;
 	do{
-		d0 = inportl(g_pci.base0 + VIA686_AC97ControllerCommand);
+		d0 = inpd(g_pci.base0 + VIA686_AC97ControllerCommand);
 //		  printf("%x\n", d0);
 		if( (d0 & VIA686_AC97ControllerBusy) == 0 ) break;
 		udelay(100);
@@ -1320,15 +1314,15 @@ static void via686_channel_reset(void)
 {
 	int via_sound_iobase = g_pci.base0;
 
-	outportb(via_sound_iobase + VIA_REG_OFFSET_CONTROL,
+	outp(via_sound_iobase + VIA_REG_OFFSET_CONTROL,
 				VIA_REG_CTRL_PAUSE | VIA_REG_CTRL_TERMINATE | VIA_REG_CTRL_RESET);
 	udelay(50);
-	outportb(via_sound_iobase + VIA_REG_OFFSET_CONTROL, 0x00);
-	outportb(via_sound_iobase + VIA_REG_OFFSET_STATUS, 0xFF);
+	outp(via_sound_iobase + VIA_REG_OFFSET_CONTROL, 0x00);
+	outp(via_sound_iobase + VIA_REG_OFFSET_STATUS, 0xFF);
 	if(via686_device_type == DEVICE_VT82C686){
-		outportb(via_sound_iobase + VIA_REG_OFFSET_TYPE, 0x00);
+		outp(via_sound_iobase + VIA_REG_OFFSET_TYPE, 0x00);
 	}
-	outportl(via_sound_iobase + VIA_REG_OFFSET_CURR_PTR, 0);
+	outpd(via_sound_iobase + VIA_REG_OFFSET_CURR_PTR, 0);
 }
 
 static DWORD via686_current_pos(void)
@@ -1340,9 +1334,9 @@ static DWORD via686_current_pos(void)
 
 	w_enter_critical();
 	while(limit > 0){
-		d0 = inportl(g_pci.base0 + VIA_REG_OFFSET_CURR_PTR);
-		d1 = inportl(g_pci.base0 + VIA_REG_PLAYBACK_CURR_COUNT);
-		d2 = inportl(g_pci.base0 + VIA_REG_OFFSET_CURR_PTR);
+		d0 = inpd(g_pci.base0 + VIA_REG_OFFSET_CURR_PTR);
+		d1 = inpd(g_pci.base0 + VIA_REG_PLAYBACK_CURR_COUNT);
+		d2 = inpd(g_pci.base0 + VIA_REG_OFFSET_CURR_PTR);
 		if(d0 == d2) break;
 		limit -= 1;
 	}
@@ -1522,13 +1516,13 @@ static BOOL via686_start(int rate, BOOL initialize)
 	}
 
 	/* set scatter/gather table pointer */
-	outportl(g_pci.base0 + VIA_REG_OFFSET_CURR_PTR, g_dosmem4k_phys_table[0]);
+	outpd(g_pci.base0 + VIA_REG_OFFSET_CURR_PTR, g_dosmem4k_phys_table[0]);
 
 	if(via686_device_type == DEVICE_VT82C686){
 		/* auto-start, 16bitpcm, stereo */
-		outportb(g_pci.base0 + VIA_REG_OFFSET_TYPE, 0xB0);
+		outp(g_pci.base0 + VIA_REG_OFFSET_TYPE, 0xB0);
 	}else{
-		outportl(g_pci.base0 + VIA_REG_OFFSET_STOP_IDX,
+		outpd(g_pci.base0 + VIA_REG_OFFSET_STOP_IDX,
 				VIA_REG_TYPE_16BIT | VIA_REG_TYPE_STEREO | 0xFF000000);
 	}
 	/* force playback rate 48000Hz */
@@ -1542,9 +1536,9 @@ static BOOL via686_start(int rate, BOOL initialize)
 
 	/* start playing */
 	if(via686_device_type == DEVICE_VT82C686){
-		outportb(g_pci.base0 + VIA_REG_OFFSET_CONTROL, VIA_REG_CTRL_START);
+		outp(g_pci.base0 + VIA_REG_OFFSET_CONTROL, VIA_REG_CTRL_START);
 	}else{
-		outportb(g_pci.base0 + VIA_REG_OFFSET_CONTROL, VIA_REG_CTRL_START | VIA_REG_CTRL_AUTOSTART);
+		outp(g_pci.base0 + VIA_REG_OFFSET_CONTROL, VIA_REG_CTRL_START | VIA_REG_CTRL_AUTOSTART);
 	}
 
 	wd.device_name	   = device_name_via686;
@@ -1678,13 +1672,13 @@ static BOOL intel_ich_codec_semaphore(void)
 	int limit = 1024;
 
 	/* codec ready ? */
-	d0 = inportl(g_pci.base1 + ICH_REG_GLOB_STA);
+	d0 = inpd(g_pci.base1 + ICH_REG_GLOB_STA);
 	if((d0 & ICH_PCR) == 0){
 		return TRUE;
 	}
 
 	do{
-		d0 = inportb(g_pci.base1 + ICH_REG_ACC_SEMA);
+		d0 = inp(g_pci.base1 + ICH_REG_ACC_SEMA);
 		if((d0 & ICH_CAS) == 0){
 			return TRUE;
 		}
@@ -1697,20 +1691,20 @@ static BOOL intel_ich_codec_semaphore(void)
 static WORD intel_ich_ReadAC97Codec(BYTE idx)
 {
 	intel_ich_codec_semaphore();
-	return inportw(g_pci.base0 + idx);
+	return inpw(g_pci.base0 + idx);
 }
 
 static void intel_ich_WriteAC97Codec(BYTE idx, WORD data)
 {
 	intel_ich_codec_semaphore();
-	outportw(g_pci.base0 + idx, data);
+	outpw(g_pci.base0 + idx, data);
 }
 
 static void intel_ich_stop(void)
 {
-	outportb(g_pci.base1 + ICH_REG_PO_CR, 0x00);
+	outp(g_pci.base1 + ICH_REG_PO_CR, 0x00);
 	udelay(100);
-	outportb(g_pci.base1 + ICH_REG_PO_CR, 0x02);
+	outp(g_pci.base1 + ICH_REG_PO_CR, 0x02);
 	udelay(100);
 }
 
@@ -1737,19 +1731,19 @@ static void intel_ich_init(void)
 
 	/* put logic to right state */
 	/* first clear status bits */
-	cnt = inportl(g_pci.base1 + ICH_REG_GLOB_STA);
-	outportl(g_pci.base1 + ICH_REG_GLOB_STA,
+	cnt = inpd(g_pci.base1 + ICH_REG_GLOB_STA);
+	outpd(g_pci.base1 + ICH_REG_GLOB_STA,
 			cnt & (ICH_RCS | ICH_MCINT | ICH_POINT | ICH_PIINT));
 
 	/* ACLink on, 2 channels */
-	cnt = inportl(g_pci.base1 + ICH_REG_GLOB_CNT);
+	cnt = inpd(g_pci.base1 + ICH_REG_GLOB_CNT);
 	cnt &= ~(ICH_ACLINK | ICH_PCM_246_MASK);
 	/* finish cold or do warm reset */
 	cnt |= (cnt & ICH_AC97COLD) == 0 ? ICH_AC97COLD : ICH_AC97WARM;
-	outportl(g_pci.base1 + ICH_REG_GLOB_CNT, cnt);
+	outpd(g_pci.base1 + ICH_REG_GLOB_CNT, cnt);
 	limit = 1024;
 	do {
-		if((inportl(g_pci.base1 + ICH_REG_GLOB_CNT) & ICH_AC97WARM) == 0) break;
+		if((inpd(g_pci.base1 + ICH_REG_GLOB_CNT) & ICH_AC97WARM) == 0) break;
 		udelay(1000);
 	} while (limit-- > 0);
 
@@ -1759,20 +1753,20 @@ static void intel_ich_init(void)
 	 */
 	limit = 1024;
 	do {
-		if (inportl(g_pci.base1 + ICH_REG_GLOB_STA) & ICH_PCR) break;
+		if (inpd(g_pci.base1 + ICH_REG_GLOB_STA) & ICH_PCR) break;
 		udelay(1000);
 	} while (limit-- > 0);
 
-	inportw(g_pci.base0);	 /* clear semaphore flag */
+	inpw(g_pci.base0);	 /* clear semaphore flag */
 
 	/* disable interrupts */
-	outportb(g_pci.base1 + ICH_REG_PI_CR, 0x00);
-	outportb(g_pci.base1 + ICH_REG_PO_CR, 0x00);
-	outportb(g_pci.base1 + ICH_REG_MC_CR, 0x00);
+	outp(g_pci.base1 + ICH_REG_PI_CR, 0x00);
+	outp(g_pci.base1 + ICH_REG_PO_CR, 0x00);
+	outp(g_pci.base1 + ICH_REG_MC_CR, 0x00);
 	/* reset channels */
-	outportb(g_pci.base1 + ICH_REG_PI_CR, ICH_RESETREGS);
-	outportb(g_pci.base1 + ICH_REG_PO_CR, ICH_RESETREGS);
-	outportb(g_pci.base1 + ICH_REG_MC_CR, ICH_RESETREGS);
+	outp(g_pci.base1 + ICH_REG_PI_CR, ICH_RESETREGS);
+	outp(g_pci.base1 + ICH_REG_PO_CR, ICH_RESETREGS);
+	outp(g_pci.base1 + ICH_REG_MC_CR, ICH_RESETREGS);
 
 	intel_ich_set_volume();
 }
@@ -1802,18 +1796,18 @@ static DWORD intel_ich_current_pos(void)
 	w_enter_critical();
 	while(limit > 0){
 		if(intel_ich_device_type == DEVICE_SIS){
-			d0 = inportb(g_pci.base1 + ICH_REG_PO_CIV);
-			d1 = inportw(g_pci.base1 + ICH_REG_PO_SR);
-			d2 = inportb(g_pci.base1 + ICH_REG_PO_CIV);
+			d0 = inp(g_pci.base1 + ICH_REG_PO_CIV);
+			d1 = inpw(g_pci.base1 + ICH_REG_PO_SR);
+			d2 = inp(g_pci.base1 + ICH_REG_PO_CIV);
 		}else{
-			d0 = inportb(g_pci.base1 + ICH_REG_PO_CIV);
-			d1 = inportw(g_pci.base1 + ICH_REG_PO_PICB);
-			d2 = inportb(g_pci.base1 + ICH_REG_PO_CIV);
+			d0 = inp(g_pci.base1 + ICH_REG_PO_CIV);
+			d1 = inpw(g_pci.base1 + ICH_REG_PO_PICB);
+			d2 = inp(g_pci.base1 + ICH_REG_PO_CIV);
 		}
 		if(d0 == d2) break;
 		limit -= 1;
 	}
-	outportb(g_pci.base1 + ICH_REG_PO_LVI, (d0 + 31) & 0x1F);
+	outp(g_pci.base1 + ICH_REG_PO_LVI, (d0 + 31) & 0x1F);
 	w_exit_critical();
 
 	d3 = (15 - d0) & 0x0F;
@@ -1937,14 +1931,14 @@ static BOOL intel_ich_start(int rate, BOOL initialize)
 	}
 
 	/* set scatter/gather table pointer */
-	outportl(g_pci.base1 + ICH_REG_PO_BDBAR, g_dosmem4k_phys_table[0]);
-	outportb(g_pci.base1 + ICH_REG_PO_LVI, 0x1F);
+	outpd(g_pci.base1 + ICH_REG_PO_BDBAR, g_dosmem4k_phys_table[0]);
+	outp(g_pci.base1 + ICH_REG_PO_LVI, 0x1F);
 
 	/* 16bitpcm, stereo */
-	data = inportl(g_pci.base1 + ICH_REG_GLOB_CNT);
+	data = inpd(g_pci.base1 + ICH_REG_GLOB_CNT);
 	data = data & ~ICH_PCM_246_MASK;
 	data = data & ~ICH_GIE;
-	outportl(g_pci.base1 + ICH_REG_GLOB_CNT, data);
+	outpd(g_pci.base1 + ICH_REG_GLOB_CNT, data);
 
 	/* force playback rate 48000Hz */
 	data = intel_ich_ReadAC97Codec(AC97_EXTENDED_ID);
@@ -1956,7 +1950,7 @@ static BOOL intel_ich_start(int rate, BOOL initialize)
 	udelay(100);
 
 	/* start playing */
-	outportb(g_pci.base1 + ICH_REG_PO_CR, ICH_STARTBM);
+	outp(g_pci.base1 + ICH_REG_PO_CR, ICH_STARTBM);
 
 	wd.device_name	   = device_name_intel_ich;
 	wd.playback_rate   = 48000;
@@ -3022,6 +3016,7 @@ static BOOL hda_start_no_speaker(int rate)
 	return hda_start(rate);
 }
 
+#if 0
 /***********************  sound blaster ************************/
 
 static DWORD sb100irq_current_pos(void);
@@ -3107,7 +3102,7 @@ static unsigned long sb100_get_next_addr(void)
 
 static int sb100_interrupt_driven_interrupt(void)
 {
-	inportb(wd.isa_port+0x0E);
+	inp(wd.isa_port+0x0E);
 	eoi(wd.irq);						 /* acknowledge interrupt */
 
 	_dma_start(wd.isa_dma, sb100_get_next_addr(), sb_samples_per_interrupt, FALSE, FALSE);
@@ -3234,7 +3229,7 @@ static int sb201_interrupt_driven_interrupt(void)
 	sb_interrupt_driven_dma_position -= sb_samples_per_interrupt;
 	sb_interrupt_driven_dma_position &= (SAMPLECNT - 1);
 
-	inportb(wd.isa_port+0x0E);
+	inp(wd.isa_port+0x0E);
 	eoi(wd.irq);						 /* acknowledge interrupt */
 	return 0;
 }
@@ -3475,7 +3470,7 @@ static void wdm_sbpro_interrupt(void)
 		wdm_sbpro_tick_correction = wdm_sbpro_virtual_tick - wdm_sbpro_prev_tick;
 	}
 
-	inportb(wd.isa_port+0x0E);
+	inp(wd.isa_port+0x0E);
 	eoi(wd.irq);						 /* acknowledge interrupt */
 	return;
 }
@@ -3486,7 +3481,7 @@ static int sbpro_interrupt_driven_interrupt(void)
 	sb_interrupt_driven_dma_position -= (sb_samples_per_interrupt * 2);
 	sb_interrupt_driven_dma_position &= ((SAMPLECNT * 2) - 1);
 
-	inportb(wd.isa_port+0x0E);
+	inp(wd.isa_port+0x0E);
 	eoi(wd.irq);						 /* acknowledge interrupt */
 	return 0;
 }
@@ -3747,8 +3742,8 @@ static DWORD cmi8x38_current_pos(void)
 	limit = 1024;
 	w_enter_critical();
 	while(limit > 0){
-		d0 = inportw(cmi8x38_iobase + 0x1E);
-		d1 = inportw(cmi8x38_iobase + 0x1E);
+		d0 = inpw(cmi8x38_iobase + 0x1E);
+		d1 = inpw(cmi8x38_iobase + 0x1E);
 		if(d0 == d1) break;
 		limit -= 1;
 	}
@@ -3815,7 +3810,7 @@ static int GetSampleRate(int sbdelta)
 
 static int SetSBDelta(DWORD iobase, int sbdelta)
 {
-	outportw(iobase + 0xAC, sbdelta & 0xFFFF);
+	outpw(iobase + 0xAC, sbdelta & 0xFFFF);
 	return TRUE;
 }
 
@@ -3828,10 +3823,10 @@ static DWORD trid4dwave_current_pos(void)
 	limit = 1024;
 	w_enter_critical();
 	while(limit > 0){
-		d0	= inportb(trid4dwave_iobase + 4);
-		d0 |= inportb(trid4dwave_iobase + 5) << 8;
-		d1	= inportb(trid4dwave_iobase + 4);
-		d1 |= inportb(trid4dwave_iobase + 5) << 8;
+		d0	= inp(trid4dwave_iobase + 4);
+		d0 |= inp(trid4dwave_iobase + 5) << 8;
+		d1	= inp(trid4dwave_iobase + 4);
+		d1 |= inp(trid4dwave_iobase + 5) << 8;
 		if(d0 == d1) break;
 		limit -= 1;
 	}
@@ -3907,23 +3902,23 @@ static void _sbpro_master_volume(int d0)
 
 	d0 = d0 << 1;
 	d0 = d0 | (d0 << 4) | 0x11;
-	outportb(wd.isa_port + 4, 0x22);
-	outportb(wd.isa_port + 5, (BYTE)d0);
+	outp(wd.isa_port + 4, 0x22);
+	outp(wd.isa_port + 5, (BYTE)d0);
 }
 
 
 static void _sb_dac_level(BYTE d0)
 {
-	outportb(wd.isa_port + 4, 4);
-	outportb(wd.isa_port + 5, d0);
+	outp(wd.isa_port + 4, 4);
+	outp(wd.isa_port + 5, d0);
 }
 
 static void _sb16_dac_level(BYTE d0)
 {
-	outportb(wd.isa_port + 4, 0x32);		 // DAC level left
-	outportb(wd.isa_port + 5, d0 & 0xFF);
-	outportb(wd.isa_port + 4, 0x33);		 // DAC level right
-	outportb(wd.isa_port + 5, d0 & 0xFF);
+	outp(wd.isa_port + 4, 0x32);		 // DAC level left
+	outp(wd.isa_port + 5, d0 & 0xFF);
+	outp(wd.isa_port + 4, 0x33);		 // DAC level right
+	outp(wd.isa_port + 5, d0 & 0xFF);
 }
 
 static void _sb_voice(int state)
@@ -3982,8 +3977,8 @@ static int sb_write_dsp(unsigned char byte)
    int x;
 
    for (x=0; x<0xFFFF; x++) {
-	  if (!(inportb(0x0C + wd.isa_port) & 0x80)) {
-	 outportb(0x0C + wd.isa_port, byte);
+	  if (!(inp(0x0C + wd.isa_port) & 0x80)) {
+	 outp(0x0C + wd.isa_port, byte);
 	 return 0;
 	  }
    }
@@ -4014,10 +4009,10 @@ static void sb_stereo_mode(int enable)
 {
 	BYTE d0;
 
-	outportb(wd.isa_port+0x04, 0x0E);
+	outp(wd.isa_port+0x04, 0x0E);
 	d0 = (enable == TRUE) ? 2 : 0;	   // stereo or mono
 	d0 = d0 | 0x20; 					// sbpro output filter off
-	outportb(wd.isa_port+0x05, d0);
+	outp(wd.isa_port+0x05, d0);
 }
 
 static void sb_set_sample_rate(unsigned int rate)
@@ -4038,9 +4033,9 @@ static void sb_set_sample_rate(unsigned int rate)
 static int sb_interrupt(void)
 {
    if (sb_16bit == TRUE)							 /* acknowledge SB */
-	  inportb(wd.isa_port+0x0F);
+	  inp(wd.isa_port+0x0F);
    else
-	  inportb(wd.isa_port+0x0E);
+	  inp(wd.isa_port+0x0E);
 
    eoi(wd.irq); 						/* acknowledge interrupt */
    return 0;
@@ -4084,13 +4079,13 @@ static int _sb_reset_dsp(int d0)
 	cwait = 8;
 	while(cwait <= 1024){
 		w_enter_critical();
-		outportb(0x06 + wd.isa_port, d0);
+		outp(0x06 + wd.isa_port, d0);
 		d7 = 0;
 		while(d7 < cwait){
-			inportb(0x06 + wd.isa_port);
+			inp(0x06 + wd.isa_port);
 			d7 += 1;
 		}
-		outportb(0x06 + wd.isa_port, 0);
+		outp(0x06 + wd.isa_port, 0);
 		w_exit_critical();
 		for(d7 = 0 ; d7 < 4 ; d7 += 1){
 			val = sb_read_dsp();
@@ -4112,8 +4107,8 @@ static int sb_read_dsp(void)
    int x;
 
    for (x=0; x<0xFFFF; x++)
-	  if (inportb(0x0E + wd.isa_port) & 0x80)
-	 return inportb(0x0A + wd.isa_port);
+	  if (inp(0x0E + wd.isa_port) & 0x80)
+	 return inp(0x0A + wd.isa_port);
 
    return -1;
 }
@@ -4123,8 +4118,8 @@ static void sb16_get_dma_and_irq(void)
 {
 	int d0;
 
-	outportb(wd.isa_port + 4, 0x81);
-	d0 = inportb(wd.isa_port + 5);
+	outp(wd.isa_port + 4, 0x81);
+	d0 = inp(wd.isa_port + 5);
 	if(d0 & 0x01) wd.isa_dma = 0;
 	if(d0 & 0x02) wd.isa_dma = 1;
 	if(d0 & 0x04) wd.isa_dma = 2;
@@ -4134,8 +4129,8 @@ static void sb16_get_dma_and_irq(void)
 	if(d0 & 0x40) wd.isa_hdma = 6;
 	if(d0 & 0x80) wd.isa_hdma = 7;
 
-	outportb(wd.isa_port + 4, 0x80);
-	d0 = inportb(wd.isa_port + 5);
+	outp(wd.isa_port + 4, 0x80);
+	d0 = inp(wd.isa_port + 5);
 	if(d0 & 0x01) wd.irq = 9;
 	if(d0 & 0x02) wd.irq = 5;
 	if(d0 & 0x04) wd.irq = 7;
@@ -4180,8 +4175,8 @@ static int get_wsscfg(void)
 
 static void _wssout(BYTE d0, BYTE d1)
 {
-	outportb(IADDR, d0);
-	outportb(IDATA, d1);
+	outp(IADDR, d0);
+	outp(IDATA, d1);
 }
 
 
@@ -4189,13 +4184,13 @@ static void wss_wait(void)
 {
    int i = 0xFFFF;
 
-   while ((inportb(wd.isa_port + 4) & INIT) || (i-- > 0));
+   while ((inp(wd.isa_port + 4) & INIT) || (i-- > 0));
 }
 
 
 static int wss_irq_handler(void)
 {
-	outportb(STATUS, 0);
+	outp(STATUS, 0);
 	eoi(wd.irq);
 	return 0;
 }
@@ -4307,24 +4302,24 @@ static int wss_start(int rate)
 	_wssout(MODE_ID, 0x8A);
 
 	/* Enable MCE */
-	outportb(IADDR, MCE | INTCON);
+	outp(IADDR, MCE | INTCON);
 	wss_wait();
 
-	outportb(IDATA, 0x18);
+	outp(IDATA, 0x18);
 	wss_wait();
 
 	/* Disable MCE */
-	outportb(IADDR, ERRSTAT);
+	outp(IADDR, ERRSTAT);
 
 	i = 0xFFFF;
 
-	while ((inportb(IDATA) & 0x20) && (i-- > 0));
+	while ((inp(IDATA) & 0x20) && (i-- > 0));
 
 	if (i < 1)
 	   return -1;
 
 	/* Enter MCE */
-	outportb(IADDR, MCE | FS);
+	outp(IADDR, MCE | FS);
 	wss_wait();
 
 	/* Set playback format */
@@ -4333,15 +4328,15 @@ static int wss_start(int rate)
 	   i |= 0x10;
 	if (wss_16bits)
 	   i |= 0x40;
-	outportb(IDATA, i);
+	outp(IDATA, i);
 	wss_wait();
 
-	outportb(IADDR, 0);
-	outportb(STATUS, 0);
-	outportb(IADDR, PINCON);
+	outp(IADDR, 0);
+	outp(STATUS, 0);
+	outp(IADDR, PINCON);
 	wss_wait();
-//	  outportb(IDATA, 0x2);
-	outportb(IDATA, 0x00);
+//	  outp(IDATA, 0x2);
+	outp(IDATA, 0x00);
 
 //	  unmask_irq(wd.irq);
 //	  install_irq_handler(wd.irq, (void*)wss_irq_handler);
@@ -4350,17 +4345,17 @@ static int wss_start(int rate)
 
 	eoi(wd.irq);
 
-	outportb(IADDR, PB_UCNT);
+	outp(IADDR, PB_UCNT);
 	wss_wait();
-	outportb(IDATA, (nsamples - 1) >> 8);
-	outportb(IADDR, PB_LCNT);
+	outp(IDATA, (nsamples - 1) >> 8);
+	outp(IADDR, PB_LCNT);
 	wss_wait();
-	outportb(IDATA, (nsamples - 1) & 0xFF);
+	outp(IDATA, (nsamples - 1) & 0xFF);
 	wss_wait();
-	outportb(IADDR, INTCON | MCE);
+	outp(IADDR, INTCON | MCE);
 	wss_wait();
-	outportb(IDATA, 0x5);
-	outportb(IADDR, 0);
+	outp(IDATA, 0x5);
+	outp(IADDR, 0);
 
 	_wssout(LDAC, 0);
 	_wssout(RDAC, 0);
@@ -4385,17 +4380,18 @@ static void wss_exit(void)
 	_dma_stop(wd.isa_dma);
 
 	/* Stop playback */
-	outportb(IADDR, MCE | INTCON);
+	outp(IADDR, MCE | INTCON);
 	wss_wait();
-	outportb(IDATA, 0);
-	outportb(IADDR, 0);
-	outportb(STATUS, 0);
+	outp(IDATA, 0);
+	outp(IADDR, 0);
+	outp(STATUS, 0);
 //	  mask_irq(wd.irq);
 //	  restore_irq_handler();
 
 	free_dosmem64k_for_dma();
 	wavedevice_struct_init();
 }
+#endif
 
 static BOOL allocate_dosmem4k(void)
 {
@@ -4502,42 +4498,42 @@ static void u_delay(void)
 
 	d0 = 0;
 	while(d0 < 7){
-		inportb(u_dram);
+		inp(u_dram);
 		d0 += 1;
 	}
 }
 
 static void u_voice_no(BYTE data)
 {
-	outportb(u_page, data);
+	outp(u_page, data);
 }
 
 static void u_cmdwb(BYTE _index, BYTE data)
 {
-	outportb(u_cmd,   _index);
-	outportb(u_datah, data);
+	outp(u_cmd,   _index);
+	outp(u_datah, data);
 }
 
 static BYTE u_cmdrb(BYTE _index)
 {
-	outportb(u_cmd, _index);
-	return inportb(u_datah);
+	outp(u_cmd, _index);
+	return inp(u_datah);
 }
 
 static void u_cmdww(BYTE _index, WORD data)
 {
-	outportb(u_cmd,   _index);
-	outportw(u_datal, data);
+	outp(u_cmd,   _index);
+	outpw(u_datal, data);
 }
 static WORD u_cmdrw(BYTE _index)
 {
-	outportb(u_cmd,   _index);
-	return inportw(u_datal);
+	outp(u_cmd,   _index);
+	return inpw(u_datal);
 }
 
 static BYTE u_irq_status(void)
 {
-	return inportb(u_status);
+	return inp(u_status);
 }
 
 // pan 0 to 7 to 15
@@ -4574,36 +4570,6 @@ static void u_set_volume(BYTE voice, WORD volume)
 	u_delay();
 	u_cmdww(0x09, volume);
 }
-
-#if 0
-static void u_voice_start(BYTE voice, DWORD current, DWORD start, DWORD end,
-						  int bits, int loop, int pan, DWORD freq, WORD volume)
-{
-	BYTE d0;
-
-	u_voice_no(voice);
-
-	u_set_pan(voice, pan);
-	u_set_freq(voice, freq);
-	u_set_volume(voice, volume);
-
-	current = current << 9;
-	start	= start   << 9;
-	end 	= end	  << 9;
-	u_cmdww(0x0A, (current >> 16) & 0xFFFF);
-	u_cmdww(0x0B, current & 0xFFFF);
-	u_cmdww(0x02, (start >> 16) & 0xFFFF);
-	u_cmdww(0x03, start & 0xFFFF);
-	u_cmdww(0x04, (end >> 16) & 0xFFFF);
-	u_cmdww(0x05, end & 0xFFFF);
-
-	d0 = 0x00;
-	if(bits == 16)	  d0 |= 0x04;
-	if(loop == TRUE) d0 |= 0x08;
-
-	u_cmdwb(0x00, d0);
-}
-#endif
 
 static void u_16bit_stereo_voice_start(DWORD length, WORD volume)
 {
@@ -4683,7 +4649,7 @@ static void u_upload(DWORD addr, BYTE data)
 		u_cmdwb(0x44, gusdramh);
 	}
 	u_cmdww(0x43, addr & 0xFFFF);
-	outportb(u_base + 0x107, data);
+	outp(u_base + 0x107, data);
 }
 
 static void u_set_dma_address(DWORD addr)
@@ -4777,7 +4743,7 @@ static int u_gf1_irq_handler(void)
 	tick += 1;
 
 	while(1){
-		irq_status = inportb(u_base + 0x006) & 0xE0;
+		irq_status = inp(u_base + 0x006) & 0xE0;
 		if(irq_status == 0) break;
 		if( (irq_status & 0x80) != 0 ){
 			d0 = u_cmdrb(0x41);
@@ -4856,7 +4822,7 @@ static void u_init(int base, DWORD freq)
 		d0 += 1;
 	}
 
-	outportb(u_base, 0x08);
+	outp(u_base, 0x08);
 }
 
 
@@ -5089,6 +5055,7 @@ static int soundscape_get_init_config()
    return TRUE;
 }
 
+#if 0
 static int detectCMI8x38(void)
 {
 	__dpmi_regs 	r;
@@ -5200,11 +5167,13 @@ static int detectTrid4DWave(void)
 	trid4dwave_iobase = r.w.cx & ~0xFF;
 	return TRUE;
 }
+#endif
 
+#if 0
 /*	from Allegro essaudio.c  */
 static volatile int ess_is_dsp_ready_for_read(void)
 {
-   return (inportb(0x0E + wd.isa_port) & 0x80);
+   return (inp(0x0E + wd.isa_port) & 0x80);
 }
 
 static volatile int ess_read_dsp(void)
@@ -5212,8 +5181,8 @@ static volatile int ess_read_dsp(void)
    int x;
 
    for (x=0; x<0xffff; x++)
-	  if (inportb(0x0E + wd.isa_port) & 0x80)
-	 return inportb(0x0A + wd.isa_port);
+	  if (inp(0x0E + wd.isa_port) & 0x80)
+	 return inp(0x0A + wd.isa_port);
 
    return -1;
 }
@@ -5223,8 +5192,8 @@ static volatile int ess_write_dsp(unsigned char byte)
    int x;
 
    for (x=0; x<0xffff; x++) {
-	  if (!(inportb(0x0C + wd.isa_port) & 0x80)) {
-	 outportb(0x0C + wd.isa_port, byte);
+	  if (!(inp(0x0C + wd.isa_port) & 0x80)) {
+	 outp(0x0C + wd.isa_port, byte);
 	 return 0;
 	  }
    }
@@ -5405,7 +5374,7 @@ static void ess_exit(void)
 	free_dosmem64k_for_dma();
 	wavedevice_struct_init();
 }
-
+#endif
 
 /*
  *	eternal silence
@@ -5787,12 +5756,12 @@ void w_unlock_mixing_buffer(void)
 		(*wd.pcm_upload)();
 	}
 }
-
+/*
 void w_set_sb_cursor_offset(int offset)
 {
 	sb_cursor_offset = offset & SAMPLECNTMASK;
 }
-
+*/
 static DWORD common_dma_current_pos(void)
 {
 	DWORD d0;
@@ -6116,18 +6085,21 @@ int w_sound_device_init(int device_no, int rate)
 		rate = 64000;
 
 	switch(device_no){
+			/*
 		case 0:
 			result = eternal_silence_start(rate);
 			break;
 		case 1:
 			result = sb_auto_detect_start(rate);
 			break;
+			*/
 		case 2:
 			result = ac97_auto_detect_start(rate, FALSE);
 			break;
 		case 3:
 			result = ac97_auto_detect_start(rate, TRUE);
 			break;
+			/*
 		case 4:
 			result = ultramax_start(rate);
 			break;
@@ -6176,6 +6148,7 @@ int w_sound_device_init(int device_no, int rate)
 		case 23:
 			result = sbpro_interrupt_driven_start(rate);
 			break;
+			*/
 		case 24:
 			result = via686_start_chip_init(rate);
 			break;
@@ -6215,8 +6188,8 @@ void w_sound_device_exit(void)
 void vga_vsync(void)
 {
 	w_enter_critical();
-	while( (inportb(0x3da) & 0x08) != 0 );
-	while( (inportb(0x3da) & 0x08) == 0 );
+	while( (inp(0x3da) & 0x08) != 0 );
+	while( (inp(0x3da) & 0x08) == 0 );
 	w_exit_critical();
 }
 
