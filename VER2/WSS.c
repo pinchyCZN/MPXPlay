@@ -40,9 +40,7 @@ static void logerror_(const char *text,...)
 }
 int _farsetsel(short sel)
 {
-	_asm{
-		mov fs,sel
-	}
+	return 0;
 }
 /***********************	TICKER	*************************/
 
@@ -413,6 +411,28 @@ typedef struct {
 } PCI_DEV;
 
 static PCI_DEV g_pci;
+
+
+int dump_audio()
+{
+	int i,j;
+	char *buf;
+	buf=g_pci.base0;
+	for(j=0;j<8;j++){
+		for(i=0;i<0x180;i++){
+			unsigned char a;
+			if((i%16)==0 && i>0)
+				printf("\n");
+			if((i%16)==0)
+				printf("%04X:",i);
+			else if((i%4)==0 && i>0)
+				printf(" ");
+			a=buf[i];
+			printf("%02X",a);
+		}
+		printf("\n");
+	}
+}
 
 
 static BOOL pci_read_config_byte(PCI_DEV *pci, int idx, BYTE *data)
@@ -1180,7 +1200,7 @@ static int _dma_allocate_mem(int *sel, unsigned long *phys)
 	if(regs.x.cflag)
 		return result;
 	*sel = regs.x.edx;
-	*phys = (void *)(regs.x.eax << 4);
+	*phys = (regs.x.eax << 4);
 	result=TRUE;
 	return result;
 	/*
@@ -1212,7 +1232,7 @@ static BOOL _dma_allocate_mem4k(int *sel, unsigned long *phys)
 	if(regs.x.cflag)
 		return result;
 	*sel = regs.x.edx;
-	*phys = (void *)(regs.x.eax << 4);
+	*phys = (regs.x.eax << 4);
 	result=TRUE;
 	return result;
 /*
@@ -2114,7 +2134,7 @@ static BOOL intel_ich_start_no_chip_init(int rate)
 /********************************************************************
  *							ac97 autodetect							*
  ********************************************************************/
-
+/*
 static BOOL ac97_auto_detect_start(int rate, BOOL initialize)
 {
 	clear_error_message();
@@ -2127,7 +2147,7 @@ static BOOL ac97_auto_detect_start(int rate, BOOL initialize)
 	set_error_message("AC97_AUTODETECT: no supported device found.\n");
 	return FALSE;
 }
-
+*/
 /********************************************************************
  *						 		HDA									*
  ********************************************************************/
@@ -2277,6 +2297,7 @@ static int optspeak = 0;
 #define FIFOE	0x08
 #define DESE	0x10		
 
+/*
 #define hda_sel()			(_farsetsel((WORD)hdaiosel))
 #define hda_rd_reg8(x)		(_farnspeekb(x))
 #define hda_rd_reg16(x)		(_farnspeekw(x))
@@ -2284,6 +2305,51 @@ static int optspeak = 0;
 #define hda_wr_reg8(x,y)	(_farnspokeb(x,(BYTE)y))
 #define hda_wr_reg16(x,y) 	(_farnspokew(x,(WORD)y))
 #define hda_wr_reg32(x,y) 	(_farnspokel(x,(DWORD)y))
+*/
+int hda_sel()
+{
+	return 0;
+}
+unsigned char hda_rd_reg8(int offset)
+{
+	char *ptr;
+	ptr=g_pci.base0+offset;
+	return ptr[0];
+}
+unsigned short hda_rd_reg16(int offset)
+{
+	unsigned short *ptr;
+	ptr=g_pci.base0+offset;
+	return ptr[0];
+}
+unsigned int hda_rd_reg32(int offset)
+{
+	unsigned int *ptr;
+	ptr=g_pci.base0+offset;
+	return ptr[0];
+}
+int hda_wr_reg8(int offset,unsigned char data)
+{
+	char *ptr;
+	ptr=g_pci.base0+offset;
+	ptr[0]=data;
+	return 1;
+}
+int hda_wr_reg16(int offset,unsigned short data)
+{
+	unsigned short *ptr;
+	ptr=g_pci.base0+offset;
+	ptr[0]=data;
+	return 1;
+}
+int hda_wr_reg32(int offset,unsigned int data)
+{
+	unsigned int *ptr;
+	ptr=g_pci.base0+offset;
+	ptr[0]=data;
+	return 1;
+}
+
 
 #define SET_CVT_FORM	0x002
 #define SET_AMP_GAIN	0x003
@@ -2821,8 +2887,8 @@ static BOOL hda_node_init(DWORD codecaddr, DWORD nid)
 			b0 = TRUE;		
 		d3 += 1;
 	}
-	
 	free(nodes);
+	printf("done node init\n");
 	
 	return b0;
 }
@@ -2832,9 +2898,7 @@ static BOOL hda_codec_init(DWORD codecaddr)
 	DWORD d0;
 	int d1, d2;
 	
-	printf("codec init\n");
 	d0 = hda_send_codec_cmd(HDAPARAM1(codecaddr, 0, GET_PARAM, VENDOR_ID), TRUE);
-	printf("2\n");
 	
 	codecvid = d0 >> 16;
 	codecdid = d0 & 0xffff;
@@ -2871,7 +2935,6 @@ static BOOL hda_init(void)
 	d0 = 0;	
 	while(d0 < HDA_MAX_CODECS)
 	{
-		printf("code=%08X\n",codecmask);
 		if(codecmask & (1 << d0))
 			if (hda_codec_init(d0) == TRUE)
 				return TRUE;
@@ -2886,7 +2949,7 @@ static BOOL hda_init(void)
 static void hda_remove_mapping(void)
 {
 	__dpmi_meminfo minfo;
-
+/*
 	if(hdaiosel != 0)
 	{
 		__dpmi_free_ldt_descriptor(hdaiosel);
@@ -2900,6 +2963,7 @@ static void hda_remove_mapping(void)
 		__dpmi_free_physical_address_mapping(&minfo);
 		g_pci.base0 = 0;
 	}
+*/
 }
 
 static int hda_map_iobase(void)
@@ -2919,11 +2983,15 @@ static int hda_map_iobase(void)
 	
 	minfo.size = HDAIOLEN;
 	
+	/*
 	if(__dpmi_physical_address_mapping(&minfo))
 	{
 		set_error_message("HDA: __dpmi_physical_address_mapping error.\n");
 		return FALSE;
 	}
+	printf("physical map=%08X\n",minfo.address);
+	*/
+	/*
 	
 	if(__dpmi_lock_linear_region(&minfo))
 	{
@@ -2944,7 +3012,7 @@ static int hda_map_iobase(void)
 		set_error_message("HDA: selector allocation or initialization error.\n");
 		return FALSE;
 	}
-	
+	*/
 	g_pci.base0 = minfo.address;
 		
 	logerror_("HDA: i/o base mapped to %08X, selector %04X.\n", g_pci.base0, hdaiosel);
@@ -3128,7 +3196,7 @@ static BOOL hda_start(int rate)
 
 	if((hda_init() == FALSE) || (hda_alloc_dma_mem() == FALSE))
 	{	
-		hda_remove_mapping();
+		//hda_remove_mapping();
 		return FALSE;
 	}
 	
@@ -3146,7 +3214,6 @@ static BOOL hda_start(int rate)
 	wd.pcm_upload	   = common_pcm_upload_func;
 	wd.get_current_pos = hda_current_pos;
 	wd.initialized = TRUE;
-
 	return TRUE;
 }
 
