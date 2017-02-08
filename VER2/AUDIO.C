@@ -25,12 +25,10 @@ int init_audio(int samplerate)
 	//Start HD audio
 	if(!w_sound_device_init(28, samplerate/2))
 	{
-		printf("%s\n",w_get_error_message());
 		return 0;
 	}
 	w_set_device_master_volume(1);
 	latency_size = w_get_nominal_sample_rate() * 0.025;
-	
 	w_lock_mixing_buffer(latency_size);
 	w_mixing_zero();
 	w_unlock_mixing_buffer();
@@ -51,10 +49,9 @@ int write_audio(unsigned char *data,int len)
 {
 	int samples;
 	
-	printf("111\n");
 	do
 	{
-		samples = w_get_buffer_size() - w_get_latency() - latency_size;
+//		samples = w_get_buffer_size() - w_get_latency() - latency_size;
 	}while(samples < len);
 	printf("uuu\n");
 	
@@ -91,9 +88,9 @@ int test_sound()
 	set_volume(31);
 	printf("write audio\n");
 	write_audio((unsigned char*)buf,count/8);
-	dump_audio();
 	end_audio();
 	free(buf);
+	test_mem();
 	printf("test sound done\n");
 	return 0;
 }

@@ -209,6 +209,24 @@ static int read_byte(char *addr)
 {
 	return addr[0];
 }
+static BOOL find_pci_device(PCI_DEV *pci)
+{
+	union REGS r={0};
+	WORD wdata;
+
+	r.w.ax = 0xB102;					// PCI BIOS - FIND PCI DEVICE
+	r.w.cx = pci->device_id;				// device ID
+	r.w.dx = pci->vender_id;				// vendor ID
+	r.x.esi = 0x00000000;					// device index
+	int386(0x1a,&r,&r);
+	if(r.x.cflag!=0){
+		return FALSE;						// no specified device found
+	}
+	pci->device_bus_number = r.w.bx;		// save the device & bus number
+	return TRUE;
+}
+
+
 
 #define SAMPLECNT	  16384
 #define SAMPLECNTMASK 0x3FFF
@@ -231,13 +249,13 @@ static DWORD g_current_req = 0;
 static DWORD g_next_req = 0;
 static int	 g_master_volume = 256;
 static DWORD g_samples_per_frame = 0;
+static int stereo_reverse_flag=0;
 
 static int g_wss_dma_sel = 0;
 static unsigned long g_wss_dma_addr = 0;
 static DWORD g_dosmem64k_phys_table[16];
 static int g_dma_buff_size;
 static int g_dmacnt_shift_count;
-
 
 /* dos memory 4k bytes for work area */
 static BOOL allocate_dosmem4k(void);
@@ -384,6 +402,66 @@ static DWORD get_address_dosmem64k_for_dma(void)
 	return g_wss_dma_addr;
 }
 
+BYTE get_8bit_pcm_value(long value)
+{
+	BYTE d0;
+
+	if(value >	32767 - 128) value =  32767 - 128;
+	if(value < -32768)		 value = -32768;
+	d0 = (value + 128 - ((value >> 15) & 0x0001)) >> 8;
+	return (d0 + 0x80);
+}
+
+static void common_pcm_upload_func(void)
+{
+	int d0;
+	long d1;
+	WORD d2;
+	DWORD d3;
+	DWORD start;
+	DWORD end;
+
+	printf("upload\n");
+	start = -1;
+	d0 = 0;
+	while(d0 < g_current_req){
+		g_write_cursor = g_write_cursor & SAMPLECNTMASK;
+		if(wd.pcm_format == _16BITSTEREO){
+			int *ptr;
+			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
+			if(d1 >  32767) d1 =  32767;
+			if(d1 < -32768) d1 = -32768;
+			d3	= d1 & 0xFFFF;
+			d1	= ((mixing_buff[(d0*2) + 1] * g_master_volume)/256);
+			if(d1 >  32767) d1 =  32767;
+			if(d1 < -32768) d1 = -32768;
+			d3 |= d1 << 16;
+			ptr=(int*)(g_wss_dma_addr+g_write_cursor * 4);
+			//ptr[0]=d3;
+		}else if(wd.pcm_format == _8BITSTEREO){
+			short *ptr;
+			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
+			d2	= get_8bit_pcm_value(d1);
+			d1	= ((mixing_buff[(d0*2) + 1] * g_master_volume)/256);
+			d2 |= get_8bit_pcm_value(d1) << 8;
+			ptr=(short*)(g_wss_dma_addr + (g_write_cursor * 2));
+			//ptr[0]=d2;
+		}else if(wd.pcm_format == _8BITMONO){
+			char *ptr;
+			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
+			d1 += ((mixing_buff[(d0*2) + 1] * g_master_volume)/256);
+			d1	= d1 / 2;
+			d2	= get_8bit_pcm_value(d1);
+			ptr=(char*)(g_wss_dma_addr + (g_write_cursor * 1));
+			//ptr[0]=d2;
+		}
+		if(start == -1)
+			start = g_write_cursor;
+		g_write_cursor += 1;
+		d0 += 1;
+	}
+	end = g_write_cursor;
+}
 
 /********************************************************************
  *						 		HDA									*
@@ -454,7 +532,7 @@ typedef struct
 }HDAFUNCINFO;
 
 static int sound_device_master_volume=-1;
-static int hda_device_type = DEV_ICH;
+static DWORD actual_sample_rate=0;
 static int hdaiosel = 0;
 static DWORD codecmask = 0;
 static DWORD osdbase = 0;
@@ -668,13 +746,13 @@ static unsigned short hda_set_rate()
 #define HDAPARAM2(addr, nodeid, verbid, payload) ((addr << 28) | (nodeid << 20) | (verbid << 16) | payload)
 
 
-static void hda_init_pci_regs()
+static void hda_init_pci_regs(int type)
 {
 	/*taken from OSS*/
 	
 	DWORD tmp;
 	
-	switch(hda_device_type)			
+	switch(type)
 	{								
 		case DEV_SCH:
 		case DEV_PCH:
@@ -1098,7 +1176,7 @@ static BOOL hda_init(void)
 	
 	if(hda_reset() == FALSE)
 		return FALSE;
-		
+	return TRUE;
 	d0 = 0;	
 	while(d0 < HDA_MAX_CODECS)
 	{
@@ -1159,13 +1237,13 @@ static BOOL hda_alloc_dma_mem()
 		log_msg("HDA: vds_helper_lock() error.\n");
 		return FALSE;
 	}
-
+*/
 	if(allocate_dosmem4k() == FALSE)
 	{
 		log_msg("HDA: allocate_dosmem4k() error.\n");
 		return FALSE;
 	}
-	
+/*	
 	if(vds_helper_lock(get_address_dosmem4k(), &g_dosmem4k_phys_table[0], 1) == FALSE)
 	{
 		log_msg("HDA: vds_helper_lock() error.\n");
@@ -1234,10 +1312,11 @@ static void hda_prepare(void)
 	d0 = 0;
 	while(d0 < BDL_ENTRIES)
 	{
-		_farnspokel(a0, g_dosmem64k_phys_table[d0 & 0x0F]);		/*low base*/
-		_farnspokel(a0 + 4, 0);									/*high base*/		
-		_farnspokel(a0 + 8, 0x1000);							/*4KB length in bytes*/
-		_farnspokel(a0 + 12, 0);								/*IOC & reserved*/		
+		int *ptr=(int*)a0;
+		ptr[0]=g_dosmem64k_phys_table[d0 & 0x0F];	/*low base*/
+		ptr[1]=0;									/*high base*/		
+		ptr[2]=0x1000;							/*4KB length in bytes*/
+		ptr[3]=0;								/*IOC & reserved*/		
 		a0 += 16;
 		d0 += 1;
 	}
@@ -1277,11 +1356,11 @@ static BOOL hda_start(int rate)
 	{
 		g_pci.vender_id 	= hda_dev_list[d0].vender_id;
 		g_pci.device_id 	= hda_dev_list[d0].device_id;
-		g_pci.sub_vender_id = hda_dev_list[d0].sub_vender_id;
-		g_pci.sub_device_id = hda_dev_list[d0].sub_device_id;
+		g_pci.sub_vender_id = 0;
+		g_pci.sub_device_id = 0;
 		if(find_pci_device(&g_pci) == TRUE)
 		{
-			log_msg("HDA: %s found.\n", hda_dev_list[d0].string);
+			log_msg("HDA: %s found.\n", hda_dev_list[d0].name);
 			break;
 		}
 		d0 += 1;
@@ -1291,11 +1370,9 @@ static BOOL hda_start(int rate)
 		return FALSE;
 	}
 	
-	hda_device_type = hda_dev_list[d0].type;
-	device_name_hda = hda_dev_list[d0].string;
-	printf("hda type=%08X\n",hda_device_type);
+	device_name_hda = hda_dev_list[d0].name;
 	
-	hda_init_pci_regs();
+	hda_init_pci_regs(DEV_ATI);
 	
 	if (hda_get_iobase() == FALSE)
 		return FALSE;
@@ -1309,7 +1386,6 @@ static BOOL hda_start(int rate)
 	//vic
 	wd.playback_rate   = rate;
 	
-	/* start playing*/
 	hda_stop();
 	hda_prepare();
 	hda_run();	
@@ -1339,7 +1415,8 @@ static BOOL hda_start_no_speaker(int rate)
 
 void w_set_watermark(float latency, DWORD samples_per_frame)
 {
-	if(wd.initialized == FALSE) return;
+	if(wd.initialized == FALSE)
+		return;
 
 	if(latency < 1.0) latency = 1.0;
 	g_latencym = latency;
@@ -1349,6 +1426,7 @@ void w_set_watermark(float latency, DWORD samples_per_frame)
 	w_reset_write_cursor(0);
 
 	w_clear_buffer();
+	printf("clear done\n");
 }
 
 void w_set_master_volume(int volume)
@@ -1523,49 +1601,6 @@ void w_mixing_stereo(short data[], DWORD length, int leftvol, int rightvol)
 	}
 }
 
-static void common_pcm_upload_func(void)
-{
-	int d0;
-	long d1;
-	WORD d2;
-	DWORD d3;
-	DWORD start;
-	DWORD end;
-
-	start = -1;
-	_farsetsel(_dos_ds);
-	d0 = 0;
-	while(d0 < g_current_req){
-		g_write_cursor = g_write_cursor & SAMPLECNTMASK;
-		if(wd.pcm_format == _16BITSTEREO){
-			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
-			if(d1 >  32767) d1 =  32767;
-			if(d1 < -32768) d1 = -32768;
-			d3	= d1 & 0xFFFF;
-			d1	= ((mixing_buff[(d0*2) + 1] * g_master_volume)/256);
-			if(d1 >  32767) d1 =  32767;
-			if(d1 < -32768) d1 = -32768;
-			d3 |= d1 << 16;
-			_farnspokel(g_wss_dma_addr + (g_write_cursor * 4), d3);
-		}else if(wd.pcm_format == _8BITSTEREO){
-			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
-			d2	= get_8bit_pcm_value(d1);
-			d1	= ((mixing_buff[(d0*2) + 1] * g_master_volume)/256);
-			d2 |= get_8bit_pcm_value(d1) << 8;
-			_farnspokew(g_wss_dma_addr + (g_write_cursor * 2), d2);
-		}else if(wd.pcm_format == _8BITMONO){
-			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
-			d1 += ((mixing_buff[(d0*2) + 1] * g_master_volume)/256);
-			d1	= d1 / 2;
-			d2	= get_8bit_pcm_value(d1);
-			_farnspokeb(g_wss_dma_addr + (g_write_cursor * 1), (BYTE)d2);
-		}
-		if(start == -1) start = g_write_cursor;
-		g_write_cursor += 1;
-		d0 += 1;
-	}
-	end = g_write_cursor;
-}
 
 void w_unlock_mixing_buffer(void)
 {
@@ -1581,11 +1616,12 @@ void w_set_sb_cursor_offset(int offset)
 */
 static DWORD common_dma_current_pos(void)
 {
-	DWORD d0;
+	DWORD d0=0;
+	/*
 	w_enter_critical();
 	d0 = _dma_todo(wd.isa_dma);
 	w_exit_critical();
-
+*/
 	return d0;
 }
 
@@ -1878,7 +1914,6 @@ int w_sound_device_init(int device_no, int rate)
 			result = FALSE;
 			log_msg("invalid sound device number.\n");
 	}
-
 	w_set_watermark(2.2, 1200);
 
 	return result;
@@ -1892,13 +1927,6 @@ void w_sound_device_exit(void)
 	}
 }
 
-void vga_vsync(void)
-{
-	w_enter_critical();
-	while( (inp(0x3da) & 0x08) != 0 );
-	while( (inp(0x3da) & 0x08) == 0 );
-	w_exit_critical();
-}
 
 DWORD w_get_actual_sample_rate(void)
 {
@@ -1907,16 +1935,16 @@ DWORD w_get_actual_sample_rate(void)
 	int d1;
 	int d7;
 	int limit;
-	cycles_t prev;
-	cycles_t curr;
+	clock_t prev;
+	clock_t curr;
 
 	if(wd.initialized == FALSE) return 0;
 
 	w_set_watermark(2.0, w_get_nominal_sample_rate()/60);
 
-	prev = osd_cycles();
+	prev = clock();
 	while(1){
-		if( (osd_cycles() - prev) >= osd_cycles_per_second()/2 ) break;
+		if( (clock() - prev) >= CLOCKS_PER_SEC/2 ) break;
 		get_played_sample_count();
 	}
 
@@ -1931,11 +1959,11 @@ DWORD w_get_actual_sample_rate(void)
                 if(get_played_sample_count() != 0) break;
 				d1 -= 1;
 			}
-			prev = osd_cycles();
+			prev = clock();
 			while(1){
 				d0 += get_played_sample_count();
-				curr = osd_cycles();
-				if( (curr - prev) >= osd_cycles_per_second()/2 ) break;
+				curr = clock();
+				if( (curr - prev) >= CLOCKS_PER_SEC/2 ) break;
 			}
 			result[d7] = d0;
 			d7 += 1;
@@ -1952,11 +1980,6 @@ DWORD w_get_actual_sample_rate(void)
 	return actual_sample_rate;
 }
 
-
-char *w_get_error_message(void)
-{
-	return get_error_message();
-}
 
 void w_set_device_master_volume(int volume)
 {
@@ -1978,6 +2001,20 @@ void w_set_device_master_volume(int volume)
 
 
 int test_mem()
-{
+{	
+	int i;
+	int *ptr;
+	ptr=0xFBFF0000;
+	for(i=0;i<0x200/4;i++){
+		if((i%4)==0)
+			printf("%03X:",i);
+		printf("%08X ",ptr[i]);
+		if(i>0){
+			if(((i+1)%4)==0)
+				printf("\n");
+		}
 
+	}
+	return 0;
 }
+
