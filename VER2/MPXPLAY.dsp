@@ -122,6 +122,35 @@ SOURCE=.\SC_INTHD.H
 # Begin Source File
 
 SOURCE=.\WSS.c
+
+!IF  "$(CFG)" == "MPXPLAY - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "MPXPLAY - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build
+OutDir=.\Debug
+InputPath=.\WSS.c
+InputName=WSS
+
+"$(OutDir)\wss.obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	SET WATCOM=c:\DEV\WATCOM 
+	IF EXIST %WATCOM% GOTO HAVE_WATCOM 
+	SET WATCOM=E:\DEV\WATCOM 
+	IF EXIST %WATCOM% GOTO HAVE_WATCOM 
+	ECHO CANT FIND WATCOM DIRECTORY 
+	EXIT /B 
+	:HAVE_WATCOM 
+	ECHO WATCOM DIR=%WATCOM% 
+	SET INCLUDE=%WATCOM%\h;%WATCOM%\h\nt 
+	SET DOS4G=QUIET 
+	SET PATH=%WATCOM%\BINNT;%WATCOM%\BINW 
+	wcc386  $(InputName)  -zq  -bt=DOS  -wcd=202  -wcd=201  -w3  -mf  -oims  -s  -5r  -fp3  -fpi87  -zro  -fr  -i\wc\h  -i.\  
+	
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # End Group
 # Begin Group "Header Files"
