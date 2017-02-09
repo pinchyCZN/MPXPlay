@@ -8,67 +8,256 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdarg.h>
-#include "WSS.h"
 
+typedef unsigned char		BYTE;
+typedef unsigned short		WORD;
+typedef unsigned long		DWORD;
+#define TRUE (1)
+#define FALSE (0)
+#define CLOCK_RATE 300000000
 
-static void log_msg(const char *text,...)
+DWORD base_reg=0;
+
+//HDA PCI CONFIG REGISTERS
+#define HDBARL 		0x10
+//HDA MEM MAP CONFIG REGISTERS
+#define GCTL		0x8
+#define OSD0CTL		0x100
+#define OSD0CBL		0x108
+#define OSD0LVI		0x10C
+#define OSD0FMT		0x112
+#define OSD0BDPL	0x118
+#define OSD0BDPU	0x11C
+
+//ctrl bits
+#define SRST		0x01
+#define RUN			0x02
+
+void log_msg(const char *fmt,...)
 {
-	  va_list arg;
-	  va_start(arg,text);
-	  vfprintf(stdout,text,arg);
-	  va_end(arg);
+	va_list arg;
+	va_start(arg,fmt);
+	vprintf(fmt,arg);
+	va_end(arg);
 }
 
-
-static void udelay(int usec)
+DWORD get_tick_count()
 {
-	clock_t  prev;
-	double t;
-	clock_t  cps = CLOCKS_PER_SEC;
-
-	t = ((double)cps / 1000000.0) * usec;
-	prev = clock();
-	while(1){
-		if( (clock() - prev) >= (clock_t)t ) break;
+	DWORD tick;
+	_asm{
+		rdtsc;
+		mov tick,eax;
 	}
+	return tick;
 }
 
-static BOOL check_pci_bios(void)
+void udelay(int usec)
+{
+	DWORD tick,delta;
+	tick=get_tick_count();
+	while(1){
+		delta=get_tick_count()-tick;
+		delta=delta/(CLOCK_RATE/(1000*1000));
+		if(delta>usec)
+			break;
+	}
+	return;
+}
+int get_msec(DWORD ticks)
+{
+	return (ticks/(CLOCK_RATE/1000));
+}
+
+int find_pci_device(WORD ven_id,WORD dev_id,BYTE *bus_num,BYTE *dev_num)
 {
 	union REGS r={0};
-	BOOL result = TRUE;
-
-	r.w.ax = 0xB101;					// PCI BIOS - INSTALLATION CHECK
-	r.w.di = 0x00000000;
+	r.w.ax=0xB102; //FIND PCI DEVICE
+	r.w.cx=dev_id;
+	r.w.dx=ven_id;
+	r.w.si=0;
 	int386(0x1a,&r,&r);
-	if( r.x.edx != 0x20494350 ){			// ' ICP'
-		result = FALSE;
+	if(r.w.cflag!=0){
+		return FALSE;
 	}
+	*bus_num=r.h.bh;
+	*dev_num=r.h.bl;
+	return TRUE;
+}
+
+int read_config_dword(BYTE bus_num,BYTE dev_num,int reg_num,DWORD *out)
+{
+	int result=FALSE;
+	union REGS r={0};
+	r.w.ax=0xB10A; //READ CONFIG DWORD
+	r.h.bh=bus_num;
+	r.h.bl=dev_num;
+	r.w.di=reg_num;
+	int386(0x1a,&r,&r);
+	if(r.w.cflag!=0){
+		return result;
+	}
+	result=TRUE;
+	*out=r.x.ecx;
 	return result;
 }
 
-typedef struct {
-	WORD vender_id;
-	WORD device_id;
-	WORD sub_vender_id;
-	WORD sub_device_id;
-	WORD device_bus_number;
-	DWORD base0;
-	DWORD base1;
-	DWORD base2;
-	DWORD base3;
-	DWORD base4;
-	DWORD base5;
-}PCI_DEV;
+int write_dword(DWORD addr,DWORD data)
+{
+	DWORD *ptr=(DWORD *)addr;
+	ptr[0]=data;
+	return TRUE;
+}
+DWORD read_dword(DWORD addr)
+{
+	DWORD *ptr=(DWORD *)addr;
+	return ptr[0];
+}
+int write_word(DWORD addr,WORD data)
+{
+	WORD *ptr=(WORD*)addr;
+	ptr[0]=data;
+	return TRUE;
+}
+WORD read_word(DWORD *addr)
+{
+	WORD *ptr=(WORD*)addr;
+	return ptr[0];
+}
+int write_byte(DWORD addr,BYTE data)
+{
+	BYTE *ptr=(BYTE*)addr;
+	ptr[0]=data;
+	return TRUE;
+}
+int read_byte(DWORD addr)
+{
+	BYTE *ptr=(BYTE*)addr;
+	return ptr[0];
+}
 
-static PCI_DEV g_pci;
+int wait_reset()
+{
+	int result=TRUE;
+	DWORD tick,delta;
+	tick=get_tick_count();
+	while((read_dword(base_reg+GCTL)&1)==0){
+		delta=get_tick_count()-tick;
+		if(get_msec(delta)>500){
+			log_msg("wait reset timeout\n");
+			result=FALSE;
+			break;
+		}
+	}
+	return result;
+}
+int hda_stop()
+{
+	int tmp;
+	tmp=read_byte(base_reg+OSD0CTL);
+	tmp&=~RUN;
+	write_byte(base_reg+OSD0CTL,tmp);
+	while((read_word(base_reg+OSD0CTL)&RUN)!=0)
+		;
+	tmp=read_byte(base_reg+OSD0CTL);
+	tmp|=SRST;
+	write_byte(base_reg+OSD0CTL,tmp);
+	while((read_word(base_reg+OSD0CTL)&SRST)==0)
+		;
+	return 0;
+}
 
+int hda_run()
+{
+	int tmp;
+	tmp=read_byte(base_reg+OSD0CTL);
+	tmp|=RUN;
+	write_byte(base_reg+OSD0CTL,tmp);
+	return 0;
+}
 
+int reset_hda()
+{
+	wait_reset();
+	write_dword(base_reg+GCTL,1);
+	wait_reset();
+	return TRUE;
+}
+int init_hda()
+{
+	int result=FALSE;
+	const WORD ven_id=0x17F3;
+	const WORD dev_id=0x3010;
+	BYTE bus_num=0,dev_num=0;
+	if(!find_pci_device(ven_id,dev_id,&bus_num,&dev_num)){
+		log_msg("ERROR finding device %04X:%04X\n",ven_id,dev_id);
+		return result;
+	}
+	log_msg("Found vortex audio device at %i:%i\n",bus_num,dev_num);
+	if(!read_config_dword(bus_num,dev_num,HDBARL,&base_reg)){
+		log_msg("ERROR getting base address\n");
+		return result;
+	}
+	log_msg("BASE ADDRESS:%08X\n",base_reg);
+	reset_hda();
+	return result;
+}
 
-#define _8BITMONO		1
-#define _8BITSTEREO 	2
-#define _16BITSTEREO	3
+static int *memory_chunk=0;
+static int *bdl_list=0;
+static int *buffer1=0;
+static int *buffer2=0;
+int play_data(char *data,int len)
+{
+	DWORD tmp;
+	int result=FALSE;
+	if(base_reg==0)
+		return result;
+	if(memory_chunk==0){
+		DWORD tmp;
+		memory_chunk=calloc(1,0x10000*4);
+		if(memory_chunk==0)
+			return result;
+		tmp=memory_chunk;
+		tmp=(tmp+0x7F)&(-0x80);
+		bdl_list=tmp;
+		buffer1=tmp+0x10000;
+		buffer2=tmp+0x20000;
+	}
 
+	bdl_list[0]=buffer1;
+	bdl_list[1]=0;
+	bdl_list[2]=0x10000;
+	bdl_list[3]=0;
+	bdl_list[4]=buffer2;
+	bdl_list[5]=0;
+	bdl_list[6]=0x10000;
+	bdl_list[7]=0;
+	hda_stop();
+	tmp=read_byte(base_reg+OSD0CTL);
+	tmp&=~SRST;
+	write_byte(base_reg+OSD0CTL,tmp);
+	while(1){
+		tmp=read_byte(base_reg+OSD0CTL);
+		printf("tmp=%08X\n",tmp);
+		tmp&=SRST;
+		if(tmp==0)
+			break;
+		tmp=read_dword(base_reg+OSD0CTL);
+		printf("tmp2=%08X\n",tmp);
+	}
+	printf("made it222\n");
+	tmp=read_dword(base_reg+OSD0CTL);
+	tmp&=0xff0fffff;
+	tmp|=(1<<20);
+	write_dword(base_reg+OSD0CTL,tmp);
+	write_dword(base_reg+OSD0CBL,0x10000);
+	write_dword(base_reg+OSD0LVI,1);
+	write_word(base_reg+OSD0FMT,(1<<3)|(1));
+	write_dword(base_reg+OSD0BDPL,bdl_list);
+	write_dword(base_reg+OSD0BDPU,0);
+}
+
+#if 0
 
 typedef struct {
 	int 	initialized;
@@ -437,7 +626,7 @@ static void common_pcm_upload_func(void)
 			if(d1 < -32768) d1 = -32768;
 			d3 |= d1 << 16;
 			ptr=(int*)(g_wss_dma_addr+g_write_cursor * 4);
-			//ptr[0]=d3;
+			ptr[0]=d3;
 		}else if(wd.pcm_format == _8BITSTEREO){
 			short *ptr;
 			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
@@ -445,7 +634,7 @@ static void common_pcm_upload_func(void)
 			d1	= ((mixing_buff[(d0*2) + 1] * g_master_volume)/256);
 			d2 |= get_8bit_pcm_value(d1) << 8;
 			ptr=(short*)(g_wss_dma_addr + (g_write_cursor * 2));
-			//ptr[0]=d2;
+			ptr[0]=d2;
 		}else if(wd.pcm_format == _8BITMONO){
 			char *ptr;
 			d1	= ((mixing_buff[(d0*2) + 0] * g_master_volume)/256);
@@ -453,7 +642,7 @@ static void common_pcm_upload_func(void)
 			d1	= d1 / 2;
 			d2	= get_8bit_pcm_value(d1);
 			ptr=(char*)(g_wss_dma_addr + (g_write_cursor * 1));
-			//ptr[0]=d2;
+			ptr[0]=d2;
 		}
 		if(start == -1)
 			start = g_write_cursor;
@@ -1176,7 +1365,9 @@ static BOOL hda_init(void)
 	
 	if(hda_reset() == FALSE)
 		return FALSE;
+	//codec skip
 	return TRUE;
+
 	d0 = 0;	
 	while(d0 < HDA_MAX_CODECS)
 	{
@@ -2005,9 +2196,9 @@ int test_mem()
 	int i;
 	int *ptr;
 	ptr=0xFBFF0000;
-	for(i=0;i<0x200/4;i++){
+	for(i=0;i<0x300/4;i++){
 		if((i%4)==0)
-			printf("%03X:",i);
+			printf("%03X:",i*4);
 		printf("%08X ",ptr[i]);
 		if(i>0){
 			if(((i+1)%4)==0)
@@ -2018,3 +2209,4 @@ int test_mem()
 	return 0;
 }
 
+#endif

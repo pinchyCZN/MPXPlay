@@ -20,6 +20,7 @@ int detect_card()
 
 int latency_size=0;
 int volume=0;
+/*
 int init_audio(int samplerate)
 {
 	//Start HD audio
@@ -63,7 +64,7 @@ int write_audio(unsigned char *data,int len)
 
 }
 
-
+*/
 int test_sound()
 {
 #define PI (3.141592653589793)
@@ -84,13 +85,14 @@ int test_sound()
 	for(i=0;i<count;i++){
 		buf[i]=sin(i/PI*4000)*1000;
 	}
-	init_audio(88200);
-	set_volume(31);
-	printf("write audio\n");
-	write_audio((unsigned char*)buf,count/8);
-	end_audio();
+	init_hda();
+	play_data();
+//	init_audio(88200);
+//	set_volume(31);
+//	printf("write audio\n");
+//	write_audio((unsigned char*)buf,count/8);
+//	end_audio();
 	free(buf);
-	test_mem();
 	printf("test sound done\n");
 	return 0;
 }
