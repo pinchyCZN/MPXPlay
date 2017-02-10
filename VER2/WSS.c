@@ -22,16 +22,18 @@ DWORD base_reg=0;
 #define HDBARL 		0x10
 //HDA MEM MAP CONFIG REGISTERS
 #define GCTL		0x8
-#define OSD0CTL		0x100
-#define OSD0CBL		0x108
-#define OSD0LVI		0x10C
-#define OSD0FMT		0x112
-#define OSD0BDPL	0x118
-#define OSD0BDPU	0x11C
+#define OSD0CTL		0xA0
+#define OSD0STS		0xA3
+#define OSD0CBL		0xA8
+#define OSD0LVI		0xAC
+#define OSD0FMT		0xB2
+#define OSD0BDPL	0xB8
+#define OSD0BDPU	0xBC
 
 //ctrl bits
 #define SRST		0x01
 #define RUN			0x02
+#define BCIS		0x04
 
 void log_msg(const char *fmt,...)
 {
@@ -180,6 +182,7 @@ int reset_hda()
 	wait_reset();
 	write_dword(base_reg+GCTL,1);
 	wait_reset();
+	write_byte(base_reg+OSD0STS,BCIS);
 	return TRUE;
 }
 int init_hda()
@@ -202,6 +205,25 @@ int init_hda()
 	return result;
 }
 
+int test_mem()
+{	
+	int i;
+	int *ptr;
+	ptr=0xFBFF0000;
+	for(i=0;i<0xC0/4;i++){
+		if((i%4)==0)
+			printf("%03X:",i*4);
+		printf("%08X ",ptr[i]);
+		if(i>0){
+			if(((i+1)%4)==0)
+				printf("\n");
+		}
+
+	}
+	return 0;
+}
+
+
 static int *memory_chunk=0;
 static int *bdl_list=0;
 static int *buffer1=0;
@@ -217,6 +239,13 @@ int play_data(char *data,int len)
 		memory_chunk=calloc(1,0x10000*4);
 		if(memory_chunk==0)
 			return result;
+		{
+			int i;
+			char *ptr=(char*)memory_chunk;
+			for(i=0;i<0x10000*4;i++){
+				ptr[i]=rand();
+			}
+		}
 		tmp=memory_chunk;
 		tmp=(tmp+0x7F)&(-0x80);
 		bdl_list=tmp;
@@ -238,14 +267,11 @@ int play_data(char *data,int len)
 	write_byte(base_reg+OSD0CTL,tmp);
 	while(1){
 		tmp=read_byte(base_reg+OSD0CTL);
-		printf("tmp=%08X\n",tmp);
 		tmp&=SRST;
 		if(tmp==0)
 			break;
 		tmp=read_dword(base_reg+OSD0CTL);
-		printf("tmp2=%08X\n",tmp);
 	}
-	printf("made it222\n");
 	tmp=read_dword(base_reg+OSD0CTL);
 	tmp&=0xff0fffff;
 	tmp|=(1<<20);
@@ -255,6 +281,7 @@ int play_data(char *data,int len)
 	write_word(base_reg+OSD0FMT,(1<<3)|(1));
 	write_dword(base_reg+OSD0BDPL,bdl_list);
 	write_dword(base_reg+OSD0BDPU,0);
+	test_mem();
 }
 
 #if 0
@@ -2191,22 +2218,5 @@ void w_set_device_master_volume(int volume)
 }
 
 
-int test_mem()
-{	
-	int i;
-	int *ptr;
-	ptr=0xFBFF0000;
-	for(i=0;i<0x300/4;i++){
-		if((i%4)==0)
-			printf("%03X:",i*4);
-		printf("%08X ",ptr[i]);
-		if(i>0){
-			if(((i+1)%4)==0)
-				printf("\n");
-		}
-
-	}
-	return 0;
-}
 
 #endif
