@@ -85,7 +85,7 @@ int test_sound()
 	for(i=0;i<count;i++){
 		buf[i]=sin(i/PI*4000)*1000;
 	}
-	init_hda();
+//	init_hda();
 	play_data();
 //	init_audio(88200);
 //	set_volume(31);

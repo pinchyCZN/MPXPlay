@@ -22,6 +22,8 @@ DWORD base_reg=0;
 #define HDBARL 		0x10
 //HDA MEM MAP CONFIG REGISTERS
 #define GCTL		0x8
+#define HDA_IC		0x60
+#define HDA_IRS		0x68
 #define OSD0CTL		0xA0
 #define OSD0STS		0xA3
 #define OSD0CBL		0xA8
@@ -34,6 +36,14 @@ DWORD base_reg=0;
 #define SRST		0x01
 #define RUN			0x02
 #define BCIS		0x04
+
+#define ICB			0x01 //immediate command busy
+#define IRV			0x02 //immediate result valid
+
+#define SET_AMP_GAIN	0x003
+#define SET_MUTE		0x0080
+#define SET_OUT_AMP		0x8000
+
 
 void log_msg(const char *fmt,...)
 {
@@ -160,10 +170,16 @@ int hda_stop()
 	write_byte(base_reg+OSD0CTL,tmp);
 	while((read_word(base_reg+OSD0CTL)&RUN)!=0)
 		;
-	tmp=read_byte(base_reg+OSD0CTL);
-	tmp|=SRST;
-	write_byte(base_reg+OSD0CTL,tmp);
-	while((read_word(base_reg+OSD0CTL)&SRST)==0)
+	if((read_word(base_reg+OSD0CTL)&SRST)!=0){
+		DWORD tick,delta;
+		tmp=read_byte(base_reg+OSD0CTL);
+		tmp|=SRST;
+		write_byte(base_reg+OSD0CTL,tmp);
+		tmp=read_byte(base_reg+OSD0CTL);
+		tmp&=~SRST;
+		write_byte(base_reg+OSD0CTL,tmp);
+	}
+	while((read_word(base_reg+OSD0CTL)&SRST)!=0)
 		;
 	return 0;
 }
@@ -176,7 +192,26 @@ int hda_run()
 	write_byte(base_reg+OSD0CTL,tmp);
 	return 0;
 }
-
+int hda_send_codec_cmd(DWORD param)
+{
+	while((read_dword(base_reg+HDA_IRS)&ICB)!=0)
+		;
+	write_dword(base_reg+HDA_IC, param);
+	write_word(base_reg+HDA_IRS,ICB|IRV);
+	return 0;
+}
+int set_volume(int vol)
+{
+	DWORD tmp;
+	if(vol>31)
+		vol=31;
+	else if(vol<0)
+		vol=0;
+	tmp=(SET_OUT_AMP|vol) & ~SET_MUTE;
+//	hda_send_codec_cmd(HDAPARAM2(codecaddr, nid, SET_AMP_GAIN, SET_RIGHT_AMP | tmp), FALSE);
+//	hda_send_codec_cmd(HDAPARAM2(codecaddr, nid, SET_AMP_GAIN, SET_LEFT_AMP  | tmp), FALSE);
+	return 0;
+}
 int reset_hda()
 {
 	wait_reset();
@@ -205,11 +240,9 @@ int init_hda()
 	return result;
 }
 
-int test_mem()
-{	
+int dump_address(int *ptr)
+{
 	int i;
-	int *ptr;
-	ptr=0xFBFF0000;
 	for(i=0;i<0xC0/4;i++){
 		if((i%4)==0)
 			printf("%03X:",i*4);
@@ -218,6 +251,42 @@ int test_mem()
 			if(((i+1)%4)==0)
 				printf("\n");
 		}
+	}
+	return 0;
+}
+int test_mem()
+{	
+	int i;
+	int *ptr;
+	int log[10]={0};
+	int log2[10]={0};
+	int quit=0;
+	DWORD tick,delta;
+	ptr=0xFBFF0000;
+	tick=get_tick_count();
+	while(1){
+		ptr=0xFBFF00A0;
+		for(i=0;i<8;i++){
+			log[i]=ptr[i];
+		}
+		for(i=0;i<8;i++){
+			int x=ptr[i];
+			log2[i]=x;
+			if(log[i]!=x){
+				quit=1;
+			}
+		}
+		if(quit){
+			dump_address(&log);
+			printf("--\n");
+			dump_address(&log2);
+			printf("[[\n");
+			dump_address(0xFBFF0000);
+			break;
+		}
+		delta=get_tick_count()-tick;
+		if(get_msec(delta)>500)
+			break;
 
 	}
 	return 0;
@@ -255,32 +324,24 @@ int play_data(char *data,int len)
 
 	bdl_list[0]=buffer1;
 	bdl_list[1]=0;
-	bdl_list[2]=0x10000;
+	bdl_list[2]=0x1000;
 	bdl_list[3]=0;
 	bdl_list[4]=buffer2;
 	bdl_list[5]=0;
-	bdl_list[6]=0x10000;
+	bdl_list[6]=0x1000;
 	bdl_list[7]=0;
+	set_volume(31);
 	hda_stop();
-	tmp=read_byte(base_reg+OSD0CTL);
-	tmp&=~SRST;
-	write_byte(base_reg+OSD0CTL,tmp);
-	while(1){
-		tmp=read_byte(base_reg+OSD0CTL);
-		tmp&=SRST;
-		if(tmp==0)
-			break;
-		tmp=read_dword(base_reg+OSD0CTL);
-	}
 	tmp=read_dword(base_reg+OSD0CTL);
 	tmp&=0xff0fffff;
 	tmp|=(1<<20);
 	write_dword(base_reg+OSD0CTL,tmp);
-	write_dword(base_reg+OSD0CBL,0x10000);
-	write_dword(base_reg+OSD0LVI,1);
-	write_word(base_reg+OSD0FMT,(1<<3)|(1));
+	write_dword(base_reg+OSD0CBL,0x4000);
+	write_word(base_reg+OSD0LVI,1);
+	write_word(base_reg+OSD0FMT,(1<<14)|(1<<4)|(1));
 	write_dword(base_reg+OSD0BDPL,bdl_list);
 	write_dword(base_reg+OSD0BDPU,0);
+	hda_run();
 	test_mem();
 }
 
