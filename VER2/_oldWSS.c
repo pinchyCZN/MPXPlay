@@ -690,17 +690,28 @@ void w_exit_critical(void)
 	}
 }
 
+static DWORD get_tick_count()
+{
+	DWORD tick;
+	_asm{
+		rdtsc;
+		mov tick,eax;
+	}
+	return tick;
+}
+
 static void udelay(int usec)
 {
-	cycles_t  prev;
-	double t;
-	cycles_t  cps = osd_cycles_per_second();
-
-	t = ((double)cps / 1000000.0) * usec;
-	prev = osd_cycles();
+#define CLOCK_RATE 300000000
+	DWORD tick,delta;
+	tick=get_tick_count();
 	while(1){
-		if( (osd_cycles() - prev) >= (cycles_t)t ) break;
+		delta=get_tick_count()-tick;
+		delta=delta/(CLOCK_RATE/(1000*1000));
+		if(delta>usec)
+			break;
 	}
+	return;
 }
 
 static void copy_to_dos_memory(DWORD dos_address, BYTE *src, DWORD length)
@@ -2596,6 +2607,7 @@ static DWORD hda_send_codec_cmd(DWORD param, BOOL needanswer)
 	while(((hda_rd_reg16(HDAICIS) & ICB) != 0) && --tmout)	
 		udelay(1000);
 	udelay(1000);
+	printf("send codec cmd=%08X\n",param);
 	hda_wr_reg32(HDAICOI, param);
 	hda_wr_reg16(HDAICIS, ICB | IRV);
 
