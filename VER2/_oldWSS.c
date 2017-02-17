@@ -2526,6 +2526,7 @@ static void hda_init_pci_regs()
 		case DEV_ATI:
 			pci_read_config_byte (&g_pci, 0x42, (BYTE *)&tmp);
 			pci_write_config_byte (&g_pci, 0x42, (tmp & 0xf8) | 0x2);
+			printf("ATI CODE=%08X\n",tmp);
 			break;
 		case DEV_NVIDIA:
 			pci_read_config_byte(&g_pci, 0x4e, (BYTE *) &tmp);
@@ -2549,6 +2550,7 @@ static void hda_init_pci_regs()
     {
 		pci_read_config_byte(&g_pci, 0x44, (BYTE *)&tmp);
 		pci_write_config_byte(&g_pci, 0x44, tmp & 0xf8);
+		printf("special vender ID, code=%08X\n",tmp);
 	}
 }
 
@@ -2598,29 +2600,66 @@ static BOOL hda_reset(void)
 	return TRUE;
 }
 
+int log_codec_cmds(DWORD param,BOOL need,int dump)
+{
+	static int *buffer=0;
+	static int count=0;
+	if(buffer==0)
+		buffer=malloc(0x10000);
+	if(buffer==0)
+		return 0;
+	if(dump){
+		int i;
+		for(i=0;i<count;i+=2){
+			int index=i;
+			printf("0x%08X,%i,\n",buffer[index],buffer[index+1]);
+		}
+		return 0;
+	}
+	buffer[count]=param;
+	buffer[count+1]=need;
+	count+=2;
+	return 0;
+}
 static DWORD hda_send_codec_cmd(DWORD param, BOOL needanswer)
 {
-	int tmout;
+	int tmout,result=0;
 	
 	hda_sel();
 	tmout = 1000;
+//#define HDAICOI		0x60
+//#define HDAICII		0x64
+//#define HDAICIS		0x68
+	
 	while(((hda_rd_reg16(HDAICIS) & ICB) != 0) && --tmout)	
 		udelay(1000);
 	udelay(1000);
-	printf("send codec cmd=%08X\n",param);
 	hda_wr_reg32(HDAICOI, param);
 	hda_wr_reg16(HDAICIS, ICB | IRV);
 
+	log_codec_cmds(param,needanswer,0);
 	if(needanswer)
 	{
 		tmout = 1000;
-		while(((hda_rd_reg16(HDAICIS) & (ICB | IRV)) != IRV) && --tmout)	
+		while((hda_rd_reg16(HDAICIS) & (ICB | IRV)) != IRV){
+			tmout--;
+			if(tmout==0){
+				printf("timeout waiting for response\n");
+				break;
+			}
 			udelay(1000);
+		}
 		udelay(1000);
-		return hda_rd_reg32(HDAICII);
-	}	
-
-	return 0;
+		tmout= hda_rd_reg32(HDAICII);
+		result=tmout;
+	}
+	/*
+	printf("param=%08X",param);
+	if(needanswer)
+		printf(" response=%08X",result);
+	printf("\n");
+	*/
+	return result;
 }
 
 static void hda_set_input_volume(DWORD codecaddr, DWORD nid, DWORD vol, int index)
@@ -2678,7 +2717,7 @@ static BOOL hda_parse_node(DWORD codecaddr, HDAFUNCINFO * nodeinfo, int subnodes
 	caps = nodeinfo->caps;
 	type = nodeinfo->type;
 
-	logerror_("HDA: parsing node id %04X.\n", nid);
+//	logerror_("HDA: parsing node id %04X.\n", nid);
 	
 	if(caps & IS_DIGITAL)
 		return FALSE;
@@ -2702,7 +2741,7 @@ static BOOL hda_parse_node(DWORD codecaddr, HDAFUNCINFO * nodeinfo, int subnodes
 			hda_send_codec_cmd(HDAPARAM1(codecaddr, nid, SET_CVT_STRM, 0x10), FALSE);
 			//vic
 			hda_send_codec_cmd(HDAPARAM2(codecaddr, nid, SET_CVT_FORM, hda_set_rate()), FALSE);
-			logerror_("HDA: found DAC, node id %04X.\n", nid);
+			//logerror_("HDA: found DAC, node id %04X.\n", nid);
 			break;
 		
 		case (AUDIO_INPUT):		
@@ -2789,7 +2828,7 @@ static BOOL hda_parse_node(DWORD codecaddr, HDAFUNCINFO * nodeinfo, int subnodes
 			mask = 0x7f;
 		}
 		ncons = d0 & 0x7f;
-		logerror_("HDA: the number of connections for node id %04X is %d.\n", nid, ncons);	
+//		logerror_("HDA: the number of connections for node id %04X is %d.\n", nid, ncons);	
 		
 		d1 = 0;
 		while(d1 < ncons)
@@ -2799,7 +2838,7 @@ static BOOL hda_parse_node(DWORD codecaddr, HDAFUNCINFO * nodeinfo, int subnodes
 			while(((d1+d2) < ncons) && (d2 < step))
 			{
 				subnid = (d0 >> (d2 * shift)) & mask;
-				logerror_("HDA: index %d has node id %04X.\n", d1 + d2, subnid);
+//				logerror_("HDA: index %d has node id %04X.\n", d1 + d2, subnid);
 				entry = hda_find_node_in_list(subnid, subnodes);
 				if(entry && (entry->type != PIN_CMPLX))
 				{	
@@ -3134,13 +3173,24 @@ static void hda_prepare(void)
 {
 	DWORD a0;
 	int d0, tmout;
-	
+	int bdl_entries=BDL_ENTRIES;
+	bdl_entries=2;
+
 	/* setup scatter/gather table for playback */
-	_farsetsel(_dos_ds);
 	a0 = get_address_dosmem4k();
 	d0 = 0;
-	while(d0 < BDL_ENTRIES)
+	while(d0 < bdl_entries)
 	{
+		DWORD tmp=g_dosmem64k_phys_table[d0 & 0x0F];
+		{
+			int i;
+			short *ptr=(short*)tmp;
+			for(i=0;i<0x1000;i++){
+				float f=0;
+				ptr[i]=100*sin(f);
+				f+=3.14/180;
+			}
+		}
 		_farnspokel(a0, g_dosmem64k_phys_table[d0 & 0x0F]);		/*low base*/
 		_farnspokel(a0 + 4, 0);									/*high base*/		
 		_farnspokel(a0 + 8, 0x1000);							/*4KB length in bytes*/
@@ -3155,11 +3205,17 @@ static void hda_prepare(void)
 	while(((hda_rd_reg8(OSDCTL) & SRST) != 0) && --tmout)	
 		udelay(1000);
 	udelay(1000);
+	d0=(hda_rd_reg32(OSDCTL) & 0xff0fffff) |  (1 << 20);
+	printf("set stream=%08X\n",d0);
 	hda_wr_reg32(OSDCTL, (hda_rd_reg32(OSDCTL) & 0xff0fffff) |  (1 << 20));	/*set stream*/
 	hda_wr_reg32(OSDCBL, g_dma_buff_size);
-	hda_wr_reg16(OSDLVI, BDL_ENTRIES - 1);
+	hda_wr_reg16(OSDLVI, bdl_entries - 1);
+	printf("dma buffer size=%08X\n",g_dma_buff_size);
+	printf("buffer entries=%i\n",bdl_entries);
 	//vic
-	hda_wr_reg16(OSDFMT, hda_set_rate());	/*48 kHz, 16 bits per sample, 2 channels*/
+	a0=hda_set_rate();
+	printf("rate=%08X\n",a0);
+	hda_wr_reg16(OSDFMT, a0);	/*48 kHz, 16 bits per sample, 2 channels*/
 	hda_wr_reg32(OSDBDPL, get_address_dosmem4k());
 	hda_wr_reg32(OSDBDPU, 0);
 }
@@ -3220,7 +3276,8 @@ BOOL hda_start(int rate)
 	/* start playing*/
 	hda_stop();
 	hda_prepare();
-	hda_run();	
+	hda_run();
+	printf("OSDBASE=%08X\n",osdbase);
 
 	wd.device_name	   = device_name_hda;
 	wd.pcm_format	   = _16BITSTEREO;
@@ -6403,8 +6460,9 @@ int w_sound_device_init(int device_no, int rate)
 			set_error_message("invalid sound device number.\n");
 	}
 
-	w_set_watermark(2.2, 1200);
+//	w_set_watermark(2.2, 1200);
 
+	//log_codec_cmds(0,0,1);
 	return result;
 }
 
