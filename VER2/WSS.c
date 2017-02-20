@@ -441,12 +441,12 @@ int init_hda()
 	return result;
 }
 
-int dump_address(int *ptr)
+int dump_address(int *ptr,int count)
 {
 	int i;
-	for(i=0;i<0xC0/4;i++){
+	for(i=0;i<count;i++){
 		if((i%4)==0)
-			printf("%03X:",i*4);
+			printf("%03X:",((DWORD)&ptr[i])&0xFFF); //i*4);
 		printf("%08X ",ptr[i]);
 		if(i>0){
 			if(((i+1)%4)==0)
@@ -457,36 +457,20 @@ int dump_address(int *ptr)
 }
 int test_mem()
 {	
-	int i;
+	int count=0;
 	int *ptr;
-	int log[10]={0};
-	int log2[10]={0};
-	int quit=0;
 	DWORD tick,delta;
-	ptr=0xFBFF0000;
-	tick=get_tick_count();
 	while(1){
-		ptr=0xFBFF00A0;
-		for(i=0;i<8;i++){
-			log[i]=ptr[i];
+		ptr=0xFBFF0060;
+		dump_address(ptr,8*4);
+		tick=get_tick_count();
+		while(1){
+			delta=get_tick_count()-tick;
+			if(get_msec(delta)>100)
+				break;
 		}
-		for(i=0;i<8;i++){
-			int x=ptr[i];
-			log2[i]=x;
-			if(log[i]!=x){
-				quit=1;
-			}
-		}
-		if(quit){
-			dump_address(&log);
-			printf("--\n");
-			dump_address(&log2);
-			printf("[[\n");
-			dump_address(0xFBFF0000);
-			break;
-		}
-		delta=get_tick_count()-tick;
-		if(get_msec(delta)>500)
+		count++;
+		if(count>2)
 			break;
 
 	}
@@ -529,12 +513,13 @@ int play_data(char *data,int len)
 			int i;
 			float f=0;
 			short *ptr=(short*)buffer1;
-			for(i=0;i<0x10000;i+=2){
+			for(i=0;i<0x10000*2;i+=2){
 				short val;
 				val=27000*sin(f);
+				//val=rand();
 				ptr[i]=val;
 				ptr[i+1]=val;
-				f+=3.14/35.;
+				f+=3.14/55.;
 			}
 		}
 	/*
@@ -569,151 +554,146 @@ int play_data(char *data,int len)
 	tmp|=(1<<20);
 	printf("STREAM=%08X\n",tmp);
 	write_32(base_reg+OSD0CTL,tmp);
-	write_32(base_reg+OSD0CBL,0x00010000);
+	write_32(base_reg+OSD0CBL,0x10000*2);
 	write_16(base_reg+OSD0LVI,bdl_entries-1);
 	write_16(base_reg+OSD0FMT,(1<<14)|(1<<4)|(1));
 	write_32(base_reg+OSD0BDPL,bdl_list);
 	write_32(base_reg+OSD0BDPU,0);
 	printf("running\n");
 	hda_run();
-	//test_mem();
+	test_mem();
 }
 
 
 int codec_commands[]={
-	0x000F0000,1,
-	0x000F0004,1,
-	0x001F0005,1,
-	0x00170500,0,
-	0x001F0012,1,
-	0x001F000D,1,
-	0x001F0004,1,
-	0x002F0009,1,
-	0x003F0009,1,
-	0x004F0009,1,
-	0x005F0009,1,
-	0x006F0009,1,
-	0x007F0009,1,
-	0x008F0009,1,
-	0x009F0009,1,
-	0x00AF0009,1,
-	0x00BF0009,1,
-	0x00CF0009,1,
-	0x00DF0009,1,
-	0x00EF0009,1,
-	0x00FF0009,1,
-	0x010F0009,1,
-	0x011F0009,1,
-	0x012F0009,1,
-	0x013F0009,1,
-	0x014F0009,1,
-	0x015F0009,1,
-	0x016F0009,1,
-	0x017F0009,1,
-	0x018F0009,1,
-	0x019F0009,1,
-	0x01AF0009,1,
-	0x01BF0009,1,
-	0x01CF0009,1,
-	0x01DF0009,1,
-	0x01EF0009,1,
-	0x01FF0009,1,
-	0x020F0009,1,
-	0x021F0009,1,
-	0x022F0009,1,
-	0x023F0009,1,
-	0x024F0009,1,
-	0x002F000B,1,
-	0x002F000A,1,
-	0x00270610,0,
-	0x00220011,0,
-	0x00270500,0,
-	0x003F000B,1,
-	0x003F000A,1,
-	0x00370610,0,
-	0x00320011,0,
-	0x00370500,0,
-	0x00BF000E,1,
-	0x00BF0200,1,
-	0x00BF0204,1,
-	0x00CF000E,1,
-	0x00CF0200,1,
-	0x00C70100,0,
-	0x00CF0012,1,
-	0x00C39007,0,
-	0x00C3A007,0,
-	0x00CF000D,1,
-	0x00C35000,0,
-	0x00C36000,0,
-	0x00DF000E,1,
-	0x00DF0200,1,
-	0x00D70100,0,
-	0x00DF0012,1,
-	0x00D39007,0,
-	0x00D3A007,0,
-	0x00DF000D,1,
-	0x00D35000,0,
-	0x00D36000,0,
-	0x00EF000E,1,
-	0x00EF0200,1,
-	0x00E70100,0,
-	0x00EF0012,1,
-	0x00E39007,0,
-	0x00E3A007,0,
-	0x00EF000D,1,
-	0x00E35000,0,
-	0x00E36000,0,
-	0x012F1C00,1,
-	0x014F1C00,1,
-	0x014F000C,1,
-	0x014F0700,1,
-	0x014707E0,0,
-	0x014F0C00,1,
-	0x01470C00,0,
-	0x014F000E,1,
-	0x014F0200,1,
-	0x01470100,0,
-	0x01470500,0,
-	0x014F0012,1,
-	0x01439007,0,
-	0x0143A007,0,
-	0x014F000D,1,
-	0x01435003,0,
-	0x01436003,0,
-	0x015F1C00,1,
-	0x016F1C00,1,
-	0x018F1C00,1,
-	0x019F1C00,1,
-	0x01AF1C00,1,
-	0x01BF1C00,1,
-	0x01CF1C00,1,
-	0x01DF1C00,1,
-	0x022F000E,1,
-	0x022F0200,1,
-	0x022F0204,1,
-	0x022F0208,1,
-	0x023F000E,1,
-	0x023F0200,1,
-	0x023F0204,1,
-	0x023F0208,1,
-	0x024F000E,1,
-	0x024F0200,1,
-	0x024F0204,1,
-	0x024F0208,1,
+	0x000F0000,
+	0x000F0004,
+	0x001F0005,
+	0x00170500,
+	0x001F0012,
+	0x001F000D,
+	0x001F0004,
+	0x002F0009,
+	0x003F0009,
+	0x004F0009,
+	0x005F0009,
+	0x006F0009,
+	0x007F0009,
+	0x008F0009,
+	0x009F0009,
+	0x00AF0009,
+	0x00BF0009,
+	0x00CF0009,
+	0x00DF0009,
+	0x00EF0009,
+	0x00FF0009,
+	0x010F0009,
+	0x011F0009,
+	0x012F0009,
+	0x013F0009,
+	0x014F0009,
+	0x015F0009,
+	0x016F0009,
+	0x017F0009,
+	0x018F0009,
+	0x019F0009,
+	0x01AF0009,
+	0x01BF0009,
+	0x01CF0009,
+	0x01DF0009,
+	0x01EF0009,
+	0x01FF0009,
+	0x020F0009,
+	0x021F0009,
+	0x022F0009,
+	0x023F0009,
+	0x024F0009,
+	0x002F000B,
+	0x002F000A,
+	0x00270610,
+	0x00220011,
+	0x00270500,
+	0x003F000B,
+	0x003F000A,
+	0x00370610,
+	0x00320011,
+	0x00370500,
+	0x00BF000E,
+	0x00BF0200,
+	0x00BF0204,
+	0x00CF000E,
+	0x00CF0200,
+	0x00C70100,
+	0x00CF0012,
+	0x00C39080, //vol
+	0x00C3A080, //vol
+	0x00CF000D,
+	0x00C35000,
+	0x00C36000,
+	0x00DF000E,
+	0x00DF0200,
+	0x00D70100,
+	0x00DF0012,
+	0x00D39080, //vol
+	0x00D3A080, //vol
+	0x00DF000D,
+	0x00D35000,
+	0x00D36000,
+	0x00EF000E,
+	0x00EF0200,
+	0x00E70100,
+	0x00EF0012,
+	0x00E39080, //vol
+	0x00E3A080, //vol
+	0x00EF000D,
+	0x00E35000,
+	0x00E36000,
+	0x012F1C00,
+	0x014F1C00,
+	0x014F000C,
+	0x014F0700,
+	0x014707E0,
+	0x014F0C00,
+	0x01470C00,
+	0x014F000E,
+	0x014F0200,
+	0x01470100,
+	0x01470500,
+	0x014F0012,
+	0x0143907F, //main vol
+	0x0143A07F, //main vol
+	0x014F000D,
+	0x01435003,
+	0x01436003,
+	0x015F1C00,
+	0x016F1C00,
+	0x018F1C00,
+	0x019F1C00,
+	0x01AF1C00,
+	0x01BF1C00,
+	0x01CF1C00,
+	0x01DF1C00,
+	0x022F000E,
+	0x022F0200,
+	0x022F0204,
+	0x022F0208,
+	0x023F000E,
+	0x023F0200,
+	0x023F0204,
+	0x023F0208,
+	0x024F000E,
+	0x024F0200,
+	0x024F0204,
+	0x024F0208,
 };
 int send_all_commands()
 {
 	int i;
 	int count=sizeof(codec_commands)/sizeof(int);
 	log_msg("writing codec commands\n");
-	for(i=0;i<count;i+=2){
+	for(i=0;i<count;i++){
 		int cmd=codec_commands[i];
 		hda_send_codec_cmd(cmd);
-		if(codec_commands[i+1]){
-			DWORD tmp=0;
-			hda_get_codec_resp(&tmp);
-			//log_msg("resp=%08X\n",tmp);
-		}
 	}
 	return 0;
 }

@@ -145,7 +145,7 @@ InputName=WSS
 	SET INCLUDE=%WATCOM%\h;%WATCOM%\h\nt 
 	SET DOS4G=QUIET 
 	SET PATH=%WATCOM%\BINNT;%WATCOM%\BINW 
-	wcc386  $(InputName)  -zq  -bt=DOS  -wcd=202  -wcd=201  -w3  -mf  -oims  -s  -5r  -fp3  -fpi87  -zro  -fr  -i\wc\h  -i.\  
+	wcc386   $(InputName)   -zq   -bt=DOS   -wcd=202   -wcd=201   -w3   -mf   -oims   -s   -5r   -fp3   -fpi87   -zro   -fr   -i\wc\h   -i.\  
 	
 # End Custom Build
 
