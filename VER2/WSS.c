@@ -216,54 +216,36 @@ int write_32(DWORD addr,DWORD data)
 {
 	DWORD *ptr=(DWORD *)addr;
 	ptr[0]=data;
-	log_mem("%08X %08X (32)\n",addr,data);
 	return TRUE;
 }
 DWORD read_32(DWORD addr)
 {
 	DWORD result,*ptr=(DWORD *)addr;
 	result=ptr[0];
-	if(addr!=last_read){
-		printf("r32 %08X %08X\n",last_read,last_data);
-	}
-	last_read=addr;
-	last_data=result;
 	return result;
 }
 int write_16(DWORD addr,WORD data)
 {
 	WORD *ptr=(WORD*)addr;
 	ptr[0]=data;
-	log_mem("%08X %08X (16)\n",addr,data);
 	return TRUE;
 }
 WORD read_16(DWORD addr)
 {
 	WORD result,*ptr=(WORD*)addr;
 	result=ptr[0];
-	if(addr!=last_read){
-		printf("r16 %08X %08X\n",last_read,last_data);
-	}
-	last_read=addr;
-	last_data=result;
 	return result;
 }
 int write_08(DWORD addr,BYTE data)
 {
 	BYTE *ptr=(BYTE*)addr;
 	ptr[0]=data;
-	log_mem("%08X %08X (8)\n",addr,data);
 	return TRUE;
 }
 int read_08(DWORD addr)
 {
 	BYTE result,*ptr=(BYTE*)addr;
 	result=ptr[0];
-	if(addr!=last_read){
-		printf("r8 %08X %08X\n",last_read,last_data);
-	}
-	last_read=addr;
-	last_data=result;
 	return result;
 }
 
@@ -427,7 +409,7 @@ int reset_hda()
 	return TRUE;
 }
 
-int init_pci_stuff(BYTE bus_num,BYTE dev_num)
+int init_pci_access(BYTE bus_num,BYTE dev_num)
 {
 	WORD tmp16=0;
 	tmp16=0;
@@ -452,7 +434,7 @@ int init_hda()
 		return result;
 	}
 	log_msg("BASE ADDRESS:%08X\n",base_reg);
-	init_pci_stuff(bus_num,dev_num);
+	init_pci_access(bus_num,dev_num);
 
 	reset_hda();
 	send_all_commands();
@@ -526,17 +508,9 @@ int play_data(char *data,int len)
 		return result;
 	if(memory_chunk==0){
 		DWORD tmp;
-		//memory_chunk=calloc(1,0x10000*4);
-		memory_chunk=0x004C2D00; //calloc(1,0x10000*4);
+		memory_chunk=calloc(1,0x10000*8);
 		if(memory_chunk==0)
 			return result;
-		{
-			int i;
-			char *ptr=(char*)memory_chunk;
-			for(i=0;i<0x10000*4;i++){
-				ptr[i]=rand();
-			}
-		}
 		tmp=memory_chunk;
 		tmp=(tmp+0x7F)&(-0x80);
 		bdl_list=tmp;
@@ -546,17 +520,23 @@ int play_data(char *data,int len)
 	}
 	printf("bdl_list=%08X\n",bdl_list);
 	for(i=0;i<bdl_entries;i++){
-		bdl_list[i*4]=0x4000; //buffer1+i*0x1000;
+		bdl_list[i*4]=buffer1+i*0x10000/16;
 		bdl_list[i*4+1]=0;
-		bdl_list[i*4+2]=0x1000;
+		bdl_list[i*4+2]=0x10000;
 		bdl_list[i*4+3]=0;
 	}
-	for(i=0;i<bdl_entries;i++){
-		int j;
-		for(j=0;j<4;j++){
-			printf(" %08X\n",bdl_list[i*4+j]);
+		{
+			int i;
+			float f=0;
+			short *ptr=(short*)buffer1;
+			for(i=0;i<0x10000;i+=2){
+				short val;
+				val=27000*sin(f);
+				ptr[i]=val;
+				ptr[i+1]=val;
+				f+=3.14/35.;
+			}
 		}
-	}
 	/*
 	bdl_list[0]=buffer1;
 	bdl_list[1]=0;
@@ -725,14 +705,14 @@ int send_all_commands()
 {
 	int i;
 	int count=sizeof(codec_commands)/sizeof(int);
-	printf("writing codec commands\n");
+	log_msg("writing codec commands\n");
 	for(i=0;i<count;i+=2){
 		int cmd=codec_commands[i];
 		hda_send_codec_cmd(cmd);
 		if(codec_commands[i+1]){
 			DWORD tmp=0;
 			hda_get_codec_resp(&tmp);
-			//printf("resp=%08X\n",tmp);
+			//log_msg("resp=%08X\n",tmp);
 		}
 	}
 	return 0;
