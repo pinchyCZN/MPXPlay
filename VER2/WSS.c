@@ -17,6 +17,7 @@ typedef unsigned long		DWORD;
 #define CLOCK_RATE 300000000
 
 DWORD base_reg=0;
+int device_found=0;
 
 #define PCICMD		0x04
 #define MSE 		0x02
@@ -361,12 +362,6 @@ int set_volume(int vol)
 }
 int reset_hda()
 {
-	/*
-	wait_reset();
-	write_32(base_reg+GCTL,1);
-	wait_reset();
-	*/
-	
 	DWORD tmp,tick,delta;
 	tmp=read_32(base_reg+GCTL);
 	tmp&=~CRST;
@@ -432,6 +427,7 @@ int init_hda()
 		log_msg("ERROR getting base address\n");
 		return result;
 	}
+	device_found=TRUE;
 	log_msg("BASE ADDRESS:%08X\n",base_reg);
 	init_pci_access(bus_num,dev_num);
 
@@ -510,6 +506,7 @@ int start_audio()
 		buffer2=tmp+buf_size*2;
 	}
 	printf("bdl_list=%08X\n",bdl_list);
+	printf("buffer1=%08X\n",buffer1);
 	for(i=0;i<bdl_entries;i++){
 		tmp=buffer1;
 		bdl_list[i*4]=tmp+i*buf_size;
@@ -517,20 +514,7 @@ int start_audio()
 		bdl_list[i*4+2]=buf_size;
 		bdl_list[i*4+3]=0;
 	}
-		if(0)
-		{
-			int i;
-			float f=0;
-			short *ptr=(short*)buffer1;
-			for(i=0;i<0x10000*2;i+=2){
-				short val;
-				val=27000*sin(f);
-				//val=rand();
-				ptr[i]=val;
-				ptr[i+1]=val;
-				f+=3.14/55.;
-			}
-		}
+
 	hda_stop();
 	tmp=read_08(base_reg+OSD0CTL);
 	tmp&=~SRST;
@@ -550,7 +534,6 @@ int start_audio()
 	tmp=read_32(base_reg+OSD0CTL);
 	tmp&=0xff0fffff;
 	tmp|=(1<<20);
-	printf("STREAM=%08X\n",tmp);
 	write_32(base_reg+OSD0CTL,tmp);
 	write_32(base_reg+OSD0CBL,buf_size*bdl_entries);
 	write_16(base_reg+OSD0LVI,bdl_entries-1);
@@ -559,7 +542,6 @@ int start_audio()
 	write_32(base_reg+OSD0BDPU,0);
 	printf("running\n");
 	hda_run();
-//	test_mem();
 }
 
 int set_bit_rate(int rate)
@@ -571,48 +553,6 @@ int set_bit_rate(int rate)
 	else
 		tmp&=~(1<<14);
 	write_16(base_reg+OSD0FMT,tmp);
-	return 0;
-}
-int play_wav_buf(char *buf,int len)
-{
-	DWORD tick,delta;
-	tick=get_tick_count();
-	while(1){
-		DWORD pos;
-		int ready=FALSE;
-		delta=get_tick_count()-tick;
-		if(get_msec(delta)>100){
-			printf("timeout waiting for buffer\n");
-			break;
-		}
-		pos=read_32(base_reg+OSD0LPIB);
-		switch(current_buf){
-		default:
-		case 0:
-			if(pos>=buf_size)
-				ready=TRUE;
-			break;
-		case 1:
-			if(pos<buf_size)
-				ready=TRUE;
-			break;
-		}
-		if(ready)
-			break;
-	}
-	{
-		char *mem;
-		if(0==current_buf)
-			mem=(char*)buffer1;
-		else
-			mem=(char*)buffer2;
-		if(len>buf_size)
-			len=buf_size;
-		else if(len<0)
-			len=0;
-		memcpy(mem,buf,len);
-		current_buf^=1;
-	}
 	return 0;
 }
 
@@ -745,6 +685,55 @@ int send_all_commands()
 	for(i=0;i<count;i++){
 		int cmd=codec_commands[i];
 		hda_send_codec_cmd(cmd);
+	}
+	return 0;
+}
+
+
+int play_wav_buf(char *buf,int len)
+{
+	DWORD tick,delta;
+	
+	if(0==device_found){
+		printf("device not found\n");
+		return 0;
+	}
+	tick=get_tick_count();
+	while(1){
+		DWORD pos;
+		int ready=FALSE;
+		delta=get_tick_count()-tick;
+		if(get_msec(delta)>100){
+			printf("timeout waiting for buffer\n");
+			break;
+		}
+		pos=read_32(base_reg+OSD0LPIB);
+		switch(current_buf){
+		default:
+		case 0:
+			if(pos>=buf_size)
+				ready=TRUE;
+			break;
+		case 1:
+			if(pos<buf_size)
+				ready=TRUE;
+			break;
+		}
+		if(ready)
+			break;
+	}
+	{
+		char *mem;
+		if(0==current_buf)
+			mem=(char*)buffer1;
+		else
+			mem=(char*)buffer2;
+		if(len>buf_size)
+			len=buf_size;
+		else if(len<0)
+			len=0;
+		memcpy(mem,buf,len);
+		current_buf^=1;
 	}
 	return 0;
 }
