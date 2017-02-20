@@ -7,9 +7,13 @@ int play_file(char *fname)
 	FILE *f;
 	f=fopen(fname,"rb");
 	if(f!=0){
-		char buf[1024];
+		char *buf;
 		int i,size;
-		const int buf_size=sizeof(buf);
+		int buf_size;
+		buf_size=get_buf_size();
+		buf=malloc(buf_size);
+		if(0==buf)
+			return 0;
 		fseek(f,0,SEEK_END);
 		size=ftell(f);
 		fseek(f,0,SEEK_SET);
@@ -25,7 +29,10 @@ int play_file(char *fname)
 				break;
 		}
 		fclose(f);
+		if(0!=buf)
+			free(buf);
 	}
+	return 0;
 }
 int main(int argc,char **argv)
 {
@@ -37,8 +44,8 @@ int main(int argc,char **argv)
 	}
 	if(argc>1){
 		char *fname=argv[1];
-		test_sound();
-		//play_file(fname);
+		audio_setup();
+		play_file(fname);
 	}
 	return result;
 }

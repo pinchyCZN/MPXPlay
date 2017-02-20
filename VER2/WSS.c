@@ -33,6 +33,7 @@ DWORD base_reg=0;
 #define HDA_IRS		0x68
 #define OSD0CTL		0xA0
 #define OSD0STS		0xA3
+#define OSD0LPIB	0xA4
 #define OSD0CBL		0xA8
 #define OSD0LVI		0xAC
 #define OSD0FMT		0xB2
@@ -356,8 +357,6 @@ int set_volume(int vol)
 	tmp=(SET_OUT_AMP|vol) & ~SET_MUTE;
 	hda_send_codec_cmd(get_hda_param(0,0xE,SET_AMP_GAIN,SET_RIGHT_AMP|tmp));
 	hda_send_codec_cmd(get_hda_param(0,0xE,SET_AMP_GAIN,SET_LEFT_AMP|tmp));
-//	hda_send_codec_cmd(HDAPARAM2(codecaddr, nid, SET_AMP_GAIN, SET_RIGHT_AMP | tmp), FALSE);
-//	hda_send_codec_cmd(HDAPARAM2(codecaddr, nid, SET_AMP_GAIN, SET_LEFT_AMP  | tmp), FALSE);
 	return 0;
 }
 int reset_hda()
@@ -482,7 +481,14 @@ static int *memory_chunk=0;
 static int *bdl_list=0;
 static int *buffer1=0;
 static int *buffer2=0;
-int play_data(char *data,int len)
+const int buf_size=0x1000;
+int current_buf=0;
+
+int get_buf_size()
+{
+	return buf_size;
+}
+int start_audio()
 {
 	DWORD tmp;
 	int result=FALSE;
@@ -492,23 +498,26 @@ int play_data(char *data,int len)
 		return result;
 	if(memory_chunk==0){
 		DWORD tmp;
-		memory_chunk=calloc(1,0x10000*8);
-		if(memory_chunk==0)
+		memory_chunk=calloc(1,buf_size*16);
+		if(memory_chunk==0){
+			printf("unable to allocate memory\n");
 			return result;
+		}
 		tmp=memory_chunk;
 		tmp=(tmp+0x7F)&(-0x80);
 		bdl_list=tmp;
-		memset(bdl_list,0,0x1000);
-		buffer1=tmp+0x10000;
-		buffer2=tmp+0x20000;
+		buffer1=tmp+buf_size;
+		buffer2=tmp+buf_size*2;
 	}
 	printf("bdl_list=%08X\n",bdl_list);
 	for(i=0;i<bdl_entries;i++){
-		bdl_list[i*4]=buffer1+i*0x10000/16;
+		tmp=buffer1;
+		bdl_list[i*4]=tmp+i*buf_size;
 		bdl_list[i*4+1]=0;
-		bdl_list[i*4+2]=0x10000;
+		bdl_list[i*4+2]=buf_size;
 		bdl_list[i*4+3]=0;
 	}
+		if(0)
 		{
 			int i;
 			float f=0;
@@ -522,17 +531,6 @@ int play_data(char *data,int len)
 				f+=3.14/55.;
 			}
 		}
-	/*
-	bdl_list[0]=buffer1;
-	bdl_list[1]=0;
-	bdl_list[2]=0x1000;
-	bdl_list[3]=0;
-	bdl_list[4]=buffer2;
-	bdl_list[5]=0;
-	bdl_list[6]=0x1000;
-	bdl_list[7]=0;
-	*/
-	//set_volume(31);
 	hda_stop();
 	tmp=read_08(base_reg+OSD0CTL);
 	tmp&=~SRST;
@@ -554,16 +552,69 @@ int play_data(char *data,int len)
 	tmp|=(1<<20);
 	printf("STREAM=%08X\n",tmp);
 	write_32(base_reg+OSD0CTL,tmp);
-	write_32(base_reg+OSD0CBL,0x10000*2);
+	write_32(base_reg+OSD0CBL,buf_size*bdl_entries);
 	write_16(base_reg+OSD0LVI,bdl_entries-1);
-	write_16(base_reg+OSD0FMT,(1<<14)|(1<<4)|(1));
+	write_16(base_reg+OSD0FMT,(1<<14)|(1<<4)|(1)); //44.1khz 16bit 2 channels
 	write_32(base_reg+OSD0BDPL,bdl_list);
 	write_32(base_reg+OSD0BDPU,0);
 	printf("running\n");
 	hda_run();
-	test_mem();
+//	test_mem();
 }
 
+int set_bit_rate(int rate)
+{
+	DWORD tmp;
+	tmp=read_16(base_reg+OSD0FMT);
+	if(44100==rate)
+		tmp|=1<<14;
+	else
+		tmp&=~(1<<14);
+	write_16(base_reg+OSD0FMT,tmp);
+	return 0;
+}
+int play_wav_buf(char *buf,int len)
+{
+	DWORD tick,delta;
+	tick=get_tick_count();
+	while(1){
+		DWORD pos;
+		int ready=FALSE;
+		delta=get_tick_count()-tick;
+		if(get_msec(delta)>100){
+			printf("timeout waiting for buffer\n");
+			break;
+		}
+		pos=read_32(base_reg+OSD0LPIB);
+		switch(current_buf){
+		default:
+		case 0:
+			if(pos>=buf_size)
+				ready=TRUE;
+			break;
+		case 1:
+			if(pos<buf_size)
+				ready=TRUE;
+			break;
+		}
+		if(ready)
+			break;
+	}
+	{
+		char *mem;
+		if(0==current_buf)
+			mem=(char*)buffer1;
+		else
+			mem=(char*)buffer2;
+		if(len>buf_size)
+			len=buf_size;
+		else if(len<0)
+			len=0;
+		memcpy(mem,buf,len);
+		current_buf^=1;
+	}
+	return 0;
+}
 
 int codec_commands[]={
 	0x000F0000,

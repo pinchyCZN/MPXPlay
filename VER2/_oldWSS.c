@@ -1303,7 +1303,7 @@ static int optspeak = 0;
 #define hda_wr_reg16(x,y) 	(_farnspokew(x,(WORD)y))
 #define hda_wr_reg32(x,y) 	(_farnspokel(x,(DWORD)y))
 */
-int log_mem(char *fmt,...)
+static int log_mem(char *fmt,...)
 {
 	va_list arg;
 	va_start(arg,fmt);
