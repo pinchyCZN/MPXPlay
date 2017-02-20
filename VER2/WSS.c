@@ -18,6 +18,10 @@ typedef unsigned long		DWORD;
 
 DWORD base_reg=0;
 
+#define PCICMD		0x04
+#define MSE 		0x02
+#define BME			0x04
+
 //HDA PCI CONFIG REGISTERS
 #define HDBARL 		0x10
 //HDA MEM MAP CONFIG REGISTERS
@@ -102,29 +106,78 @@ int find_pci_device(WORD ven_id,WORD dev_id,BYTE *bus_num,BYTE *dev_num)
 	*dev_num=r.h.bl;
 	return TRUE;
 }
-
+int read_config(BYTE bus_num,BYTE dev_num,int reg_num,DWORD *out,int size)
+{
+	int result=FALSE;
+	union REGS r={0};
+	int cmd;
+	switch(size){
+	case 1:
+		cmd=0xB108;
+		break;
+	case 2:
+		cmd=0xB109;
+		break;
+	default:
+	case 4:
+		cmd=0xB10A;
+		break;
+	}
+	r.w.ax=cmd;
+	r.h.bh=bus_num;
+	r.h.bl=dev_num;
+	r.w.di=reg_num;
+	int386(0x1a,&r,&r);
+	if(r.w.cflag!=0){
+		return result;
+	}
+	result=TRUE;
+	*out=r.x.ecx;
+	return result;
+}
 int read_config_32(BYTE bus_num,BYTE dev_num,int reg_num,DWORD *out)
 {
 	int result=FALSE;
-	union REGS r={0};
-	r.w.ax=0xB10A; //READ CONFIG DWORD
-	r.h.bh=bus_num;
-	r.h.bl=dev_num;
-	r.w.di=reg_num;
-	int386(0x1a,&r,&r);
-	if(r.w.cflag!=0){
-		return result;
-	}
-	result=TRUE;
-	*out=r.x.ecx;
+	result=read_config(bus_num,dev_num,reg_num,out,4);
 	return result;
 }
-/*
-int read_config_08(BYTE bus_num,BYTE dev_num,int reg_num,BYTE *out)
+int read_config_16(BYTE bus_num,BYTE dev_num,int reg_num,WORD *out)
+{
+	int result=FALSE;
+	DWORD _out=0;
+	result=read_config(bus_num,dev_num,reg_num,&_out,2);
+	*out=_out;
+	return result;
+}
+int read_config_8(BYTE bus_num,BYTE dev_num,int reg_num,BYTE *out)
+{
+	int result;
+	DWORD _out=0;
+	result=read_config(bus_num,dev_num,reg_num,&_out,1);
+	*out=_out;
+	return result;
+}
+int write_config(BYTE bus_num,BYTE dev_num,int reg_num,DWORD data,int size)
 {
 	int result=FALSE;
 	union REGS r={0};
-	r.w.ax=0xB108; //READ CONFIG BYTE
+	int cmd;
+	switch(size){
+	case 1:
+		cmd=0xB10B;
+		r.h.cl=data;
+		break;
+	case 2:
+		cmd=0xB10C;
+		r.w.cx=data;
+		break;
+	default:
+	case 4:
+		cmd=0xB10D;
+		r.x.ecx=data;
+		break;
+	}
+	r.w.ax=cmd;
 	r.h.bh=bus_num;
 	r.h.bl=dev_num;
 	r.w.di=reg_num;
@@ -133,59 +186,85 @@ int read_config_08(BYTE bus_num,BYTE dev_num,int reg_num,BYTE *out)
 		return result;
 	}
 	result=TRUE;
-	*out=r.x.ecx;
 	return result;
 }
-int write_config_08(BYTE bus_num,BYTE dev_num,int reg_num,BYTE data)
+int write_config_16(BYTE bus_num,BYTE dev_num,int reg_num,WORD data)
 {
-	int result=FALSE;
-	union REGS r={0};
-	r.w.ax=0xB10B; //WRITE CONFIG BYTE
-	r.h.bh=bus_num;
-	r.h.bl=dev_num;
-	r.w.di=reg_num;
-	r.h.cl=data;
-	int386(0x1a,&r,&r);
-	if(r.w.cflag!=0){
-		return result;
-	}
-	result=TRUE;
+	int result;
+	DWORD _data=data;
+	result=write_config(bus_num,dev_num,reg_num,_data,2);
 	return result;
 }
-*/
+int write_config_8(BYTE bus_num,BYTE dev_num,int reg_num,BYTE data)
+{
+	int result;
+	DWORD _data=data;
+	result=write_config(bus_num,dev_num,reg_num,_data,1);
+	return result;
+}
+
+int log_mem(char *fmt,...)
+{
+	va_list arg;
+	va_start(arg,fmt);
+	vprintf(fmt,arg);
+	va_end(arg);
+}
+static DWORD last_read=0,last_data=0;
 
 int write_32(DWORD addr,DWORD data)
 {
 	DWORD *ptr=(DWORD *)addr;
 	ptr[0]=data;
+	log_mem("%08X %08X (32)\n",addr,data);
 	return TRUE;
 }
 DWORD read_32(DWORD addr)
 {
-	DWORD *ptr=(DWORD *)addr;
-	return ptr[0];
+	DWORD result,*ptr=(DWORD *)addr;
+	result=ptr[0];
+	if(addr!=last_read){
+		printf("r32 %08X %08X\n",last_read,last_data);
+	}
+	last_read=addr;
+	last_data=result;
+	return result;
 }
 int write_16(DWORD addr,WORD data)
 {
 	WORD *ptr=(WORD*)addr;
 	ptr[0]=data;
+	log_mem("%08X %08X (16)\n",addr,data);
 	return TRUE;
 }
-WORD read_16(DWORD *addr)
+WORD read_16(DWORD addr)
 {
-	WORD *ptr=(WORD*)addr;
-	return ptr[0];
+	WORD result,*ptr=(WORD*)addr;
+	result=ptr[0];
+	if(addr!=last_read){
+		printf("r16 %08X %08X\n",last_read,last_data);
+	}
+	last_read=addr;
+	last_data=result;
+	return result;
 }
 int write_08(DWORD addr,BYTE data)
 {
 	BYTE *ptr=(BYTE*)addr;
 	ptr[0]=data;
+	log_mem("%08X %08X (8)\n",addr,data);
 	return TRUE;
 }
 int read_08(DWORD addr)
 {
-	BYTE *ptr=(BYTE*)addr;
-	return ptr[0];
+	BYTE result,*ptr=(BYTE*)addr;
+	result=ptr[0];
+	if(addr!=last_read){
+		printf("r8 %08X %08X\n",last_read,last_data);
+	}
+	last_read=addr;
+	last_data=result;
+	return result;
 }
 
 int wait_reset()
@@ -347,6 +426,16 @@ int reset_hda()
 	write_08(base_reg+OSD0STS,BCIS);
 	return TRUE;
 }
+
+int init_pci_stuff(BYTE bus_num,BYTE dev_num)
+{
+	WORD tmp16=0;
+	tmp16=0;
+	read_config_16(bus_num,dev_num,0x4,&tmp16);
+	write_config_16(bus_num,dev_num,0x4,tmp16|(MSE|BME));
+	return TRUE;
+}
+
 int init_hda()
 {
 	int result=FALSE;
@@ -363,6 +452,8 @@ int init_hda()
 		return result;
 	}
 	log_msg("BASE ADDRESS:%08X\n",base_reg);
+	init_pci_stuff(bus_num,dev_num);
+
 	reset_hda();
 	send_all_commands();
 	return result;
@@ -430,12 +521,13 @@ int play_data(char *data,int len)
 	DWORD tmp;
 	int result=FALSE;
 	int i;
-	const int bdl_entries=256;
+	const int bdl_entries=2;
 	if(base_reg==0)
 		return result;
 	if(memory_chunk==0){
 		DWORD tmp;
-		memory_chunk=calloc(1,0x10000*4);
+		//memory_chunk=calloc(1,0x10000*4);
+		memory_chunk=0x004C2D00; //calloc(1,0x10000*4);
 		if(memory_chunk==0)
 			return result;
 		{
@@ -452,12 +544,18 @@ int play_data(char *data,int len)
 		buffer1=tmp+0x10000;
 		buffer2=tmp+0x20000;
 	}
-	printf("buffer1=%08X\n",buffer1);
+	printf("bdl_list=%08X\n",bdl_list);
 	for(i=0;i<bdl_entries;i++){
-		bdl_list[i*4]=buffer1+i*0x1000;
+		bdl_list[i*4]=0x4000; //buffer1+i*0x1000;
 		bdl_list[i*4+1]=0;
 		bdl_list[i*4+2]=0x1000;
 		bdl_list[i*4+3]=0;
+	}
+	for(i=0;i<bdl_entries;i++){
+		int j;
+		for(j=0;j<4;j++){
+			printf(" %08X\n",bdl_list[i*4+j]);
+		}
 	}
 	/*
 	bdl_list[0]=buffer1;
@@ -634,7 +732,7 @@ int send_all_commands()
 		if(codec_commands[i+1]){
 			DWORD tmp=0;
 			hda_get_codec_resp(&tmp);
-			printf("resp=%08X\n",tmp);
+			//printf("resp=%08X\n",tmp);
 		}
 	}
 	return 0;

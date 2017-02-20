@@ -85,9 +85,9 @@ int test_sound()
 	for(i=0;i<count;i++){
 		buf[i]=sin(i/PI*4000)*1000;
 	}
-	w_sound_device_init(28,44100);
-//	init_hda();
-//	play_data();
+//	w_sound_device_init(28,44100);
+	init_hda();
+	play_data();
 //	init_audio(88200);
 //	set_volume(31);
 //	printf("write audio\n");
