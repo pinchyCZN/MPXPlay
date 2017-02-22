@@ -34,6 +34,15 @@ int play_file(char *fname)
 	}
 	return 0;
 }
+__declspec(__cdecl) int test_d(int);
+
+int test()
+{
+	int i=55;
+	i=test_d(i);
+	printf("D result=%i\n",i);
+}
+
 int main(int argc,char **argv)
 {
 	int i;
@@ -42,6 +51,8 @@ int main(int argc,char **argv)
 	for(i=1;i<argc;i++){
 		printf("%s\n",argv[i]);
 	}
+	test();
+	return 0;
 	if(argc>1){
 		char *fname=argv[1];
 		audio_setup();

@@ -2,7 +2,6 @@
 #include "au_cards.h"
 #include <math.h>
 
-
 int audio_setup()
 {
 //	w_sound_device_init(28,44100);

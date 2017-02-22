@@ -7,6 +7,8 @@ FILE audio.obj
 #FILE dosstuff.obj
 FILE wss.obj
 FILE _oldwss.obj
+FILE .\MP3123\test.obj
+
 
 
 #------------- Link config -----------------------------------------
