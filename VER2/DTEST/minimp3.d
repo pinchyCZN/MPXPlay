@@ -2171,7 +2171,7 @@ int decode_header(mp3_context_t *s, uint32_t header) {
       [0, 576, 1152, 384], // v2
       [0, 1152, 1152, 384], // v1
     ];
-    ubyte mpid = (header>>19)&0x03;
+	ubyte mpid = (header>>19)&0x03;
     ubyte layer = (header>>17)&0x03;
 
     s.sample_count = sampleCount.ptr[mpid].ptr[layer];
@@ -2699,45 +2699,50 @@ int mp3_decode_init () {
     return 0;
 }
 
-int mp3_decode_frame (mp3_context_t *s, int16_t *out_samples, ref int consumed, uint8_t *buf, int buf_size) {
-  uint32_t header;
-  int out_size;
-  int extra_bytes = 0;
-
+int mp3_decode_frame (mp3_context_t *s, int16_t *out_samples, ref int written, uint8_t *buf, int buf_size, ref int consumed) {
+	int result=false;
+	uint32_t header;
+	int out_size;
+	int extra_bytes = 0;
+	
 retry:
-  if (buf_size < HEADER_SIZE) return -1;
-
-  header = (buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|buf[3];
-  if (mp3_check_header(header) < 0){
-    ++buf;
-    --buf_size;
-    ++extra_bytes;
-    goto retry;
-  }
-
-  if (s.last_header && (header&0xffff0c00u) != s.last_header) {
-    ++buf;
-    --buf_size;
-    ++extra_bytes;
-    goto retry;
-  }
-
-  if (decode_header(s, header) == 1) {
-    s.frame_size = -1;
-    return -1;
-  }
-
-  if (s.frame_size<=0 || s.frame_size > buf_size) return -1; // incomplete frame
-  if (s.frame_size < buf_size) buf_size = s.frame_size;
-
-  out_size = mp3_decode_main(s, out_samples, buf, buf_size);
-  if (out_size >= 0) {
-    consumed = out_size;
-    s.last_header = header&0xffff0c00u;
-  }
-  // else: Error while decoding MPEG audio frame.
-  s.frame_size += extra_bytes;
-  return buf_size;
+	if(buf_size < HEADER_SIZE)
+		return result;
+	
+	header = (buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|buf[3];
+	if (mp3_check_header(header) < 0){
+		++buf;
+		--buf_size;
+		++extra_bytes;
+		goto retry;
+	}
+	
+	if (s.last_header && (header&0xffff0c00u) != s.last_header) {
+		++buf;
+		--buf_size;
+		++extra_bytes;
+		goto retry;
+	}
+	
+	if (decode_header(s, header) == 1) {
+		s.frame_size = -1;
+		return result;
+	}
+	
+	if (s.frame_size<=0 || s.frame_size > buf_size)
+		return result; // incomplete frame
+	if (s.frame_size < buf_size) buf_size = s.frame_size;
+	
+	out_size = mp3_decode_main(s, out_samples, buf, buf_size);
+	if (out_size >= 0) {
+		written = out_size;
+		s.last_header = header&0xffff0c00u;
+		result=true;
+	}
+	s.frame_size += extra_bytes;
+	consumed=s.frame_size;
+	
+	return result;
 }
 
 
