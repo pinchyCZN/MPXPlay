@@ -12,6 +12,8 @@ alias fwrite=_fwrite;
 alias fseek=_fseek;
 alias fopen=_fopen;
 alias fclose=_fclose;
+alias malloc=_malloc;
+alias printf=_printf;
 
 @nogc:
 nothrow:

@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+
 char DOS4GOPTIONS[] = "dos4g=StartupBanner:OFF\n";	// for DOS4G v2.xx
 
 int play_file(char *fname)
@@ -74,7 +76,7 @@ __declspec(__cdecl) void _free(void *buf)
 	free(buf);
 }
 
-__declspec(__cdecl) int _printf(const char* fmt)
+__declspec(__cdecl) int _printf(const char* fmt,...)
 {
 	int result;
 	va_list args;
