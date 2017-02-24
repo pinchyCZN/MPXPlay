@@ -1,9 +1,3 @@
-import std.stdio;
-import std.file;
-import std.string;
-import std.conv;
-import std.array;
-import std.algorithm;
 import core.stdc.stdlib;
 import core.stdc.stdio;
 import core.stdc.string;
@@ -64,6 +58,7 @@ int main(string[] args)
 {
 	if(args.length<2)
 		return 0;
+
 	const char *fname=args[1].ptr;
 	FILE *f=cast(FILE*)fopen(fname,"rb");
 	if(f is null)

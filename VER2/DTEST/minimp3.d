@@ -27,12 +27,13 @@ module minimp3;
  nothrow:
  @nogc:
 
+extern (C){
 
 import core.stdc.stdlib: libc_calloc = calloc, libc_malloc = malloc, libc_realloc = realloc, libc_free = free;
 import core.stdc.string: libc_memcpy = memcpy, libc_memset = memset, libc_memmove = memmove;
 
 import std.math:libc_pow = pow, libc_frexp = frexp, tan, M_PI = PI, sqrt, cos, sin;
-
+}
 /*
    void* libc_calloc (size_t nmemb, size_t count) {
    import core.stdc.stdlib : calloc;

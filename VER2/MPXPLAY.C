@@ -36,6 +36,54 @@ int play_file(char *fname)
 }
 __declspec(__cdecl) int test_d(int);
 
+__declspec(__cdecl) FILE* _fopen(const char *name, const char *param)
+{
+	return fopen(name,param);
+}
+__declspec(__cdecl) int _fclose(FILE *f)
+{
+	return fclose(f);
+}
+__declspec(__cdecl) int _fread(void *buf, int size, int rec, FILE *f)
+{
+	return fread(buf,size,rec,f);
+}
+__declspec(__cdecl) int _fwrite(const void *buf, int size, int rec, FILE *f)
+{
+	return fwrite(buf,size,rec,f);
+}
+__declspec(__cdecl) int _fseek(FILE* stream,long offset,int whence)
+{
+	return fseek(stream,offset,whence);
+}
+__declspec(__cdecl) void* _memset(void *buf, int val, int size)
+{
+	return memset(buf,val,size);
+}
+__declspec(__cdecl) void* _memmove(void *s1, const void *s2, int size)
+{
+	return memmove(s1,s2,size);
+}
+
+__declspec(__cdecl) void* _malloc(int size)
+{
+	return malloc(size);
+}
+__declspec(__cdecl) void _free(void *buf)
+{
+	free(buf);
+}
+
+__declspec(__cdecl) int _printf(const char* fmt)
+{
+	int result;
+	va_list args;
+	va_start(args,fmt);
+	result=vprintf(fmt,args);
+	va_end(args);
+	return result;
+}
+
 int test()
 {
 	int i=55;
