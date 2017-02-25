@@ -62,6 +62,10 @@ __declspec(__cdecl) void* _memset(void *buf, int val, int size)
 {
 	return memset(buf,val,size);
 }
+__declspec(__cdecl) void* _memcpy(void *s1,const void *s2,int size)
+{
+	return memcpy(s1,s2,size);
+}
 __declspec(__cdecl) void* _memmove(void *s1, const void *s2, int size)
 {
 	return memmove(s1,s2,size);
@@ -71,9 +75,38 @@ __declspec(__cdecl) void* _malloc(int size)
 {
 	return malloc(size);
 }
+__declspec(__cdecl) void* _realloc(void *buf,int size)
+{
+	return realloc(buf,size);
+}
 __declspec(__cdecl) void _free(void *buf)
 {
 	free(buf);
+}
+
+__declspec(__cdecl) double _pow(double a,double b)
+{
+	return pow(a,b);
+}
+__declspec(__cdecl) double _sin(double a)
+{
+	return sin(a);
+}
+__declspec(__cdecl) double _cos(double a)
+{
+	return cos(a);
+}
+__declspec(__cdecl) double _tan(double a)
+{
+	return tan(a);
+}
+__declspec(__cdecl) double _sqrt(double a)
+{
+	return sqrt(a);
+}
+__declspec(__cdecl) double _frexp(double a,int *e)
+{
+	return frexp(a,e);
 }
 
 __declspec(__cdecl) int _printf(const char* fmt,...)
@@ -85,6 +118,11 @@ __declspec(__cdecl) int _printf(const char* fmt,...)
 	va_end(args);
 	return result;
 }
+__declspec(__cdecl) int _fltused=0;
+__declspec(__cdecl) int _tls_index=0;
+__declspec(__cdecl) int _tls_array=0;
+__declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
+__declspec(__cdecl) int D7minimp37__arrayZ=0;
 
 int test()
 {

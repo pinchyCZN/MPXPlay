@@ -27,40 +27,25 @@ module minimp3;
  nothrow:
  @nogc:
 
-import core.stdc.stdlib: libc_calloc = calloc, libc_malloc = malloc, libc_realloc = realloc, libc_free = free;
-import core.stdc.string: libc_memcpy = memcpy, libc_memset = memset, libc_memmove = memmove;
+import libc_map;
 
-import std.math:libc_pow = pow, libc_frexp = frexp, tan, M_PI = PI, sqrt, cos, sin;
+import std.math: M_PI=PI;
 
-/*
-   void* libc_calloc (size_t nmemb, size_t count) {
-   import core.stdc.stdlib : calloc;
-   import core.stdc.stdio : printf;
-   printf("calloc(%zu, %zu)\n", nmemb, count);
-   return calloc(nmemb, count);
-   }
+alias libc_pow=_pow;
+alias libc_frexp=_frexp;
+alias tan=_tan;
+alias sin=_sin;
+alias cos=_cos;
+alias sqrt=_sqrt;
 
-   void* libc_malloc (size_t count) {
-   import core.stdc.stdlib : malloc;
-   import core.stdc.stdio : printf;
-   printf("malloc(%zu)\n", count+1024*1024);
-   return malloc(count);
-   }
+alias libc_memset=_memset;
+alias libc_memmove=_memmove;
+alias libc_memcpy=_memcpy;
+alias libc_malloc=_malloc;
+alias libc_realloc=_realloc;
+alias libc_free=_free;
+alias printf=_printf;
 
-   void* libc_realloc (void* ptr, size_t count) {
-   import core.stdc.stdlib : realloc;
-   import core.stdc.stdio : printf;
-   printf("realloc(%p, %zu)\n", ptr, count);
-   return realloc(ptr, count+1024*1024);
-   }
-
-   void libc_free (void* ptr) {
-   import core.stdc.stdlib : free;
-   import core.stdc.stdio : printf;
-   printf("free(%p)\n", ptr);
-   return free(ptr);
-   }
- */
 
 enum MP3_FRAME_SIZE = 1152;
 enum MP3_MAX_CODED_FRAME_SIZE = 1792;
@@ -209,16 +194,17 @@ __gshared float[4][8] csa_table_float;
 __gshared         int32_t[36][8] mdct_win;
 __gshared         int16_t[512] window;
 
+__gshared static int _mp3_init_done = false;
 
 // ////////////////////////////////////////////////////////////////////////// //
-static immutable uint16_t[15][2] mp3_bitrate_tab = [
+__gshared static immutable uint16_t[15][2] mp3_bitrate_tab = [
 	[0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320 ],
 	[0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160]
 ];
 
-static immutable uint16_t[3] mp3_freq_tab = [ 44100, 48000, 32000 ];
+__gshared static immutable uint16_t[3] mp3_freq_tab = [ 44100, 48000, 32000 ];
 
-static immutable int32_t[257] mp3_enwindow = [
+__gshared static immutable int32_t[257] mp3_enwindow = [
 	0, -1, -1, -1, -1, -1, -1, -2,
 	-2, -2, -2, -3, -3, -4, -4, -5,
 	-5, -6, -7, -7, -8, -9, -10, -11,
@@ -254,12 +240,12 @@ static immutable int32_t[257] mp3_enwindow = [
 	75038,
 ];
 
-static immutable uint8_t[16][2] slen_table = [
+__gshared static immutable uint8_t[16][2] slen_table = [
 	[ 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 ],
 	[ 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 ],
 ];
 
-static immutable uint8_t[4][3][6] lsf_nsf_table = [
+__gshared static immutable uint8_t[4][3][6] lsf_nsf_table = [
 	[ [  6, 5, 5, 5 ], [  9, 9, 9, 9 ], [  6, 9, 9, 9 ] ],
 	[ [  6, 5, 7, 3 ], [  9, 9, 12, 6 ], [  6, 9, 12, 6 ] ],
 	[ [ 11, 10, 0, 0 ], [ 18, 18, 0, 0 ], [ 15, 18, 0, 0 ] ],
@@ -268,39 +254,39 @@ static immutable uint8_t[4][3][6] lsf_nsf_table = [
 	[ [  8, 8, 5, 0 ], [ 15, 12, 9, 0 ], [  6, 18, 9, 0 ] ],
 ];
 
-static immutable uint16_t[4] mp3_huffcodes_1 = [ 0x0001, 0x0001, 0x0001, 0x0000, ];
+__gshared static immutable uint16_t[4] mp3_huffcodes_1 = [ 0x0001, 0x0001, 0x0001, 0x0000, ];
 
-static immutable uint8_t[4] mp3_huffbits_1 = [ 1, 3, 2, 3, ];
+__gshared static immutable uint8_t[4] mp3_huffbits_1 = [ 1, 3, 2, 3, ];
 
-static immutable uint16_t[9] mp3_huffcodes_2 = [ 0x0001, 0x0002, 0x0001, 0x0003, 0x0001, 0x0001, 0x0003, 0x0002, 0x0000, ];
+__gshared static immutable uint16_t[9] mp3_huffcodes_2 = [ 0x0001, 0x0002, 0x0001, 0x0003, 0x0001, 0x0001, 0x0003, 0x0002, 0x0000, ];
 
-static immutable uint8_t[9] mp3_huffbits_2 = [ 1, 3, 6, 3, 3, 5, 5, 5, 6, ];
+__gshared static immutable uint8_t[9] mp3_huffbits_2 = [ 1, 3, 6, 3, 3, 5, 5, 5, 6, ];
 
-static immutable uint16_t[9] mp3_huffcodes_3 = [ 0x0003, 0x0002, 0x0001, 0x0001, 0x0001, 0x0001, 0x0003, 0x0002, 0x0000, ];
+__gshared static immutable uint16_t[9] mp3_huffcodes_3 = [ 0x0003, 0x0002, 0x0001, 0x0001, 0x0001, 0x0001, 0x0003, 0x0002, 0x0000, ];
 
-static immutable uint8_t[9] mp3_huffbits_3 = [ 2, 2, 6, 3, 2, 5, 5, 5, 6, ];
+__gshared static immutable uint8_t[9] mp3_huffbits_3 = [ 2, 2, 6, 3, 2, 5, 5, 5, 6, ];
 
-static immutable uint16_t[16] mp3_huffcodes_5 = [
+__gshared static immutable uint16_t[16] mp3_huffcodes_5 = [
 	0x0001, 0x0002, 0x0006, 0x0005, 0x0003, 0x0001, 0x0004, 0x0004,
 	0x0007, 0x0005, 0x0007, 0x0001, 0x0006, 0x0001, 0x0001, 0x0000,
 ];
 
-static immutable uint8_t[16] mp3_huffbits_5 = [
+__gshared static immutable uint8_t[16] mp3_huffbits_5 = [
 	1, 3, 6, 7, 3, 3, 6, 7,
 	6, 6, 7, 8, 7, 6, 7, 8,
 ];
 
-static immutable uint16_t[16] mp3_huffcodes_6 = [
+__gshared static immutable uint16_t[16] mp3_huffcodes_6 = [
 	0x0007, 0x0003, 0x0005, 0x0001, 0x0006, 0x0002, 0x0003, 0x0002,
 	0x0005, 0x0004, 0x0004, 0x0001, 0x0003, 0x0003, 0x0002, 0x0000,
 ];
 
-static immutable uint8_t[16] mp3_huffbits_6 = [
+__gshared static immutable uint8_t[16] mp3_huffbits_6 = [
 	3, 3, 5, 7, 3, 2, 4, 5,
 	4, 4, 5, 6, 6, 5, 6, 7,
 ];
 
-static immutable uint16_t[36] mp3_huffcodes_7 = [
+__gshared static immutable uint16_t[36] mp3_huffcodes_7 = [
 	0x0001, 0x0002, 0x000a, 0x0013, 0x0010, 0x000a, 0x0003, 0x0003,
 	0x0007, 0x000a, 0x0005, 0x0003, 0x000b, 0x0004, 0x000d, 0x0011,
 	0x0008, 0x0004, 0x000c, 0x000b, 0x0012, 0x000f, 0x000b, 0x0002,
@@ -308,7 +294,7 @@ static immutable uint16_t[36] mp3_huffcodes_7 = [
 	0x0005, 0x0003, 0x0002, 0x0000,
 ];
 
-static immutable uint8_t[36] mp3_huffbits_7 = [
+__gshared static immutable uint8_t[36] mp3_huffbits_7 = [
 	1, 3, 6, 8, 8, 9, 3, 4,
 	6, 7, 7, 8, 6, 5, 7, 8,
 	8, 9, 7, 7, 8, 9, 9, 9,
@@ -316,7 +302,7 @@ static immutable uint8_t[36] mp3_huffbits_7 = [
 	9, 10, 10, 10,
 ];
 
-static immutable uint16_t[36] mp3_huffcodes_8 = [
+__gshared static immutable uint16_t[36] mp3_huffcodes_8 = [
 	0x0003, 0x0004, 0x0006, 0x0012, 0x000c, 0x0005, 0x0005, 0x0001,
 	0x0002, 0x0010, 0x0009, 0x0003, 0x0007, 0x0003, 0x0005, 0x000e,
 	0x0007, 0x0003, 0x0013, 0x0011, 0x000f, 0x000d, 0x000a, 0x0004,
@@ -324,7 +310,7 @@ static immutable uint16_t[36] mp3_huffcodes_8 = [
 	0x0004, 0x0001, 0x0001, 0x0000,
 ];
 
-static immutable uint8_t[36] mp3_huffbits_8 = [
+__gshared static immutable uint8_t[36] mp3_huffbits_8 = [
 	2, 3, 6, 8, 8, 9, 3, 2,
 	4, 8, 8, 8, 6, 4, 6, 8,
 	8, 9, 8, 8, 8, 9, 9, 10,
@@ -332,7 +318,7 @@ static immutable uint8_t[36] mp3_huffbits_8 = [
 	9, 9, 11, 11,
 ];
 
-static immutable uint16_t[36] mp3_huffcodes_9 = [
+__gshared static immutable uint16_t[36] mp3_huffcodes_9 = [
 	0x0007, 0x0005, 0x0009, 0x000e, 0x000f, 0x0007, 0x0006, 0x0004,
 	0x0005, 0x0005, 0x0006, 0x0007, 0x0007, 0x0006, 0x0008, 0x0008,
 	0x0008, 0x0005, 0x000f, 0x0006, 0x0009, 0x000a, 0x0005, 0x0001,
@@ -340,7 +326,7 @@ static immutable uint16_t[36] mp3_huffcodes_9 = [
 	0x0006, 0x0002, 0x0006, 0x0000,
 ];
 
-static immutable uint8_t[36] mp3_huffbits_9 = [
+__gshared static immutable uint8_t[36] mp3_huffbits_9 = [
 	3, 3, 5, 6, 8, 9, 3, 3,
 	4, 5, 6, 8, 4, 4, 5, 6,
 	7, 8, 6, 5, 6, 7, 7, 8,
@@ -348,7 +334,7 @@ static immutable uint8_t[36] mp3_huffbits_9 = [
 	8, 8, 9, 9,
 ];
 
-static immutable uint16_t[64] mp3_huffcodes_10 = [
+__gshared static immutable uint16_t[64] mp3_huffcodes_10 = [
 	0x0001, 0x0002, 0x000a, 0x0017, 0x0023, 0x001e, 0x000c, 0x0011,
 	0x0003, 0x0003, 0x0008, 0x000c, 0x0012, 0x0015, 0x000c, 0x0007,
 	0x000b, 0x0009, 0x000f, 0x0015, 0x0020, 0x0028, 0x0013, 0x0006,
@@ -359,7 +345,7 @@ static immutable uint16_t[64] mp3_huffcodes_10 = [
 	0x0009, 0x0008, 0x0007, 0x0008, 0x0004, 0x0004, 0x0002, 0x0000,
 ];
 
-static immutable uint8_t[64] mp3_huffbits_10 = [
+__gshared static immutable uint8_t[64] mp3_huffbits_10 = [
 	1, 3, 6, 8, 9, 9, 9, 10,
 	3, 4, 6, 7, 8, 9, 8, 8,
 	6, 6, 7, 8, 9, 10, 9, 9,
@@ -370,7 +356,7 @@ static immutable uint8_t[64] mp3_huffbits_10 = [
 	9, 8, 9, 10, 10, 11, 11, 11,
 ];
 
-static immutable uint16_t[64] mp3_huffcodes_11 = [
+__gshared static immutable uint16_t[64] mp3_huffcodes_11 = [
 	0x0003, 0x0004, 0x000a, 0x0018, 0x0022, 0x0021, 0x0015, 0x000f,
 	0x0005, 0x0003, 0x0004, 0x000a, 0x0020, 0x0011, 0x000b, 0x000a,
 	0x000b, 0x0007, 0x000d, 0x0012, 0x001e, 0x001f, 0x0014, 0x0005,
@@ -381,7 +367,7 @@ static immutable uint16_t[64] mp3_huffcodes_11 = [
 	0x000b, 0x0004, 0x0006, 0x0006, 0x0006, 0x0003, 0x0002, 0x0000,
 ];
 
-static immutable uint8_t[64] mp3_huffbits_11 = [
+__gshared static immutable uint8_t[64] mp3_huffbits_11 = [
 	2, 3, 5, 7, 8, 9, 8, 9,
 	3, 3, 4, 6, 8, 8, 7, 8,
 	5, 5, 6, 7, 8, 9, 8, 8,
@@ -392,7 +378,7 @@ static immutable uint8_t[64] mp3_huffbits_11 = [
 	8, 7, 8, 9, 10, 10, 10, 10,
 ];
 
-static immutable uint16_t[64] mp3_huffcodes_12 = [
+__gshared static immutable uint16_t[64] mp3_huffcodes_12 = [
 	0x0009, 0x0006, 0x0010, 0x0021, 0x0029, 0x0027, 0x0026, 0x001a,
 	0x0007, 0x0005, 0x0006, 0x0009, 0x0017, 0x0010, 0x001a, 0x000b,
 	0x0011, 0x0007, 0x000b, 0x000e, 0x0015, 0x001e, 0x000a, 0x0007,
@@ -403,7 +389,7 @@ static immutable uint16_t[64] mp3_huffcodes_12 = [
 	0x001b, 0x000c, 0x0008, 0x000c, 0x0006, 0x0003, 0x0001, 0x0000,
 ];
 
-static immutable uint8_t[64] mp3_huffbits_12 = [
+__gshared static immutable uint8_t[64] mp3_huffbits_12 = [
 	4, 3, 5, 7, 8, 9, 9, 9,
 	3, 3, 4, 5, 7, 7, 8, 8,
 	5, 4, 5, 6, 7, 8, 7, 8,
@@ -414,7 +400,7 @@ static immutable uint8_t[64] mp3_huffbits_12 = [
 	9, 8, 8, 9, 9, 9, 9, 10,
 ];
 
-static immutable uint16_t[256] mp3_huffcodes_13 = [
+__gshared static immutable uint16_t[256] mp3_huffcodes_13 = [
 	0x0001, 0x0005, 0x000e, 0x0015, 0x0022, 0x0033, 0x002e, 0x0047,
 	0x002a, 0x0034, 0x0044, 0x0034, 0x0043, 0x002c, 0x002b, 0x0013,
 	0x0003, 0x0004, 0x000c, 0x0013, 0x001f, 0x001a, 0x002c, 0x0021,
@@ -449,7 +435,7 @@ static immutable uint16_t[256] mp3_huffcodes_13 = [
 	0x0011, 0x000c, 0x0010, 0x0008, 0x0001, 0x0001, 0x0000, 0x0001,
 ];
 
-static immutable uint8_t[256] mp3_huffbits_13 = [
+__gshared static immutable uint8_t[256] mp3_huffbits_13 = [
 	1, 4, 6, 7, 8, 9, 9, 10,
 	9, 10, 11, 11, 12, 12, 13, 13,
 	3, 4, 6, 7, 8, 8, 9, 9,
@@ -484,7 +470,7 @@ static immutable uint8_t[256] mp3_huffbits_13 = [
 	15, 15, 16, 16, 19, 18, 19, 16,
 ];
 
-static immutable uint16_t[256] mp3_huffcodes_15 = [
+__gshared static immutable uint16_t[256] mp3_huffcodes_15 = [
 	0x0007, 0x000c, 0x0012, 0x0035, 0x002f, 0x004c, 0x007c, 0x006c,
 	0x0059, 0x007b, 0x006c, 0x0077, 0x006b, 0x0051, 0x007a, 0x003f,
 	0x000d, 0x0005, 0x0010, 0x001b, 0x002e, 0x0024, 0x003d, 0x0033,
@@ -519,7 +505,7 @@ static immutable uint16_t[256] mp3_huffcodes_15 = [
 	0x0015, 0x0010, 0x000a, 0x0006, 0x0008, 0x0006, 0x0002, 0x0000,
 ];
 
-static immutable uint8_t[256] mp3_huffbits_15 = [
+__gshared static immutable uint8_t[256] mp3_huffbits_15 = [
 	3, 4, 5, 7, 7, 8, 9, 9,
 	9, 10, 10, 11, 11, 11, 12, 13,
 	4, 3, 5, 6, 7, 7, 8, 8,
@@ -554,7 +540,7 @@ static immutable uint8_t[256] mp3_huffbits_15 = [
 	12, 12, 12, 12, 13, 13, 13, 13,
 ];
 
-static immutable uint16_t[256] mp3_huffcodes_16 = [
+__gshared static immutable uint16_t[256] mp3_huffcodes_16 = [
 	0x0001, 0x0005, 0x000e, 0x002c, 0x004a, 0x003f, 0x006e, 0x005d,
 	0x00ac, 0x0095, 0x008a, 0x00f2, 0x00e1, 0x00c3, 0x0178, 0x0011,
 	0x0003, 0x0004, 0x000c, 0x0014, 0x0023, 0x003e, 0x0035, 0x002f,
@@ -589,7 +575,7 @@ static immutable uint16_t[256] mp3_huffcodes_16 = [
 	0x000d, 0x000c, 0x000a, 0x0007, 0x0005, 0x0003, 0x0001, 0x0003,
 ];
 
-static immutable uint8_t[256] mp3_huffbits_16 = [
+__gshared static immutable uint8_t[256] mp3_huffbits_16 = [
 	1, 4, 6, 8, 9, 9, 10, 10,
 	11, 11, 11, 12, 12, 12, 13, 9,
 	3, 4, 6, 7, 8, 9, 9, 9,
@@ -624,7 +610,7 @@ static immutable uint8_t[256] mp3_huffbits_16 = [
 	11, 11, 11, 11, 11, 11, 11, 8,
 ];
 
-static immutable uint16_t[256] mp3_huffcodes_24 = [
+__gshared static immutable uint16_t[256] mp3_huffcodes_24 = [
 	0x000f, 0x000d, 0x002e, 0x0050, 0x0092, 0x0106, 0x00f8, 0x01b2,
 	0x01aa, 0x029d, 0x028d, 0x0289, 0x026d, 0x0205, 0x0408, 0x0058,
 	0x000e, 0x000c, 0x0015, 0x0026, 0x0047, 0x0082, 0x007a, 0x00d8,
@@ -659,7 +645,7 @@ static immutable uint16_t[256] mp3_huffcodes_24 = [
 	0x0007, 0x0006, 0x0004, 0x0007, 0x0005, 0x0003, 0x0001, 0x0003,
 ];
 
-static immutable uint8_t[256] mp3_huffbits_24 = [
+__gshared static immutable uint8_t[256] mp3_huffbits_24 = [
 	4, 4, 6, 7, 8, 9, 9, 10,
 	10, 11, 11, 11, 11, 11, 12, 9,
 	4, 4, 5, 6, 7, 8, 8, 9,
@@ -694,7 +680,7 @@ static immutable uint8_t[256] mp3_huffbits_24 = [
 	7, 7, 7, 8, 8, 8, 8, 4,
 ];
 
-static immutable huff_table_t[16] mp3_huff_tables = [
+__gshared static immutable huff_table_t[16] mp3_huff_tables = [
 	huff_table_t(1, null, null),
 	huff_table_t(2, mp3_huffbits_1.ptr, mp3_huffcodes_1.ptr),
 	huff_table_t(3, mp3_huffbits_2.ptr, mp3_huffcodes_2.ptr),
@@ -713,7 +699,7 @@ static immutable huff_table_t[16] mp3_huff_tables = [
 	huff_table_t(16, mp3_huffbits_24.ptr, mp3_huffcodes_24.ptr),
 ];
 
-static immutable uint8_t[2][32] mp3_huff_data = [
+__gshared static immutable uint8_t[2][32] mp3_huff_data = [
 	[ 0, 0 ],
 	[ 1, 0 ],
 	[ 2, 0 ],
@@ -748,17 +734,17 @@ static immutable uint8_t[2][32] mp3_huff_data = [
 	[ 15, 13 ],
 ];
 
-static immutable uint8_t[16][2] mp3_quad_codes = [
+__gshared static immutable uint8_t[16][2] mp3_quad_codes = [
 	[  1, 5, 4, 5, 6, 5, 4, 4, 7, 3, 6, 0, 7, 2, 3, 1, ],
 	[ 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, ],
 ];
 
-static immutable uint8_t[16][2] mp3_quad_bits = [
+__gshared static immutable uint8_t[16][2] mp3_quad_bits = [
 	[ 1, 4, 4, 5, 4, 6, 5, 6, 4, 5, 5, 6, 5, 6, 6, 6, ],
 	[ 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, ],
 ];
 
-static immutable uint8_t[22][9] band_size_long = [
+__gshared static immutable uint8_t[22][9] band_size_long = [
 	[ 4, 4, 4, 4, 4, 4, 6, 6, 8, 8, 10,
 	  12, 16, 20, 24, 28, 34, 42, 50, 54, 76, 158, ],     /* 44100 */
 	[ 4, 4, 4, 4, 4, 4, 6, 6, 6, 8, 10,
@@ -779,7 +765,7 @@ static immutable uint8_t[22][9] band_size_long = [
 	  40, 48, 56, 64, 76, 90, 2, 2, 2, 2, 2, ],           /* 8000 */
 ];
 
-static immutable uint8_t[13][9] band_size_short = [
+__gshared static immutable uint8_t[13][9] band_size_short = [
 	[ 4, 4, 4, 4, 6, 8, 10, 12, 14, 18, 22, 30, 56, ],      /* 44100 */
 	[ 4, 4, 4, 4, 6, 6, 10, 12, 14, 16, 20, 26, 66, ],      /* 48000 */
 	[ 4, 4, 4, 4, 6, 8, 12, 16, 20, 26, 34, 42, 12, ],      /* 32000 */
@@ -791,12 +777,12 @@ static immutable uint8_t[13][9] band_size_short = [
 	[ 8, 8, 8, 12, 16, 20, 24, 28, 36, 2, 2, 2, 26, ],      /* 8000 */
 ];
 
-static immutable uint8_t[22][2] mp3_pretab = [
+__gshared static immutable uint8_t[22][2] mp3_pretab = [
 	[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
 	[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0 ],
 ];
 
-static immutable float[8] ci_table = [
+__gshared static immutable float[8] ci_table = [
 	-0.6f, -0.535f, -0.33f, -0.185f, -0.095f, -0.041f, -0.0142f, -0.0037f,
 ];
 
@@ -809,7 +795,7 @@ enum C6 = FIXHR!(0.5 / 2);
 enum C7 = FIXHR!(0.34202014332566873304 / 2);
 enum C8 = FIXHR!(0.17364817766693034885 / 2);
 
-static immutable int[9] icos36 = [
+__gshared static immutable int[9] icos36 = [
 	FIXR!(0.50190991877167369479),
 	FIXR!(0.51763809020504152469),     //0
 	FIXR!(0.55168895948124587824),
@@ -821,7 +807,7 @@ static immutable int[9] icos36 = [
 	FIXR!(5.73685662283492756461),
 ];
 
-static immutable int[9] icos36h = [
+__gshared static immutable int[9] icos36h = [
 	FIXHR!(0.50190991877167369479 / 2),
 	FIXHR!(0.51763809020504152469 / 2),     //0
 	FIXHR!(0.55168895948124587824 / 2),
@@ -2500,7 +2486,6 @@ int mp3_decode_main(
 
 
 // ////////////////////////////////////////////////////////////////////////// //
-static int _mp3_init_done = false;
 
 int mp3_decode_init()
 {
@@ -2572,7 +2557,7 @@ int mp3_decode_init()
 			double f, fm;
 			int    e, m;
 			f = libc_pow(cast(double) (i / 4), 4.0 / 3.0) * libc_pow(2, (i & 3) * 0.25);
-			fm = libc_frexp(f, e);
+			fm = libc_frexp(f, &e);
 			m = cast(uint32_t) (fm * (1L << 31) + 0.5);
 			e += FRAC_BITS - 31 + 5 - 100;
 			table_4_3_value[i] = m;

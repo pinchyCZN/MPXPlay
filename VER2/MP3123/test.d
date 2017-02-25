@@ -76,7 +76,8 @@ int mp3_test(const char *fname)
 	ubyte *fbuf;
 	int fbuf_len=0x10000;
 	int data_size;
-	FILE *fout;
+	FILE *fout=null;
+	/*
 	fout=fopen("1.wav","rb");
 	if(fout !is null){
 		char tmp[1024];
@@ -85,6 +86,7 @@ int mp3_test(const char *fname)
 		fout=fopen("out.wav","wb");
 		fwrite(tmp.ptr,1,16*4,fout);
 	}
+	*/
 	fbuf=cast(ubyte*)malloc(fbuf_len);
 	buffer=cast(short*)malloc(buffer_len);
 	while(1){
@@ -101,6 +103,7 @@ int mp3_test(const char *fname)
 			if(result){
 				if(fout !is null)
 					fwrite(buffer,1,written,fout);
+				printf(".");
 				fill_buffer(f,fbuf,fbuf_len,buf_level,consumed);
 				skip_tags(f,fbuf,fbuf_len,buf_level);
 			}else{
