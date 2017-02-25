@@ -1514,7 +1514,7 @@ int huffman_decode(mp3_context_t *s, granule_t *g, int16_t *exponents, int end_p
 				g.sb_hybrid[s_index + 2] =
 					g.sb_hybrid[s_index + 3] = 0;
 		while(code){
-			static immutable int[16] idxtab = [3, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0];
+			__gshared static immutable int[16] idxtab = [3, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0];
 			int v;
 			int pos_ = s_index + idxtab[code];
 			code ^= 8 >> idxtab[code];
@@ -2095,7 +2095,7 @@ void mp3_synth_filter(
 // ////////////////////////////////////////////////////////////////////////// //
 int decode_header(mp3_context_t *s, uint32_t header)
 {
-	static immutable short[4][4] sampleCount = [
+	__gshared static immutable short[4][4] sampleCount = [
 		[0, 576, 1152, 384],          // v2.5
 		[0, 0, 0, 0],                 // reserved
 		[0, 576, 1152, 384],          // v2
@@ -2147,8 +2147,8 @@ int mp_decode_layer3(mp3_context_t *s)
 	int       nb_granules, main_data_begin, private_bits;
 	int       gr, ch, blocksplit_flag, i, j, k, n, bits_pos;
 	granule_t *g;
-	static    granule_t[2][2] granules;
-	static    int16_t[576] exponents;
+	__gshared static    granule_t[2][2] granules;
+	__gshared static    int16_t[576] exponents;
 	const(uint8_t) *ptr;
 
 	if(s.lsf){

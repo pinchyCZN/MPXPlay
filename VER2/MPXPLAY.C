@@ -36,7 +36,6 @@ int play_file(char *fname)
 	}
 	return 0;
 }
-__declspec(__cdecl) int test_d(int);
 
 __declspec(__cdecl) FILE* _fopen(const char *name, const char *param)
 {
@@ -57,6 +56,10 @@ __declspec(__cdecl) int _fwrite(const void *buf, int size, int rec, FILE *f)
 __declspec(__cdecl) int _fseek(FILE* stream,long offset,int whence)
 {
 	return fseek(stream,offset,whence);
+}
+__declspec(__cdecl) unsigned int _ftell(FILE* stream)
+{
+	return ftell(stream);
 }
 __declspec(__cdecl) void* _memset(void *buf, int val, int size)
 {
@@ -108,6 +111,19 @@ __declspec(__cdecl) double _frexp(double a,int *e)
 {
 	return frexp(a,e);
 }
+__declspec(__cdecl) unsigned int _clock()
+{
+	return clock();
+}
+__declspec(__cdecl) int _getch()
+{
+	return getch();
+}
+__declspec(__cdecl) int _kbhit()
+{
+	return kbhit();
+}
+
 
 __declspec(__cdecl) int _printf(const char* fmt,...)
 {
@@ -119,15 +135,19 @@ __declspec(__cdecl) int _printf(const char* fmt,...)
 	return result;
 }
 __declspec(__cdecl) int _fltused=0;
-__declspec(__cdecl) int _tls_index=0;
-__declspec(__cdecl) int _tls_array=0;
 __declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
-__declspec(__cdecl) int D7minimp37__arrayZ=0;
-
-int test()
+__declspec(__cdecl) int D7minimp37__arrayZ()
 {
-	int i=55;
-	i=test_d(i);
+	printf("array error\n");
+}
+
+
+__declspec(__cdecl) int test_d(const char *fname);
+
+int test(const char *fname)
+{
+	int i;
+	i=test_d(fname);
 	printf("D result=%i\n",i);
 }
 
@@ -139,7 +159,7 @@ int main(int argc,char **argv)
 	for(i=1;i<argc;i++){
 		printf("%s\n",argv[i]);
 	}
-	test();
+	test(argv[1]);
 	return 0;
 	if(argc>1){
 		char *fname=argv[1];
