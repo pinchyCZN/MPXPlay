@@ -1,41 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <i86.h>
 
 char DOS4GOPTIONS[] = "dos4g=StartupBanner:OFF\n";	// for DOS4G v2.xx
-
-int play_file(char *fname)
-{
-	FILE *f;
-	f=fopen(fname,"rb");
-	if(f!=0){
-		char *buf;
-		int i,size;
-		int buf_size;
-		buf_size=get_buf_size();
-		buf=malloc(buf_size);
-		if(0==buf)
-			return 0;
-		fseek(f,0,SEEK_END);
-		size=ftell(f);
-		fseek(f,0,SEEK_SET);
-		for(i=0;i<size;i+=buf_size){
-			int r;
-			r=fread(buf,1,buf_size,f);
-			if(r>0){
-				if(r>buf_size)
-					r=buf_size;
-				play_wav_buf(buf,r);
-			}
-			if(r<buf_size)
-				break;
-		}
-		fclose(f);
-		if(0!=buf)
-			free(buf);
-	}
-	return 0;
-}
 
 __declspec(__cdecl) FILE* _fopen(const char *name, const char *param)
 {
@@ -123,6 +91,31 @@ __declspec(__cdecl) int _kbhit()
 {
 	return kbhit();
 }
+__declspec(__cdecl) int get_key(int *extended);
+
+
+__declspec(__cdecl) int dos_get_key(int *extended)
+{
+	union REGPACK r={0};
+	int key;
+	r.h.ah=1;
+	intr(0x16,&r);
+	if(r.w.flags&INTR_ZF)
+		return 0;
+	memset(&r,0,sizeof(r));
+	r.h.ah=0;
+	intr(0x16,&r);
+	key=r.h.al;
+	*extended=0;
+	if(key==0){
+		memset(&r,0,sizeof(r));
+		r.h.ah=0;
+		intr(0x16,&r);
+		key=r.h.al;
+		*extended=1;
+	}
+	return key;
+}
 
 
 __declspec(__cdecl) int _printf(const char* fmt,...)
@@ -151,6 +144,58 @@ int test(const char *fname)
 	printf("D result=%i\n",i);
 }
 
+int play_file(char *fname)
+{
+	FILE *f;
+	f=fopen(fname,"rb");
+	if(f!=0){
+		char *buf;
+		int i,size;
+		int buf_size;
+		buf_size=get_buf_size();
+		buf=malloc(buf_size);
+		if(0==buf)
+			return 0;
+		fseek(f,0,SEEK_END);
+		size=ftell(f);
+		fseek(f,0,SEEK_SET);
+		for(i=0;i<size;i+=buf_size){
+			int r;
+			r=fread(buf,1,buf_size,f);
+			if(r>0){
+				if(r>buf_size)
+					r=buf_size;
+				play_wav_buf(buf,r);
+			}
+			if(r<buf_size)
+				break;
+			{
+				static int vol=0x1f;
+				int ext;
+				int key=dos_get_key(&ext);
+				if(key==0x1b)
+					break;
+				if(key==0x2d)
+					vol++;
+				else if(key==0x2b)
+					vol--;
+				if(key!=0){
+					printf("vol=0x%03X\n",vol);
+					set_volume(vol);
+				}
+				key=get_key(&ext);
+				if(0x1b==key)
+					break;
+			}
+		}
+		fclose(f);
+		if(0!=buf)
+			free(buf);
+	}
+	return 0;
+}
+
+
 int main(int argc,char **argv)
 {
 	int i;
@@ -159,12 +204,11 @@ int main(int argc,char **argv)
 	for(i=1;i<argc;i++){
 		printf("%s\n",argv[i]);
 	}
-	test(argv[1]);
-	return 0;
 	if(argc>1){
 		char *fname=argv[1];
 		audio_setup();
 		play_file(fname);
+		set_silence();
 	}
 	return result;
 }

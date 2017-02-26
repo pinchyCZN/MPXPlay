@@ -32,6 +32,8 @@ enum CLOCKS_PER_SEC=1000;
 extern (C) @nogc nothrow int _getch();
 extern (C) @nogc nothrow int _kbhit();
 
+extern (C) @nogc nothrow int dos_get_key(int *extended);
+
 extern (C)
 nothrow @nogc
 int get_key(ref int extended)
@@ -45,5 +47,15 @@ int get_key(ref int extended)
 			extended=true;
 		}
 	}
+	return result;
+}
+
+extern (C)
+nothrow @nogc
+int get_usb_key(ref int extended)
+{
+	int result;
+	int ext=0;
+	result=dos_get_key(&ext);
 	return result;
 }

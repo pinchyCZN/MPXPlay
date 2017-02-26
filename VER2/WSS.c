@@ -348,18 +348,6 @@ int get_hda_param(int addr,int nodeid,int verbid,int payload)
 {
 	return ((addr<<28)|(nodeid<<20)|(verbid<<16)|payload);
 }
-int set_volume(int vol)
-{
-	DWORD tmp;
-	if(vol>31)
-		vol=31;
-	else if(vol<0)
-		vol=0;
-	tmp=(SET_OUT_AMP|vol) & ~SET_MUTE;
-	hda_send_codec_cmd(get_hda_param(0,0xE,SET_AMP_GAIN,SET_RIGHT_AMP|tmp));
-	hda_send_codec_cmd(get_hda_param(0,0xE,SET_AMP_GAIN,SET_LEFT_AMP|tmp));
-	return 0;
-}
 int reset_hda()
 {
 	DWORD tmp,tick,delta;
@@ -540,8 +528,10 @@ int start_audio()
 	write_16(base_reg+OSD0FMT,(1<<14)|(1<<4)|(1)); //44.1khz 16bit 2 channels
 	write_32(base_reg+OSD0BDPL,bdl_list);
 	write_32(base_reg+OSD0BDPU,0);
-	printf("running\n");
 	hda_run();
+	printf("audio running\n");
+	result=TRUE;
+	return result;
 }
 
 int set_bit_rate(int rate)
@@ -616,8 +606,8 @@ int codec_commands[]={
 	0x00CF0200,
 	0x00C70100,
 	0x00CF0012,
-	0x00C39080, //vol
-	0x00C3A080, //vol
+	0x00C3901F, //main vol
+	0x00C3A01F, //main vol
 	0x00CF000D,
 	0x00C35000,
 	0x00C36000,
@@ -651,8 +641,8 @@ int codec_commands[]={
 	0x01470100,
 	0x01470500,
 	0x014F0012,
-	0x0143907F, //main vol
-	0x0143A07F, //main vol
+	0x0143907F, //amp
+	0x0143A07F, //amp
 	0x014F000D,
 	0x01435003,
 	0x01436003,
@@ -689,7 +679,29 @@ int send_all_commands()
 	return 0;
 }
 
-
+int set_volume(int vol)
+{
+	int cmds[2]={
+		0x00C39020, //main vol
+		0x00C3A020, //main vol
+	};
+	vol&=0xFF;
+	if(vol>=0x1F)
+		vol=0x1F;
+	cmds[0]|=vol;
+	cmds[1]|=vol;
+	hda_send_codec_cmd(cmds[0]);
+	hda_send_codec_cmd(cmds[1]);
+	return 0;
+}
+int set_silence()
+{
+	if(buffer1!=0)
+		memset(buffer1,0,buf_size);
+	if(buffer1!=0)
+		memset(buffer2,0,buf_size);
+	return 0;
+}
 int play_wav_buf(char *buf,int len)
 {
 	DWORD tick,delta;
