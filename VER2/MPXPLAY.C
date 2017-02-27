@@ -195,6 +195,7 @@ int play_file(char *fname)
 	return 0;
 }
 
+__declspec(__cdecl) int play_mp3(const char *fname);
 
 int main(int argc,char **argv)
 {
@@ -207,7 +208,8 @@ int main(int argc,char **argv)
 	if(argc>1){
 		char *fname=argv[1];
 		audio_setup();
-		play_file(fname);
+		//play_file(fname);
+		play_mp3(fname);
 		set_silence();
 	}
 	return result;

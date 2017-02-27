@@ -4,10 +4,12 @@ import core.stdc.string;
 import minimp3;
 
 
-extern (C) int getch();
 
 nothrow:
 @nogc:
+
+extern (C) int getch();
+
 
 int fill_buffer(FILE *f,ubyte *buf,int buf_size,ref int buf_level,int forward)
 {
@@ -52,10 +54,21 @@ int skip_tags(FILE *f,ubyte *buf,int buf_size,ref int buf_level)
 	}
 	return result;
 }
+int test()
+{
+	__gshared int x;
+	x++;
+	return x;
+}
 
-
+@nogc
 int main(string[] args)
 {
+	printf("%i\n",test());
+	printf("%i\n",test());
+	getch();
+	return 0;
+
 	if(args.length<2)
 		return 0;
 

@@ -468,7 +468,7 @@ static int *buffer2=0;
 const int buf_size=0x1000;
 int current_buf=0;
 
-int get_buf_size()
+int get_audio_buf_size()
 {
 	return buf_size;
 }
