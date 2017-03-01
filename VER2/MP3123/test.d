@@ -146,6 +146,11 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 	__gshared static int buf_level=0;
 
 	mp3_decode_init();
+
+	if(f is null || abuf is null){
+		buf_level=0;
+		return result;
+	}
 	mp3_context_t mp3;
 
 

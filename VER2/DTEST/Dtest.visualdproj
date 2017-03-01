@@ -409,7 +409,9 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="Dtest">
+  <File path="dummy_.d" />
+  <File path="..\MP3123\libc_map.d" />
   <File path="main.d" />
-  <File path="minimp3.d" />
+  <File path="..\MP3123\minimp3.d" />
  </Folder>
 </DProject>
