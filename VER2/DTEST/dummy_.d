@@ -1,6 +1,12 @@
 module dummy_;
 
 import core.stdc.stdio;
+import core.stdc.string;
+import core.stdc.stdlib;
+import core.stdc.stdarg;
+import core.stdc.math;
+import core.stdc.time;
+
 
 extern (C) @nogc nothrow FILE* _fopen(const char *name, const char *param)
 {
@@ -53,22 +59,58 @@ extern (C) @nogc nothrow void _free(void *buf)
 	free(buf);
 }
 
-extern (C) @nogc nothrow void* _printf(const char*,...)
+extern (C) @nogc nothrow int _printf(const char* fmt,...)
 {
+	va_list list;
+	va_start(list,fmt);
+	vprintf(fmt,list);
+	return 0;
 }
 
-extern (C) @nogc nothrow double _sin(double){}
-extern (C) @nogc nothrow double _cos(double){}
-extern (C) @nogc nothrow double _tan(double){}
-extern (C) @nogc nothrow double _sqrt(double){}
-extern (C) @nogc nothrow double _frexp(double,int *){}
-extern (C) @nogc nothrow double _pow(double,double){}
+extern (C) @nogc nothrow double _sin(double x)
+{
+	return sin(x);
+}
+extern (C) @nogc nothrow double _cos(double x)
+{
+	return cos(x);
+}
+extern (C) @nogc nothrow double _tan(double x)
+{
+	return tan(x);
+}
+extern (C) @nogc nothrow double _sqrt(double x)
+{
+	return sqrt(x);
+}
+extern (C) @nogc nothrow double _frexp(double x,int *y)
+{
+	return frexp(x,y);
+}
+extern (C) @nogc nothrow double _pow(double x,double y)
+{
+	return pow(x,y);
+}
 
-extern (C) @nogc nothrow uint _clock(){}
+extern (C) @nogc nothrow uint _clock()
+{
+	return clock();
+}
 enum CLOCKS_PER_SEC=1000;
 
-extern (C) @nogc nothrow int _getch(){}
-extern (C) @nogc nothrow int _kbhit(){}
+extern (C) @nogc nothrow int _getch()
+{
+//	return getch();
+	return 0;
+}
+extern (C) @nogc nothrow int _kbhit()
+{
+//	return kbhit();
+	return 0;
+}
 
-extern (C) @nogc nothrow int dos_get_key(int *extended){}
+extern (C) @nogc nothrow int dos_get_key(int *extended)
+{
+	return 0;
+}
 
