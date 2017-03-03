@@ -1,7 +1,10 @@
+module test;
 import core.stdc.stdio: FILE,SEEK_CUR;
 
 import minimp3;
 import libc_map;
+import intel_hda;
+
 
 alias memset=_memset;
 alias memmove=_memmove;
@@ -206,7 +209,6 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 }
 
 
-extern (C) int get_audio_buf_size();
 
 extern (C)
 int play_mp3(const char *fname)
@@ -249,6 +251,7 @@ int play_mp3(const char *fname)
 	
 exit:
 	fclose(f);
+	return result;
 }
 
 
