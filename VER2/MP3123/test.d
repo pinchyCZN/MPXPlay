@@ -258,6 +258,10 @@ exit:
 extern(C)
 int test_d(const char *fname)
 {
+	init_hda();
+	start_audio();
+	printf("audio setup done\n");
 	mp3_test(fname);
+	set_silence();
 	return 0;
 }

@@ -36,7 +36,7 @@ union REGS {
         BYTEREGS  h;
 };
 
-__gshared int hda_registers[100];
+__gshared int hda_registers[400];
 
 int _int386(int cmd,REGS *r,REGS *s)
 {
@@ -51,7 +51,8 @@ int _int386(int cmd,REGS *r,REGS *s)
 		case 0xB10A:
 			if(r.w.di==0x10) //HDBARL
 			{
-								
+				s.x.ecx=cast(uint)&hda_registers;
+				r.w.cflag=0;
 			}
 			break;
 		default:

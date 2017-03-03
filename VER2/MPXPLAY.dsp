@@ -85,39 +85,11 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\AU_CARDS.H
-# End Source File
-# Begin Source File
-
 SOURCE=.\AUDIO.C
 # End Source File
 # Begin Source File
 
-SOURCE=.\DMAIRQ.C
-# End Source File
-# Begin Source File
-
-SOURCE=.\DOSSTUFF.C
-# End Source File
-# Begin Source File
-
 SOURCE=.\MPXPLAY.C
-# End Source File
-# Begin Source File
-
-SOURCE=.\PCIBIOS.C
-# End Source File
-# Begin Source File
-
-SOURCE=.\PCIBIOS.H
-# End Source File
-# Begin Source File
-
-SOURCE=.\SC_INTHD.C
-# End Source File
-# Begin Source File
-
-SOURCE=.\SC_INTHD.H
 # End Source File
 # Begin Source File
 
@@ -145,7 +117,7 @@ InputName=WSS
 	SET INCLUDE=%WATCOM%\h;%WATCOM%\h\nt 
 	SET DOS4G=QUIET 
 	SET PATH=%WATCOM%\BINNT;%WATCOM%\BINW 
-	wcc386   $(InputName)   -zq   -bt=DOS   -wcd=202   -wcd=201   -w3   -mf   -oims   -s   -5r   -fp3   -fpi87   -zro   -fr   -i\wc\h   -i.\  
+	wcc386    $(InputName)    -zq    -bt=DOS    -wcd=202    -wcd=201    -w3    -mf    -oims    -s    -5r    -fp3    -fpi87    -zro    -fr    -i\wc\h    -i.\  
 	
 # End Custom Build
 

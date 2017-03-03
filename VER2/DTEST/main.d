@@ -2,7 +2,7 @@ import core.stdc.stdlib;
 import core.stdc.stdio;
 import core.stdc.string;
 
-//import test;
+import test;
 
 @nogc
 int main(string[] args)
@@ -11,9 +11,7 @@ int main(string[] args)
 		return 0;
 
 	const char *fname=args[1].ptr;
-	FILE *f=cast(FILE*)fopen(fname,"rb");
-	if(f is null)
-		return 0;
+	test_d(fname);
 
 	return 0;		
 }
