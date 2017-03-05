@@ -1,9 +1,11 @@
 module test;
 import core.stdc.stdio: FILE,SEEK_CUR;
+import core.sys.windows.windows;
 
 import minimp3;
 import libc_map;
 import intel_hda;
+import dos_map;
 
 
 alias memset=_memset;
@@ -253,14 +255,58 @@ exit:
 	fclose(f);
 	return result;
 }
+__gshared static WAVEFORMATEX wf = {
+    1,  // wFormatTag
+    0,  // nChannels
+    0,  // nSamplesPerSec
+    0,  // nAvgBytesPerSec
+    4,  // nBlockAlign
+    16, // wBitsPerSample
+    WAVEFORMATEX.sizeof // cbSize
+};
 
+extern (Windows)
+void AudioCallback(
+	HWAVEOUT hwo,      
+	UINT uMsg,         
+	DWORD_PTR dwInstance,  
+	DWORD dwParam1,    
+	DWORD dwParam2     
+)
+{
+	LPWAVEHDR wh=cast(LPWAVEHDR) dwParam1;
+	if(!wh)
+		return;
+	waveOutUnprepareHeader(hwo, wh, WAVEHDR.sizeof);
+	waveOutPrepareHeader(hwo, wh, WAVEHDR.sizeof);
+	waveOutWrite(hwo, wh, WAVEHDR.sizeof);
+}
+
+__gshared int long_sleep=false;
+extern (Windows) DWORD hw_thread(void *param)
+{
+	while(1){
+		if(long_sleep){
+			Sleep(100);
+		}else{
+			memset(hda_registers.ptr,0,hda_registers.sizeof);
+			Sleep(0);
+		}
+
+	}
+}
 
 extern(C)
 int test_d(const char *fname)
 {
+	DWORD tid=0;
+	CreateThread(null,0,&hw_thread,null,0,&tid);
 	init_hda();
 	start_audio();
 	printf("audio setup done\n");
+	long_sleep=true;
+	HWAVEOUT hwo;
+	waveOutOpen(&hwo,WAVE_MAPPER,&wf,cast(DWORD)&AudioCallback,0,CALLBACK_FUNCTION);
 	mp3_test(fname);
 	set_silence();
 	return 0;
