@@ -306,6 +306,8 @@ int test_d(const char *fname)
 	printf("audio setup done\n");
 	long_sleep=true;
 	HWAVEOUT hwo;
+	wf.nSamplesPerSec=44100;
+	wf.nChannels=2;
 	waveOutOpen(&hwo,WAVE_MAPPER,&wf,cast(DWORD)&AudioCallback,0,CALLBACK_FUNCTION);
 	mp3_test(fname);
 	set_silence();

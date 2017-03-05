@@ -680,7 +680,7 @@ const int codec_commands[]=[
 int send_all_commands()
 {
 	int i;
-	int count=codec_commands.sizeof;
+	int count=codec_commands.length;
 	log_msg("writing codec commands\n");
 	for(i=0;i<count;i++){
 		int cmd=codec_commands[i];
