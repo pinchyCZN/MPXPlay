@@ -483,7 +483,10 @@ __gshared static int *memory_chunk=null;
 __gshared static int *bdl_list=null;
 __gshared static int *buffer1=null;
 __gshared static int *buffer2=null;
-__gshared const int buf_size=0x1000;
+version(Windows)
+	__gshared const int buf_size=0x2000;
+else
+	__gshared const int buf_size=0x1000;
 __gshared int current_buf=0;
 
 int get_audio_buf_size()
