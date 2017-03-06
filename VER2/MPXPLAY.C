@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <i86.h>
+#include <math.h>
+#include <time.h>
+#include <conio.h>
 
 char DOS4GOPTIONS[] = "dos4g=StartupBanner:OFF\n";	// for DOS4G v2.xx
 
@@ -83,11 +87,11 @@ __declspec(__cdecl) unsigned int _clock()
 {
 	return clock();
 }
-__declspec(__cdecl) int _getch()
+__declspec(__cdecl) int __getch()
 {
 	return getch();
 }
-__declspec(__cdecl) int _kbhit()
+__declspec(__cdecl) int __kbhit()
 {
 	return kbhit();
 }
@@ -127,75 +131,34 @@ __declspec(__cdecl) int _printf(const char* fmt,...)
 	va_end(args);
 	return result;
 }
+__declspec(__cdecl) int _vprintf(const char* fmt,va_list list)
+{
+	return vprintf(fmt,list);
+}
+__declspec(__cdecl) int _int386(int cmd,union REGS *r,union REGS *s)
+{
+	return int386(cmd,r,s);
+}
 __declspec(__cdecl) int _fltused=0;
 __declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
+__declspec(__cdecl) int D10TypeInfo_h6__initZ=0;
+__declspec(__cdecl) int D10TypeInfo_k6__initZ=0;
+__declspec(__cdecl) int D9intel_hda7__arrayZ=0;
+__declspec(__cdecl) int D14TypeInfo_Tuple6__vtblZ=0;
+__declspec(__cdecl) int D14TypeInfo_Const6__vtblZ=0;
+__declspec(__cdecl) int D10TypeInfo_t6__initZ=0;
+
 __declspec(__cdecl) int D7minimp37__arrayZ()
 {
 	printf("array error\n");
 }
 
 
-__declspec(__cdecl) int test_d(const char *fname);
-
-int test(const char *fname)
-{
-	int i;
-	i=test_d(fname);
-	printf("D result=%i\n",i);
-}
-
-int play_file(char *fname)
-{
-	FILE *f;
-	f=fopen(fname,"rb");
-	if(f!=0){
-		char *buf;
-		int i,size;
-		int buf_size;
-		buf_size=get_buf_size();
-		buf=malloc(buf_size);
-		if(0==buf)
-			return 0;
-		fseek(f,0,SEEK_END);
-		size=ftell(f);
-		fseek(f,0,SEEK_SET);
-		for(i=0;i<size;i+=buf_size){
-			int r;
-			r=fread(buf,1,buf_size,f);
-			if(r>0){
-				if(r>buf_size)
-					r=buf_size;
-				play_wav_buf(buf,r);
-			}
-			if(r<buf_size)
-				break;
-			{
-				static int vol=0x1f;
-				int ext;
-				int key=dos_get_key(&ext);
-				if(key==0x1b)
-					break;
-				if(key==0x2d)
-					vol++;
-				else if(key==0x2b)
-					vol--;
-				if(key!=0){
-					printf("vol=0x%03X\n",vol);
-					set_volume(vol);
-				}
-				key=get_key(&ext);
-				if(0x1b==key)
-					break;
-			}
-		}
-		fclose(f);
-		if(0!=buf)
-			free(buf);
-	}
-	return 0;
-}
 
 __declspec(__cdecl) int play_mp3(const char *fname);
+__declspec(__cdecl) int init_hda();
+__declspec(__cdecl) int start_audio();
+__declspec(__cdecl) int set_silence();
 
 int main(int argc,char **argv)
 {
@@ -207,7 +170,10 @@ int main(int argc,char **argv)
 	}
 	if(argc>1){
 		char *fname=argv[1];
-		audio_setup();
+		init_hda();
+		start_audio();
+		printf("audio setup done\n");
+		
 		//play_file(fname);
 		play_mp3(fname);
 		set_silence();

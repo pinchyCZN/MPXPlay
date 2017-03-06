@@ -1,15 +1,9 @@
 #------------ Mpxplay main (root) files ----------------------------
 FILE mpxplay.obj
-FILE audio.obj
-#FILE dmairq.obj
-#FILE pcibios.obj
-#FILE sc_inthd.obj
-#FILE dosstuff.obj
-FILE wss.obj
-FILE _oldwss.obj
-FILE .\MP3123\test.obj
-FILE .\MP3123\minimp3.obj
-FILE .\MP3123\libc_map.obj
+FILE intel_hda.obj
+FILE mp3_file.obj
+FILE minimp3.obj
+FILE libc_map.obj
 
 
 

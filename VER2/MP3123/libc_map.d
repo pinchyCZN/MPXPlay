@@ -36,8 +36,8 @@ double _pow(double,double);
 uint _clock();
 enum CLOCKS_PER_SEC=1000;
 
-int _getch();
-int _kbhit();
+int __getch();
+int __kbhit();
 
 int dos_get_key(int *extended);
 
@@ -45,10 +45,10 @@ int get_key(ref int extended)
 {
 	int result=0;
 	extended=false;
-	if(_kbhit()){
-		result=_getch();
+	if(__kbhit()){
+		result=__getch();
 		if(result==0){
-			result=_getch();
+			result=__getch();
 			extended=true;
 		}
 	}

@@ -75,7 +75,7 @@ void log_msg(const char *fmt,...)
 DWORD get_tick_count()
 {
 	DWORD tick;
-	version(Windows){
+	version(windows_exe){
 		import core.sys.windows.windows;
 		tick=GetTickCount();
 	}else{
@@ -101,7 +101,7 @@ void udelay(int usec)
 }
 int get_msec(DWORD ticks)
 {
-	version(Windows){
+	version(windows_exe){
 		return ticks;
 	}else{
 		return (ticks/(CLOCK_RATE/1000));
@@ -418,6 +418,7 @@ int init_pci_access(BYTE bus_num,BYTE dev_num)
 	return TRUE;
 }
 
+extern (C)
 int init_hda()
 {
 	int result=FALSE;
@@ -483,7 +484,7 @@ __gshared static int *memory_chunk=null;
 __gshared static int *bdl_list=null;
 __gshared static int *buffer1=null;
 __gshared static int *buffer2=null;
-version(Windows)
+version(windows_exe)
 	__gshared const int buf_size=0x2000;
 else
 	__gshared const int buf_size=0x1000;
@@ -500,6 +501,7 @@ int* get_audio_buf(int which)
 	else
 		return buffer1;
 }
+extern (C)
 int start_audio()
 {
 	DWORD tmp;
@@ -723,6 +725,7 @@ int set_volume(int vol)
 	hda_send_codec_cmd(cmds[1]);
 	return 0;
 }
+extern (C)
 int set_silence()
 {
 	if(buffer1!is null)
@@ -762,7 +765,7 @@ int play_wav_buf(ubyte *buf,int len)
 		}
 		if(ready)
 			break;
-		version(Windows){
+		version(windows_exe){
 			import core.sys.windows.windows;
 			Sleep(0);
 		}

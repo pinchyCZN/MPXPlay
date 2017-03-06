@@ -5,12 +5,13 @@ nothrow:
 @nogc:
 
 struct BYTEREGS {
-        ubyte al, ah;
-        ubyte bl, bh;
-        ubyte cl, ch;
-        ubyte dl, dh;
+        ubyte al, ah ,f1,f2;
+        ubyte bl, bh ,f3,f4;
+        ubyte cl, ch ,f5,f6;
+        ubyte dl, dh ,f7,f8;
 };
 struct WORDREGS {
+		align (4):
         ushort ax;
         ushort bx;
         ushort cx;
@@ -36,6 +37,7 @@ union REGS {
         BYTEREGS  h;
 };
 
+version(windows_exe){
 __gshared int hda_registers[400];
 
 int _int386(int cmd,REGS *r,REGS *s)
@@ -63,4 +65,11 @@ int _int386(int cmd,REGS *r,REGS *s)
 		break;
 	}
 	return 0;
+}
+}else{
+extern (C) int int386(int,REGS *,REGS*);
+int _int386(int cmd,REGS *r,REGS *s)
+{
+	return int386(cmd,r,s);
+}
 }
