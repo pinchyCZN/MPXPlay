@@ -21,8 +21,8 @@ enum : BOOL {
 }
 
 const CLOCK_RATE = 300000000;
-DWORD base_reg;
-int device_found;
+__gshared DWORD base_reg;
+__gshared int device_found;
 
 const PCICMD = 0x04;
 const MSE = 0x02;
@@ -75,9 +75,14 @@ void log_msg(const char *fmt,...)
 DWORD get_tick_count()
 {
 	DWORD tick;
-	asm{
-		rdtsc;
-		mov tick,EAX;
+	version(Windows){
+		import core.sys.windows.windows;
+		tick=GetTickCount();
+	}else{
+		asm{
+			rdtsc;
+			mov tick,EAX;
+		}
 	}
 	return tick;
 }
@@ -96,7 +101,11 @@ void udelay(int usec)
 }
 int get_msec(DWORD ticks)
 {
-	return (ticks/(CLOCK_RATE/1000));
+	version(Windows){
+		return ticks;
+	}else{
+		return (ticks/(CLOCK_RATE/1000));
+	}
 }
 
 int find_pci_device(WORD ven_id,WORD dev_id,BYTE *bus_num,BYTE *dev_num)
@@ -481,6 +490,13 @@ int get_audio_buf_size()
 {
 	return buf_size;
 }
+int* get_audio_buf(int which)
+{
+	if(which)
+		return buffer2;
+	else
+		return buffer1;
+}
 int start_audio()
 {
 	DWORD tmp;
@@ -743,6 +759,10 @@ int play_wav_buf(ubyte *buf,int len)
 		}
 		if(ready)
 			break;
+		version(Windows){
+			import core.sys.windows.windows;
+			Sleep(0);
+		}
 	}
 	{
 		char *mem;

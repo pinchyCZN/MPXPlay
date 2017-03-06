@@ -105,15 +105,15 @@ uint _clock()
 }
 enum CLOCKS_PER_SEC=1000;
 
+extern (C) @nogc nothrow int getch();
 int _getch()
 {
-//	return getch();
-	return 0;
+	return getch();
 }
+extern (C) @nogc nothrow int kbhit();
 int _kbhit()
 {
-//	return kbhit();
-	return 0;
+	return kbhit();
 }
 
 int dos_get_key(int *extended)
