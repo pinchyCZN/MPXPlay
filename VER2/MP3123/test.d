@@ -150,14 +150,15 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 	const int buf_size=0x10000;
 
 	__gshared static int buf_level=0;
+	__gshared static mp3_context_t mp3;
 
 	mp3_decode_init();
 
 	if(f is null || abuf is null){
 		buf_level=0;
+		memset(&mp3,0,mp3.sizeof);
 		return result;
 	}
-	mp3_context_t mp3;
 
 
 	if(fbuf is null)
@@ -175,7 +176,6 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 		result=true;
 		return result;
 	}
-
 	while(1){
 		int consumed=0;
 		int written=0;
@@ -232,18 +232,34 @@ int play_mp3(const char *fname)
 	uint buf_level;
 	uint full_level;
 
+	uint __tmp;
+	fill_audio_buf(null,null,0,__tmp,0);
+
 	full_level=get_audio_buf_size();
 	if(full_level>buf_size)
 		full_level=buf_size;
 	buf_level=0;
 
+	FILE *fout=null;
+	//fout=fopen("1.wav","rb");
+	if(fout !is null){
+		char tmp[1024];
+		fread(tmp.ptr,1,1024,fout);
+		fclose(fout);
+		fout=fopen("out.wav","wb");
+		fwrite(tmp.ptr,1,16*4,fout);
+	}
+	DWORD tick=get_tick_count();
 	if(buf is null)
 		buf=cast(ubyte*)malloc(buf_size);
 	if(buf is null)
 		goto exit;
+
 	while(1){
 		if(fill_audio_buf(f,buf,buf_size,buf_level,full_level)){
 			play_wav_buf(buf,full_level);
+			if(fout !is null)
+				fwrite(buf,full_level,1,fout);
 			if(buf_level>buf_size)
 				buf_level=buf_size;
 			if(buf_level>full_level){
@@ -259,8 +275,11 @@ int play_mp3(const char *fname)
 		}
 		else
 			break;
-		if(kbhit()){
-			break;
+		DWORD delta=get_tick_count()-tick;
+		if(delta>200){
+			tick=get_tick_count();
+			if(kbhit())
+				break;
 		}
 	}
 	memset(buf,0,buf_size);
@@ -315,18 +334,19 @@ void AudioCallback(
 	}
 }
 
-__gshared int long_sleep=false;
+__gshared int thread_exit=false;
 extern (Windows) DWORD hw_thread(void *param)
 {
 	while(1){
-		if(long_sleep){
-			Sleep(100);
+		if(thread_exit){
+			break;
 		}else{
 			memset(hda_registers.ptr,0,hda_registers.sizeof);
 			Sleep(0);
 		}
 
 	}
+	return 0;
 }
 
 extern(C)
@@ -337,7 +357,7 @@ int test_d(const char *fname)
 	init_hda();
 	start_audio();
 	printf("audio setup done\n");
-	long_sleep=true;
+	thread_exit=true;
 	HWAVEOUT hwo;
 	wf.nSamplesPerSec=44100;
 	wf.nChannels=2;
