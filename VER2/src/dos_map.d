@@ -67,9 +67,5 @@ int _int386(int cmd,REGS *r,REGS *s)
 	return 0;
 }
 }else{
-extern (C) int int386(int,REGS *,REGS*);
-int _int386(int cmd,REGS *r,REGS *s)
-{
-	return int386(cmd,r,s);
-}
+extern (C) int _int386(int,REGS *,REGS*);
 }
