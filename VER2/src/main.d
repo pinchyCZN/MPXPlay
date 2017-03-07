@@ -1,5 +1,7 @@
-import libc_map;
+module main;
 
+import libc_map;
+import intel_hda;
 import mp3_file;
 
 extern (C):
@@ -8,11 +10,21 @@ nothrow:
 
 int d_main(int argc,char **argv)
 {
-	if(argc<2){
-		printf("no arguments given\n");
-		return 0;
+	int i;
+	int result=0;
+	printf("args:\n");
+	for(i=1;i<argc;i++){
+		printf("%s\n",argv[i]);
 	}
-
-
-	return 0;		
+	if(argc>1){
+		char *fname=argv[1];
+		init_hda();
+		start_audio();
+		printf("audio setup done\n");
+		
+		//play_file(fname);
+		play_mp3(fname);
+		set_silence();
+	}
+	return result;
 }

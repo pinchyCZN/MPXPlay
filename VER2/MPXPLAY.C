@@ -163,6 +163,14 @@ __declspec(__cdecl) int init_hda();
 __declspec(__cdecl) int start_audio();
 __declspec(__cdecl) int set_silence();
 
+__declspec(__cdecl) int d_main(int argc,char **argv);
+
+int main(int argc,char **argv)
+{
+	return d_main(argc,argv);
+}
+
+/*
 int main(int argc,char **argv)
 {
 	int i;
@@ -183,3 +191,4 @@ int main(int argc,char **argv)
 	}
 	return result;
 }
+*/

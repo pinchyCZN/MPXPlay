@@ -416,7 +416,7 @@
   <File path="src\main.d" />
   <File path="src\minimp3.d" />
   <File path="src\mp3_file.d" />
-  <File tool="None" path="MPXPLAY.C" />
+  <File tool="Custom" path="MPXPLAY.C" customcmd="wd.bat" outfile="mpxplay.exe" />
   <File path="src\test.d" />
  </Folder>
 </DProject>
