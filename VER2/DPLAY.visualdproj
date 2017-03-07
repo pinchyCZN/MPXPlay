@@ -72,7 +72,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids />
+  <versionids>windows_exe</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -409,12 +409,14 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="DPLAY">
-  <File path="dos_map.d" />
-  <File path="MP3123\dummy_.d" />
-  <File path="intel_hda.d" />
-  <File path="MP3123\libc_map.d" />
-  <File path="MP3123\main.d" />
-  <File path="MP3123\minimp3.d" />
-  <File path="MP3123\test.d" />
+  <File path="src\dos_map.d" />
+  <File path="src\dummy_.d" />
+  <File path="src\intel_hda.d" />
+  <File path="src\libc_map.d" />
+  <File path="src\main.d" />
+  <File path="src\minimp3.d" />
+  <File path="src\mp3_file.d" />
+  <File tool="None" path="src\MPXPLAY.C" />
+  <File path="src\test.d" />
  </Folder>
 </DProject>

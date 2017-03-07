@@ -710,6 +710,7 @@ int send_all_commands()
 	return 0;
 }
 
+extern (C)
 int set_volume(int vol)
 {
 	int cmds[2]=[

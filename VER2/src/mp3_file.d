@@ -1,11 +1,9 @@
-module test;
+module mp3_file;
 import core.stdc.stdio: FILE,SEEK_CUR;
-import core.sys.windows.windows;
 
 import minimp3;
 import libc_map;
 import intel_hda;
-import dos_map;
 
 
 alias memset=_memset;
@@ -19,7 +17,7 @@ alias fclose=_fclose;
 alias malloc=_malloc;
 alias printf=_printf;
 alias clock=_clock;
-alias kbhit=_kbhit;
+alias kbhit=__kbhit;
 
 @nogc:
 nothrow:
@@ -287,93 +285,4 @@ int play_mp3(const char *fname)
 exit:
 	fclose(f);
 	return result;
-}
-__gshared static WAVEFORMATEX wf = {
-    1,  // wFormatTag
-    0,  // nChannels
-    0,  // nSamplesPerSec
-    0,  // nAvgBytesPerSec
-    4,  // nBlockAlign
-    16, // wBitsPerSample
-    WAVEFORMATEX.sizeof // cbSize
-};
-__gshared static WAVEHDR wh_template = {
-    NULL, // lpData
-    0, // dwBufferLength
-    0, // dwBytesRecorded
-    0, // dwUser
-    0, // dwFlags
-    1, // dwLoops
-    NULL, // lpNext
-    0 // reserved
-};
-enum BUFFER_COUNT=2;
-__gshared static WAVEHDR wh[BUFFER_COUNT];
-
-extern (Windows)
-void AudioCallback(
-	HWAVEOUT hwo,      
-	UINT uMsg,         
-	DWORD_PTR dwInstance,  
-	DWORD dwParam1,    
-	DWORD dwParam2     
-)
-{
-	LPWAVEHDR wh=cast(LPWAVEHDR) dwParam1;
-	int size=WAVEHDR.sizeof;
-	if(!wh)
-		return;
-	waveOutUnprepareHeader(hwo,wh,size);
-	waveOutPrepareHeader(hwo,wh,size);
-	waveOutWrite(hwo,wh,size);
-	if(base_reg!=0){
-		int tmp=0;
-		if(!wh.dwUser)
-			tmp=get_audio_buf_size();
-		write_32(base_reg+OSD0LPIB,tmp);
-	}
-}
-
-__gshared int thread_exit=false;
-extern (Windows) DWORD hw_thread(void *param)
-{
-	while(1){
-		if(thread_exit){
-			break;
-		}else{
-			memset(hda_registers.ptr,0,hda_registers.sizeof);
-			Sleep(0);
-		}
-
-	}
-	return 0;
-}
-
-extern(C)
-int test_d(const char *fname)
-{
-	DWORD tid=0;
-	CreateThread(null,0,&hw_thread,null,0,&tid);
-	init_hda();
-	start_audio();
-	printf("audio setup done\n");
-	thread_exit=true;
-	HWAVEOUT hwo;
-	wf.nSamplesPerSec=44100;
-	wf.nChannels=2;
-	waveOutOpen(&hwo,WAVE_MAPPER,&wf,cast(DWORD)&AudioCallback,0,CALLBACK_FUNCTION);
-	if(hwo !is null){
-		int i;
-		for(i=0;i<2;i++){
-			wh[i]=wh_template;
-			wh[i].dwBufferLength=get_audio_buf_size();
-			wh[i].lpData=cast(char*)get_audio_buf(i);
-			wh[i].dwUser=i;
-			AudioCallback(hwo,0,0,cast(DWORD)&wh[i],0);
-		}
-	}
-	//mp3_test(fname);
-	play_mp3(fname);
-	set_silence();
-	return 0;
 }

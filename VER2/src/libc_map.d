@@ -3,7 +3,6 @@ module libc_map;
 import core.stdc.stdio: FILE;
 import core.stdc.stdarg: va_list;
 
-
 extern (C):
 @nogc:
 nothrow:

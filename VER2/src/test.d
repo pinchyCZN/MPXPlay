@@ -1,9 +1,13 @@
 module test;
-import core.stdc.stdio: FILE,SEEK_CUR;
 
+import core.stdc.stdio: FILE;
+import core.sys.windows.windows;
+
+import dummy_;
+import libc_map:get_key;
 import minimp3;
-import libc_map;
 import intel_hda;
+import dos_map;
 
 
 alias memset=_memset;
@@ -17,7 +21,7 @@ alias fclose=_fclose;
 alias malloc=_malloc;
 alias printf=_printf;
 alias clock=_clock;
-alias kbhit=__kbhit;
+alias kbhit=_kbhit;
 
 @nogc:
 nothrow:
@@ -67,7 +71,7 @@ int skip_tags(FILE *f,ubyte *buf,int buf_size,ref int buf_level)
 	return result;
 }
 
-extern (C)
+static
 int mp3_test(const char *fname)
 {
 	printf("fname=%s\n",fname);
@@ -215,7 +219,7 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 
 
 
-extern (C)
+static
 int play_mp3(const char *fname)
 {
 	int result=false;
@@ -285,4 +289,109 @@ int play_mp3(const char *fname)
 exit:
 	fclose(f);
 	return result;
+}
+__gshared static WAVEFORMATEX wf = {
+    1,  // wFormatTag
+    0,  // nChannels
+    0,  // nSamplesPerSec
+    0,  // nAvgBytesPerSec
+    4,  // nBlockAlign
+    16, // wBitsPerSample
+    WAVEFORMATEX.sizeof // cbSize
+};
+__gshared static WAVEHDR wh_template = {
+    NULL, // lpData
+    0, // dwBufferLength
+    0, // dwBytesRecorded
+    0, // dwUser
+    0, // dwFlags
+    1, // dwLoops
+    NULL, // lpNext
+    0 // reserved
+};
+enum BUFFER_COUNT=2;
+__gshared static WAVEHDR wh[BUFFER_COUNT];
+
+extern (Windows)
+void AudioCallback(
+	HWAVEOUT hwo,      
+	UINT uMsg,         
+	DWORD_PTR dwInstance,  
+	DWORD dwParam1,    
+	DWORD dwParam2     
+)
+{
+	LPWAVEHDR wh=cast(LPWAVEHDR) dwParam1;
+	int size=WAVEHDR.sizeof;
+	if(!wh)
+		return;
+	waveOutUnprepareHeader(hwo,wh,size);
+	waveOutPrepareHeader(hwo,wh,size);
+	waveOutWrite(hwo,wh,size);
+	if(base_reg!=0){
+		int tmp=0;
+		if(!wh.dwUser)
+			tmp=get_audio_buf_size();
+		write_32(base_reg+OSD0LPIB,tmp);
+	}
+}
+
+__gshared int thread_exit=false;
+extern (Windows) DWORD hw_thread(void *param)
+{
+	while(1){
+		if(thread_exit){
+			break;
+		}else{
+			memset(hda_registers.ptr,0,hda_registers.sizeof);
+			Sleep(0);
+		}
+
+	}
+	return 0;
+}
+
+extern(C)
+int test_d(const char *fname)
+{
+	DWORD tid=0;
+	CreateThread(null,0,&hw_thread,null,0,&tid);
+	init_hda();
+	start_audio();
+	printf("audio setup done\n");
+	thread_exit=true;
+	HWAVEOUT hwo;
+	wf.nSamplesPerSec=44100;
+	wf.nChannels=2;
+	waveOutOpen(&hwo,WAVE_MAPPER,&wf,cast(DWORD)&AudioCallback,0,CALLBACK_FUNCTION);
+	if(hwo !is null){
+		int i;
+		for(i=0;i<2;i++){
+			wh[i]=wh_template;
+			wh[i].dwBufferLength=get_audio_buf_size();
+			wh[i].lpData=cast(char*)get_audio_buf(i);
+			wh[i].dwUser=i;
+			AudioCallback(hwo,0,0,cast(DWORD)&wh[i],0);
+		}
+	}
+	//mp3_test(fname);
+	play_mp3(fname);
+	set_silence();
+	return 0;
+}
+int main(string[] args)
+{
+	int result=0;
+	if(args.length<2)
+		return result;
+	char fname[256];
+	string s=args[1];
+	if(s.length>=256){
+		printf("fname too long\n");
+		return result;
+	}
+	fname[0..s.length]=s[0..s.length];
+	fname[s.length]=0;
+	test_d(fname.ptr);
+	return result;		
 }

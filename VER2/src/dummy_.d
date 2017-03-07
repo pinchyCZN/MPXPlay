@@ -115,7 +115,14 @@ int _kbhit()
 {
 	return kbhit();
 }
-
+int __kbhit()
+{
+	return kbhit();
+}
+int __getch()
+{
+	return getch();
+}
 int dos_get_key(int *extended)
 {
 	return 0;
