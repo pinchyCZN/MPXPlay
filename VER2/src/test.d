@@ -8,7 +8,7 @@ import libc_map:get_key;
 import minimp3;
 import intel_hda;
 import dos_map;
-
+import main:process_file;
 
 alias memset=_memset;
 alias memmove=_memmove;
@@ -375,7 +375,8 @@ int test_d(const char *fname)
 		}
 	}
 	//mp3_test(fname);
-	play_mp3(fname);
+	//play_mp3(fname);
+	process_file(fname);
 	set_silence();
 	return 0;
 }

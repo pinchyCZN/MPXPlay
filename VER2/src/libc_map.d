@@ -25,6 +25,9 @@ void _free(void *buf);
 void* _printf(const char*,...);
 void* _vprintf(const char*,va_list);
 
+int _strlen(const char *);
+int _strncpy(char *,const char *,int);
+
 double _sin(double);
 double _cos(double);
 double _tan(double);
@@ -61,3 +64,4 @@ int get_usb_key(ref int extended)
 	result=dos_get_key(&ext);
 	return result;
 }
+

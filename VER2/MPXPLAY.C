@@ -139,6 +139,14 @@ __declspec(__cdecl) int _int386(int cmd,union REGS *r,union REGS *s)
 {
 	return int386(cmd,r,s);
 }
+__declspec(__cdecl) int _strlen(const char *s)
+{
+	return strlen(s);
+}
+__declspec(__cdecl) char * _strncpy(char *dst,const char *src,int len)
+{
+	return strncpy(dst,src,len);
+}
 __declspec(__cdecl) int _fltused=0;
 __declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
 __declspec(__cdecl) int D10TypeInfo_h6__initZ=0;

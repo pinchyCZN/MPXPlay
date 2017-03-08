@@ -74,6 +74,14 @@ int _vprintf(const char* fmt,va_list list)
 	return vprintf(fmt,list);
 }
 
+int _strlen(const char *s)
+{
+	return strlen(s);
+}
+char *_strncpy(char *dst,const char *src,int len)
+{
+	return strncpy(dst,src,len);
+}
 double _sin(double x)
 {
 	return sin(x);
