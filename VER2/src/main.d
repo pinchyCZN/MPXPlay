@@ -70,7 +70,18 @@ int get_flen(FILE *f)
 	fseek(f,SEEK_SET,offset);
 	return len;
 }
-int seek_char(const char *buf,uint buf_size,char a,ref int offset,int dir)
+int get_line_count(const char *buf,int buf_size)
+{
+	int i,result=0;
+	for(i=0;i<buf_size;i++){
+		char a=buf[i];
+		if(a=='\n')
+			result++;
+	}
+	return result;
+}
+enum SEEK_TYPE {NEWLINE,ALPHANUMERIC}
+int seek_char_type(const char *buf,uint buf_size,SEEK_TYPE type,ref uint offset,int dir)
 {
 	int result=false;
 	while(1){
@@ -82,15 +93,22 @@ int seek_char(const char *buf,uint buf_size,char a,ref int offset,int dir)
 			if(dir>=0)
 				break;
 		}
-		else if(offset<=0){
+		else if(offset==0){
 			offset=0;
 			if(dir<0)
 				break;
 		}
-		char tmp=buf[offset];
-		if(tmp==a){
-			result=true;
-			break;
+		ubyte tmp=buf[offset];
+		if(type==SEEK_TYPE.NEWLINE){
+			if(tmp=='\n'){
+				result=true;
+				break;
+			}
+		}else{
+			if(tmp>' '){
+				result=true;
+				break;
+			}
 		}
 		if(dir>=0)
 			offset++;
@@ -111,19 +129,71 @@ int seek_line(const char *buf,uint buf_size,int line,ref uint offset)
 				offset=buf_size-1;
 			else
 				offset=0;
-			break;
+			if(line>=0)
+				break;
 		}
-		else if(offset<=0){
+		else if(offset==0){
 			offset=0;
+			if(line<0)
+				break;
 		}
-		if(count==line)
+		int dir=1;
+		if(line==0){
+			if(seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,dir))
+				result=true;
 			break;
-		a=buf[offset];
-		if(a=='\n'){
-			
+		}
+		else if(line>0){
+			dir=1;
+			if(seek_char_type(buf,buf_size,SEEK_TYPE.NEWLINE,offset,dir)){
+				if(seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,dir)){
+					count+=dir;
+					if(count==line){
+						result=true;
+						break;
+					}
+				}else{
+					break;
+				}
+			}else{
+				break;
+			}
+		}else{ //reverse
+			dir=-1;
+			if(seek_char_type(buf,buf_size,SEEK_TYPE.NEWLINE,offset,dir)){
+				if(seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,dir)){
+					seek_char_type(buf,buf_size,SEEK_TYPE.NEWLINE,offset,dir);
+					seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,1);
+					count+=dir;
+					if(count==line){
+						result=true;
+						break;
+					}
+				}else{
+					break;
+				}
+			}else{
+				break;
+			}
 		}
 	}
-	return 0;
+	return result;
+}
+int extract_line(const char *buf,char *line,int line_size)
+{
+	int i;
+	for(i=0;i<line_size;i++){
+		ubyte a=buf[i];
+		if(a<' '){
+			break;
+		}
+		line[i]=a;
+	}
+	if(i<line_size)
+		line[i]=0;
+	if(line_size>0)
+		line[line_size-1]=0;
+	return i;
 }
 int process_playlist(const char *fname)
 {
@@ -149,6 +219,9 @@ int process_playlist(const char *fname)
 	uint offset=0,line=0;
 	while(1){
 		seek_line(playlist,len,line,offset);
+		char current_line[256];
+		extract_line(playlist+offset,current_line.ptr,current_line.length);
+		
 		
 	}
 }
