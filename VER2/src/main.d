@@ -65,9 +65,9 @@ int get_flen(FILE *f)
 {
 	uint offset,len;
 	offset=ftell(f);
-	fseek(f,SEEK_END,0);
+	fseek(f,0,SEEK_END);
 	len=ftell(f);
-	fseek(f,SEEK_SET,offset);
+	fseek(f,offset,SEEK_SET);
 	return len;
 }
 int get_line_count(const char *buf,int buf_size)
@@ -80,10 +80,11 @@ int get_line_count(const char *buf,int buf_size)
 	}
 	return result;
 }
-enum SEEK_TYPE {NEWLINE,ALPHANUMERIC}
+enum SEEK_TYPE {NONALPHANUMERIC,ALPHANUMERIC}
 int seek_char_type(const char *buf,uint buf_size,SEEK_TYPE type,ref uint offset,int dir)
 {
 	int result=false;
+	uint orig_offset=offset;
 	while(1){
 		if(offset>=buf_size){
 			if(buf_size!=0)
@@ -99,13 +100,13 @@ int seek_char_type(const char *buf,uint buf_size,SEEK_TYPE type,ref uint offset,
 				break;
 		}
 		ubyte tmp=buf[offset];
-		if(type==SEEK_TYPE.NEWLINE){
-			if(tmp=='\n'){
+		if(type==SEEK_TYPE.NONALPHANUMERIC){
+			if(tmp<' '){
 				result=true;
 				break;
 			}
 		}else{
-			if(tmp>' '){
+			if(tmp>=' '){
 				result=true;
 				break;
 			}
@@ -115,6 +116,8 @@ int seek_char_type(const char *buf,uint buf_size,SEEK_TYPE type,ref uint offset,
 		else
 			offset--;
 	}
+	if(!result)
+		offset=orig_offset;
 	return result;
 }
 int seek_line(const char *buf,uint buf_size,int line,ref uint offset)
@@ -144,8 +147,9 @@ int seek_line(const char *buf,uint buf_size,int line,ref uint offset)
 			break;
 		}
 		else if(line>0){
+			uint orig_offset=offset;
 			dir=1;
-			if(seek_char_type(buf,buf_size,SEEK_TYPE.NEWLINE,offset,dir)){
+			if(seek_char_type(buf,buf_size,SEEK_TYPE.NONALPHANUMERIC,offset,dir)){
 				if(seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,dir)){
 					count+=dir;
 					if(count==line){
@@ -153,6 +157,7 @@ int seek_line(const char *buf,uint buf_size,int line,ref uint offset)
 						break;
 					}
 				}else{
+					offset=orig_offset;
 					break;
 				}
 			}else{
@@ -160,20 +165,21 @@ int seek_line(const char *buf,uint buf_size,int line,ref uint offset)
 			}
 		}else{ //reverse
 			dir=-1;
-			if(seek_char_type(buf,buf_size,SEEK_TYPE.NEWLINE,offset,dir)){
-				if(seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,dir)){
-					seek_char_type(buf,buf_size,SEEK_TYPE.NEWLINE,offset,dir);
-					seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,1);
-					count+=dir;
-					if(count==line){
-						result=true;
-						break;
-					}
-				}else{
+			int have_char=false;
+			if(!seek_char_type(buf,buf_size,SEEK_TYPE.NONALPHANUMERIC,offset,dir))
+				break;
+			if(seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,dir))
+				have_char=true;
+			if(!seek_char_type(buf,buf_size,SEEK_TYPE.NONALPHANUMERIC,offset,dir)){
+				if(have_char)
+					offset=0;
+			}
+			if(seek_char_type(buf,buf_size,SEEK_TYPE.ALPHANUMERIC,offset,1)){
+				count+=dir;
+				if(count==line){
+					result=true;
 					break;
 				}
-			}else{
-				break;
 			}
 		}
 	}
@@ -195,6 +201,15 @@ int extract_line(const char *buf,char *line,int line_size)
 		line[line_size-1]=0;
 	return i;
 }
+int seek_next_folder(const char *buf,uint buf_size,ref uint offset,int dir)
+{
+	int result=false;
+	char line[256];
+	const char *ptr=buf+offset;
+	extract_line(ptr,line.ptr,line.length);
+	return result;
+}
+
 int process_playlist(const char *fname)
 {
 	FILE *f;
@@ -216,14 +231,29 @@ int process_playlist(const char *fname)
 		printf("unable to allocate mem for playlist\n");
 		return 0;
 	}
-	uint offset=0,line=0;
+	uint offset=0,dir=0,line=0;
+	int count=0;
 	while(1){
-		seek_line(playlist,len,line,offset);
+		if(seek_line(playlist,len,dir,offset))
+			line+=dir;
 		char current_line[256];
+		current_line[0]=0;
 		extract_line(playlist+offset,current_line.ptr,current_line.length);
-		
-		
+		printf("%02i %08X %s\n",line,offset,current_line.ptr);
+		count++;
+		int key=__getch();
+		int kval=tolower(cast(char)key); 
+		if(kval=='x')
+			break;
+		if(kval=='a'){
+			
+			dir=0;
+		}
+		else
+			dir=-1;
 	}
+	printf("done %i\n",count);
+	return 0;
 }
 int process_file(const char *fname)
 {
