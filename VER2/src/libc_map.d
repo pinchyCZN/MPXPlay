@@ -89,5 +89,5 @@ void log_msg(const char *fmt,...)
 	import core.stdc.stdio;
 	va_list arg;
 	va_start(arg,fmt);
-	vprintf(fmt,arg);
+	_vprintf(fmt,arg);
 }

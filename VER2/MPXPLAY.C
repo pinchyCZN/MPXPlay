@@ -174,14 +174,14 @@ __declspec(__cdecl) int __stricmp(char *a,const char *b)
 	return stricmp(a,b);
 }
 __declspec(__cdecl) int _fltused=0;
-__declspec(__cdecl) int D13TypeInfo_Enum6__vtblZ(){return printf("test12\n"); }
-__declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ(){return printf("test12\n"); }
-__declspec(__cdecl) int D10TypeInfo_h6__initZ(){return printf("test12\n"); }
-__declspec(__cdecl) int D10TypeInfo_k6__initZ(){return printf("test12\n"); }
-__declspec(__cdecl) int D10TypeInfo_i6__initZ(){return printf("test12\n"); }
-__declspec(__cdecl) int D14TypeInfo_Tuple6__vtblZ(){return printf("test12\n"); }
-__declspec(__cdecl) int D14TypeInfo_Const6__vtblZ(){return printf("test12\n"); }
-__declspec(__cdecl) int D10TypeInfo_t6__initZ(){return printf("test12\n"); }
+__declspec(__cdecl) int D13TypeInfo_Enum6__vtblZ=0;
+__declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
+__declspec(__cdecl) int D10TypeInfo_h6__initZ=0;
+__declspec(__cdecl) int D10TypeInfo_k6__initZ=0;
+__declspec(__cdecl) int D10TypeInfo_i6__initZ;
+__declspec(__cdecl) int D14TypeInfo_Tuple6__vtblZ=0;
+__declspec(__cdecl) int D14TypeInfo_Const6__vtblZ=0;
+__declspec(__cdecl) int D10TypeInfo_t6__initZ=0;
 
 __declspec(__cdecl) int D7minimp37__arrayZ()
 {
