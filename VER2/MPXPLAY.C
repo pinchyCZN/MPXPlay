@@ -147,6 +147,10 @@ __declspec(__cdecl) char * _strncpy(char *dst,const char *src,int len)
 {
 	return strncpy(dst,src,len);
 }
+__declspec(__cdecl) int _stricmp(char *a,const char *b)
+{
+	return stricmp(a,b);
+}
 __declspec(__cdecl) int _fltused=0;
 __declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
 __declspec(__cdecl) int D10TypeInfo_h6__initZ=0;

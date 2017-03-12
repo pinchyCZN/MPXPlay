@@ -2,6 +2,7 @@ module dummy_;
 
 import core.stdc.stdio;
 import core.stdc.string;
+import core.stdc.ctype;
 import core.stdc.stdlib;
 import core.stdc.stdarg;
 import core.stdc.math;
@@ -81,6 +82,13 @@ int _strlen(const char *s)
 char *_strncpy(char *dst,const char *src,int len)
 {
 	return strncpy(dst,src,len);
+}
+int _stricmp(char *s1,char *s2)
+{
+	while (*s2 != 0 && toupper(*s1) == toupper(*s2))
+		s1++, s2++;
+	return (toupper(*s1) - toupper(*s2));
+
 }
 double _sin(double x)
 {

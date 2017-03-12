@@ -27,6 +27,7 @@ void* _vprintf(const char*,va_list);
 
 int _strlen(const char *);
 int _strncpy(char *,const char *,int);
+int _stricmp(const char*,const char*);
 
 double _sin(double);
 double _cos(double);

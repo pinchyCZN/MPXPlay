@@ -7,6 +7,7 @@ import mp3_file;
 
 alias strncpy=_strncpy;
 alias strlen=_strlen;
+alias stricmp=_stricmp;
 enum MAX_PATH=256;
 
 extern (C):
@@ -201,12 +202,112 @@ int extract_line(const char *buf,char *line,int line_size)
 		line[line_size-1]=0;
 	return i;
 }
+int extract_folder(const char *path,char *folder,int folder_size)
+{
+	int result=false;
+	int i,len;
+	int start=0,end=0;
+	len=strlen(path);
+	for(i=len-1;i>=0;i--){
+		char a=path[i];
+		if(a=='\\' || a=='/'){
+			if(end==0)
+				end=i;
+			else if(start==0){
+				start=i;
+				break;
+			}
+		}
+	}
+	if(start!=end){
+		result=true;
+		len=end-start;
+		if(len>folder_size)
+			len=folder_size;
+		strncpy(folder,path+start,len);
+		if(folder_size>0)
+			folder[folder_size-1]=0;
+	}
+	return result;
+}
 int seek_next_folder(const char *buf,uint buf_size,ref uint offset,int dir)
 {
 	int result=false;
 	char line[256];
-	const char *ptr=buf+offset;
+	char *ptr;
+	if(offset>=buf_size){
+		if(dir>=0)
+			return result;
+		if(buf_size>0)
+			offset=buf_size-1;
+		else
+			offset=0;
+	}
+	char folder[256];
+	ptr=cast(char*)buf+offset;
 	extract_line(ptr,line.ptr,line.length);
+	extract_folder(line.ptr,folder.ptr,folder.length);
+	printf("current folder:%s\n",folder.ptr);
+	if(dir>=0)
+		dir=1;
+	else
+		dir=-1;
+	int rounds=0;
+	if(dir>0){
+		while(1){
+			char tmp[256];
+			if(seek_line(buf,buf_size,dir,offset)){
+next:
+				ptr=cast(char*)buf+offset;
+				extract_line(ptr,line.ptr,line.length);
+				extract_folder(line.ptr,tmp.ptr,tmp.length);
+				if(0==stricmp(folder.ptr,tmp.ptr))
+					continue;
+				else{
+					result=true;
+					break;
+				}
+			}else{
+				if(rounds>0)
+					break;
+				rounds++;
+				offset=0;
+				goto next;
+			}
+		}
+	}else{
+		int rcount=0;
+		while(1){
+			char tmp[256];
+			if(seek_line(buf,buf_size,dir,offset)){
+				ptr=cast(char*)buf+offset;
+				extract_line(ptr,line.ptr,line.length);
+				extract_folder(line.ptr,tmp.ptr,tmp.length);
+				if(0==stricmp(folder.ptr,tmp.ptr))
+					continue;
+				else{
+					strncpy(folder.ptr,tmp.ptr,folder.length);
+					if(folder.length>0)
+						folder[folder.length-1]=0;
+					if(rcount==0){
+						rcount++;
+						continue;
+					}
+					seek_line(buf,buf_size,1,offset);
+					result=true;
+					break;
+				}
+			}else{
+				if(rcount>0)
+					break;
+				if(rounds>0)
+					break;
+				rounds++;
+				offset=buf_size;
+			}
+		}
+	}
+
 	return result;
 }
 
@@ -236,6 +337,7 @@ int process_playlist(const char *fname)
 	while(1){
 		if(seek_line(playlist,len,dir,offset))
 			line+=dir;
+loop:
 		char current_line[256];
 		current_line[0]=0;
 		extract_line(playlist+offset,current_line.ptr,current_line.length);
@@ -245,9 +347,19 @@ int process_playlist(const char *fname)
 		int kval=tolower(cast(char)key); 
 		if(kval=='x')
 			break;
-		if(kval=='a'){
-			
-			dir=0;
+		if(kval=='s'){
+			dir=1;
+		}
+		else if(key=='a'){
+			dir=-1;
+		}
+		else if(key=='d'){
+			seek_next_folder(playlist,len,offset,-1);
+			goto loop;
+		}
+		else if(key=='f'){
+			seek_next_folder(playlist,len,offset,1);
+			goto loop;
 		}
 		else
 			dir=-1;
