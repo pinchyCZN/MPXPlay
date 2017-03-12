@@ -28,7 +28,7 @@ int _fwrite(const void *buf, int size, int rec, FILE *f)
 {
 	return fwrite(buf,size,rec,f);
 }
-int _fseek(FILE* stream,long offset,int whence)
+int _fseek(FILE* stream,uint offset,int whence)
 {
 	return fseek(stream,cast(int)offset,whence);
 }

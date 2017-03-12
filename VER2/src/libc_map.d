@@ -11,7 +11,7 @@ FILE* _fopen(const char *name, const char *param);
 int _fclose(FILE *f);
 int _fread(void *buf, int size, int rec, FILE *f);
 int _fwrite(const void *buf, int size, int rec, FILE *f);
-int _fseek(FILE* stream,long offset,int whence);
+int _fseek(FILE* stream,uint offset,int whence);
 uint _ftell(FILE* stream);
 void* _memset(void *buf, int val, int size);
 void* _memmove(void *s1, const void *s2, int size);
@@ -83,3 +83,11 @@ int get_key(ref int extended)
 	return result;
 }
 
+void log_msg(const char *fmt,...)
+{
+	import core.stdc.stdarg;
+	import core.stdc.stdio;
+	va_list arg;
+	va_start(arg,fmt);
+	vprintf(fmt,arg);
+}

@@ -63,15 +63,6 @@ const SET_RIGHT_AMP = 0x1000;
 
 const SET_OUT_AMP = 0x8000;
 
-void log_msg(const char *fmt,...)
-{
-	import core.stdc.stdarg;
-	import core.stdc.stdio;
-	va_list arg;
-	va_start(arg,fmt);
-	vprintf(fmt,arg);
-}
-
 DWORD get_tick_count()
 {
 	DWORD tick;
