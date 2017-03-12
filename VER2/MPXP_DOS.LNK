@@ -1,7 +1,7 @@
 #------------ Mpxplay main (root) files ----------------------------
 NAME MPXPLAY.EXE
 PATH .\OBJ
-FILE dos_map.obj
+#FILE dos_map.obj
 FILE intel_hda.obj
 FILE libc_map.obj
 FILE main.obj

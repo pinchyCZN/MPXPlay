@@ -46,15 +46,15 @@ int _int386(int cmd,REGS *r,REGS *s)
 	case 0x1A:
 		switch(r.w.ax){
 		case 0xB102:
-			r.h.bl=1;
-			r.h.bh=2;
-			r.w.cflag=0;
+			s.h.bl=0xEE;
+			s.h.bh=0xAA;
+			s.w.cflag=0;
 			break;
 		case 0xB10A:
 			if(r.w.di==0x10) //HDBARL
 			{
 				s.x.ecx=cast(uint)&hda_registers;
-				r.w.cflag=0;
+				s.w.cflag=0;
 			}
 			break;
 		default:

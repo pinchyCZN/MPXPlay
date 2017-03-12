@@ -13,6 +13,8 @@ alias free=_free;
 alias inp=_inp;
 alias outp=_outp;
 alias fopen=_fopen;
+alias fseek=_fseek;
+alias ftell=_ftell;
 alias printf=_printf;
 
 enum MAX_PATH=256;
@@ -441,7 +443,7 @@ int process_playlist(const char *fname)
 	int ltable_size=0;
 	create_line_lookup(playlist,ltable,ltable_size);
 	if(ltable is null){
-		printf("unable to allocate line table\n");
+		printf("unable to allocate line table %08X\n",ltable_size);
 		free(playlist);
 		return 0;
 	}

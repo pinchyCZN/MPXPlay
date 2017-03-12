@@ -227,7 +227,6 @@ void log_mem(char *fmt,...)
 	va_start(arg,fmt);
 	vprintf(fmt,arg);
 }
-static DWORD last_read=0,last_data=0;
 
 int write_32(DWORD addr,DWORD data)
 {
