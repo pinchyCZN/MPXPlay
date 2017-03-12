@@ -726,19 +726,11 @@ int set_volume(int vol)
 	hda_send_codec_cmd(cmds[1]);
 	return 0;
 }
-extern (C)
-int set_silence()
+
+int wait_buffer()
 {
-	if(buffer1!is null)
-		memset(buffer1,0,buf_size);
-	if(buffer1!is null)
-		memset(buffer2,0,buf_size);
-	return 0;
-}
-int play_wav_buf(ubyte *buf,int len)
-{
+	int result=false;
 	DWORD tick,delta;
-	
 	if(0==device_found){
 		printf("device not found\n");
 		return 0;
@@ -754,35 +746,63 @@ int play_wav_buf(ubyte *buf,int len)
 		}
 		pos=read_32(base_reg+OSD0LPIB);
 		switch(current_buf){
-		default:
-		case 0:
-			if(pos>=buf_size)
-				ready=TRUE;
-			break;
-		case 1:
-			if(pos<buf_size)
-				ready=TRUE;
+			default:
+			case 0:
+				if(pos>=buf_size)
+					ready=TRUE;
+				break;
+			case 1:
+				if(pos<buf_size)
+					ready=TRUE;
+				break;
+		}
+		if(ready){
+			result=true;
 			break;
 		}
-		if(ready)
-			break;
 		version(windows_exe){
 			import core.sys.windows.windows;
 			Sleep(0);
 		}
 	}
-	{
-		char *mem;
-		if(0==current_buf)
-			mem=cast(char*)buffer1;
+	return result;
+}
+int play_wav_buf(ubyte *buf,int len)
+{
+	if(0==device_found){
+		printf("device not found\n");
+		return 0;
+	}
+	wait_buffer();
+	char *mem;
+	if(0==current_buf)
+		mem=cast(char*)buffer1;
+	else
+		mem=cast(char*)buffer2;
+	if(len>buf_size)
+		len=buf_size;
+	else if(len<0)
+		len=0;
+	memcpy(mem,buf,len);
+	current_buf^=1;
+	return 0;
+}
+
+extern (C)
+int set_silence()
+{
+	int count=0;
+	while(count<2){
+		int *b=null;
+		wait_buffer();
+		if(current_buf==0)
+			b=buffer1;
 		else
-			mem=cast(char*)buffer2;
-		if(len>buf_size)
-			len=buf_size;
-		else if(len<0)
-			len=0;
-		memcpy(mem,buf,len);
+			b=buffer2;
+		if(b !is null)
+			memset(b,0,buf_size);
 		current_buf^=1;
+		count++;
 	}
 	return 0;
 }

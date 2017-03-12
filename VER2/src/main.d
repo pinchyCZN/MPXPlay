@@ -7,7 +7,7 @@ import mp3_file;
 
 alias strncpy=_strncpy;
 alias strlen=_strlen;
-alias stricmp=_stricmp;
+alias stricmp=__stricmp;
 enum MAX_PATH=256;
 
 extern (C):
@@ -219,12 +219,16 @@ int extract_folder(const char *path,char *folder,int folder_size)
 			}
 		}
 	}
+	if(folder_size>0)
+		folder[0]=0;
 	if(start!=end){
 		result=true;
 		len=end-start;
 		if(len>folder_size)
 			len=folder_size;
 		strncpy(folder,path+start,len);
+		if(len>0 && len<folder_size)
+			folder[len]=0;
 		if(folder_size>0)
 			folder[folder_size-1]=0;
 	}
@@ -332,39 +336,53 @@ int process_playlist(const char *fname)
 		printf("unable to allocate mem for playlist\n");
 		return 0;
 	}
-	uint offset=0,dir=0,line=0;
-	int count=0;
+	uint offset=0;
+	int dir=0;
 	while(1){
-		if(seek_line(playlist,len,dir,offset))
-			line+=dir;
+		if(!seek_line(playlist,len,dir,offset)){
+			if(dir<0){
+				offset=len;
+				seek_line(playlist,len,dir,offset);
+			}else if(dir>0){
+				offset=0;
+			}
+		}
 loop:
 		char current_line[256];
 		current_line[0]=0;
 		extract_line(playlist+offset,current_line.ptr,current_line.length);
-		printf("%02i %08X %s\n",line,offset,current_line.ptr);
-		count++;
-		int key=__getch();
-		int kval=tolower(cast(char)key); 
-		if(kval=='x')
-			break;
-		if(kval=='s'){
-			dir=1;
-		}
-		else if(key=='a'){
-			dir=-1;
-		}
-		else if(key=='d'){
+		printf("%08X %s\n",offset,current_line.ptr);
+		play_mp3(current_line.ptr);
+		dir=1;
+		int vkey,ext;
+		vkey=dos_get_key(&ext);
+		switch(vkey){
+		case VK_FWDSLASH:
 			seek_next_folder(playlist,len,offset,-1);
 			goto loop;
-		}
-		else if(key=='f'){
-			seek_next_folder(playlist,len,offset,1);
+			break;
+		case VK_ASTERISK:
+			seek_next_folder(playlist,len,offset,-1);
 			goto loop;
-		}
-		else
+			break;
+		case VK_PLUS:
+			dir=1;
+			break;
+		case VK_MINUS:
 			dir=-1;
+			break;
+		case VK_ENTER:
+			dir=0;
+			break;
+		case VK_0:
+			goto exit;
+			break;
+		default:
+			break;
+		}
 	}
-	printf("done %i\n",count);
+exit:
+	printf("done\n");
 	return 0;
 }
 int process_file(const char *fname)

@@ -269,15 +269,55 @@ int play_mp3(const char *fname)
 				buf_level=0;
 			int len;
 			len=ftell(f);
-			printf("len=%06i %06i\n",len,buf_level);
+			//printf("len=%06i %06i\n",len,buf_level);
 		}
 		else
 			break;
 		DWORD delta=get_tick_count()-tick;
 		if(delta>200){
 			tick=get_tick_count();
-			if(kbhit())
+			int vkey,ext;
+			vkey=dos_get_key(&ext);
+			switch(vkey){
+			case VK_BACKSPACE:
+			case VK_4:
+				//fill_audio_buf(null,null,0,__tmp,0);
+				//fseek(f,-1024,SEEK_CUR);
+				//buf_level=0;
 				break;
+			case VK_6:
+				//fill_audio_buf(null,null,0,__tmp,0);
+				//fseek(f,1024,SEEK_CUR);
+				//buf_level=0;
+				break;
+			case VK_5:
+				set_silence();
+				while(1){
+					vkey=dos_get_key(&ext);
+					if(vkey!=0){
+						break;
+					}
+				}
+				break;
+			case VK_1:
+			case VK_2:
+			case VK_3:
+			case VK_7:
+			case VK_8:
+			case VK_9:
+				break;
+			case VK_0:
+			case VK_TAB:
+			case VK_FWDSLASH:
+			case VK_ASTERISK:
+			case VK_PLUS:
+			case VK_MINUS:
+			case VK_ENTER:
+				dos_put_key(vkey);
+				goto exit;
+			default:
+				break;
+			}
 		}
 	}
 	memset(buf,0,buf_size);

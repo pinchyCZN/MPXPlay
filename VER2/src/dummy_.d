@@ -83,7 +83,7 @@ char *_strncpy(char *dst,const char *src,int len)
 {
 	return strncpy(dst,src,len);
 }
-int _stricmp(char *s1,char *s2)
+int __stricmp(char *s1,char *s2)
 {
 	while (*s2 != 0 && toupper(*s1) == toupper(*s2))
 		s1++, s2++;
@@ -141,6 +141,18 @@ int __getch()
 }
 int dos_get_key(int *extended)
 {
-	return 0;
+	int result=0;
+	if(kbhit()){
+		result=getch();
+		if(result==0){
+			result=getch();
+			*extended=1;
+		}
+	}
+	return result;
 }
-
+extern (C) @nogc nothrow int ungetch(int key);
+int dos_put_key(int key)
+{
+	return ungetch(key);
+}

@@ -120,7 +120,21 @@ __declspec(__cdecl) int dos_get_key(int *extended)
 	}
 	return key;
 }
-
+__declspec(__cdecl) int dos_put_key(int key)
+{
+	union REGPACK r={0};
+	int result=0;
+	r.h.ah=5;
+	intr(0x16,&r);
+	if(r.w.flags&INTR_ZF)
+		return 0;
+	memset(&r,0,sizeof(r));
+	r.h.ch=key;
+	r.h.cl=key;
+	intr(0x16,&r);
+	result=r.h.al==0;
+	return result;
+}
 
 __declspec(__cdecl) int _printf(const char* fmt,...)
 {
@@ -147,14 +161,16 @@ __declspec(__cdecl) char * _strncpy(char *dst,const char *src,int len)
 {
 	return strncpy(dst,src,len);
 }
-__declspec(__cdecl) int _stricmp(char *a,const char *b)
+__declspec(__cdecl) int __stricmp(char *a,const char *b)
 {
 	return stricmp(a,b);
 }
 __declspec(__cdecl) int _fltused=0;
+__declspec(__cdecl) int D13TypeInfo_Enum6__vtblZ=0;
 __declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
 __declspec(__cdecl) int D10TypeInfo_h6__initZ=0;
 __declspec(__cdecl) int D10TypeInfo_k6__initZ=0;
+__declspec(__cdecl) int D10TypeInfo_i6__initZ;
 __declspec(__cdecl) int D14TypeInfo_Tuple6__vtblZ=0;
 __declspec(__cdecl) int D14TypeInfo_Const6__vtblZ=0;
 __declspec(__cdecl) int D10TypeInfo_t6__initZ=0;
@@ -179,6 +195,12 @@ __declspec(__cdecl) int d_main(int argc,char **argv);
 
 int main(int argc,char **argv)
 {
+	while(2){
+		int ext;
+		int key=dos_get_key(&ext);
+		if(key!=0)
+			printf("key=%02X\n",key);
+	}
 	return d_main(argc,argv);
 }
 

@@ -27,7 +27,7 @@ void* _vprintf(const char*,va_list);
 
 int _strlen(const char *);
 int _strncpy(char *,const char *,int);
-int _stricmp(const char*,const char*);
+int __stricmp(const char*,const char*);
 
 double _sin(double);
 double _cos(double);
@@ -42,7 +42,29 @@ enum CLOCKS_PER_SEC=1000;
 int __getch();
 int __kbhit();
 
+enum{
+	VK_TAB=0x09,
+	VK_FWDSLASH=0x2F,
+	VK_ASTERISK=0x2A,
+	VK_BACKSPACE=0x08,
+	VK_MINUS=0x2D,
+	VK_PLUS=0x2B,
+	VK_ENTER=0x0D,
+	VK_PERIOD=0x2E,
+	VK_0=0x30,
+	VK_1=0x31,
+	VK_2=0x32,
+	VK_3=0x33,
+	VK_4=0x34,
+	VK_5=0x35,
+	VK_6=0x36,
+	VK_7=0x37,
+	VK_8=0x38,
+	VK_9=0x39
+};
+
 int dos_get_key(int *extended);
+int dos_put_key(int key);
 
 int get_key(ref int extended)
 {
@@ -55,14 +77,6 @@ int get_key(ref int extended)
 			extended=true;
 		}
 	}
-	return result;
-}
-
-int get_usb_key(ref int extended)
-{
-	int result;
-	int ext=0;
-	result=dos_get_key(&ext);
 	return result;
 }
 
