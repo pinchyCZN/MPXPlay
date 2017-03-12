@@ -1,6 +1,6 @@
 .erase
 .c.obj: .AUTODEPEND
-        wcc386 $[* -zq -bt=DOS -wcd=202 -wcd=201 -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -fr -i\wc\h -i.\ -fo=.\obj\
+        wcc386 $[* -D__WATCOM_LFN__ -zq -bt=DOS -wcd=202 -wcd=201 -w3 -mf -oims -s -5r -fp3 -fpi87 -zro -fr -i\wc\h -i.\ -fo=.\obj\
 
 # OBJ = wss.obj audio.obj dmairq.obj dosstuff.obj mpxplay.obj pcibios.obj sc_inthd.obj 
 OBJ = .\obj\mpxplay.obj

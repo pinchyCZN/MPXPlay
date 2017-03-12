@@ -130,18 +130,7 @@ __declspec(__cdecl) int dos_get_key(int *extended)
 }
 __declspec(__cdecl) int dos_put_key(int key)
 {
-	union REGPACK r={0};
-	int result=0;
-	r.h.ah=5;
-	intr(0x16,&r);
-	if(r.w.flags&INTR_ZF)
-		return 0;
-	memset(&r,0,sizeof(r));
-	r.h.ch=key;
-	r.h.cl=key;
-	intr(0x16,&r);
-	result=r.h.al==0;
-	return result;
+	return ungetch(key);
 }
 
 __declspec(__cdecl) int _printf(const char* fmt,...)

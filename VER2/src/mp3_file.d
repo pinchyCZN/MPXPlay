@@ -307,6 +307,11 @@ int play_mp3(const char *fname)
 			case VK_9:
 				break;
 			case VK_0:
+				version(windows_exe){
+					dos_put_key(vkey);
+					goto exit;
+				}
+				break;
 			case VK_TAB:
 			case VK_FWDSLASH:
 			case VK_ASTERISK:

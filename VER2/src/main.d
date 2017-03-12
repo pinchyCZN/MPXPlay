@@ -24,9 +24,10 @@ extern (C):
 nothrow:
 int tolower(char a)
 {
-	int result=a;
+	int result;
 	if(a>='A' && a<='Z')
 		a+=0x20;
+	result=a;
 	return result;
 }
 char * strstri(const char *str,const char *substr)
@@ -466,19 +467,21 @@ loop:
 		pfile[0]=0;
 		extract_line(playlist+offset,pfile.ptr,pfile.length);
 		current_line=get_current_line(offset,ltable,ltable_size);
-		printf("%03i %08X %s\n",current_line,offset,pfile.ptr);
-		play_mp3(pfile.ptr);
+		printf("%03i %08X [%s]\n",current_line,offset,pfile.ptr);
 		write_cmos(CMOS_VAL.LINE_NUMBER,current_line);
+		play_mp3(pfile.ptr);
 		dir=1;
 		int vkey,ext;
 		vkey=dos_get_key(&ext);
+		if(vkey==0)
+			vkey=get_key(ext);
 		switch(vkey){
 		case VK_FWDSLASH:
 			seek_next_folder(playlist,len,offset,-1);
 			goto loop;
 			break;
 		case VK_ASTERISK:
-			seek_next_folder(playlist,len,offset,-1);
+			seek_next_folder(playlist,len,offset,1);
 			goto loop;
 			break;
 		case VK_PLUS:
@@ -491,7 +494,8 @@ loop:
 			dir=0;
 			break;
 		case VK_0:
-			goto exit;
+			version(windows_exe)
+				goto exit;
 			break;
 		default:
 			break;
@@ -513,6 +517,8 @@ int process_file(const char *fname)
 	}else if(strstri(tmp.ptr,"txt".ptr)){
 		process_playlist(fname);
 	}
+	else
+		printf("unkown file:%s\n",fname);
 	return 0;
 }
 
