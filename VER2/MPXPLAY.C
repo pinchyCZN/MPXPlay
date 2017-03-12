@@ -83,6 +83,14 @@ __declspec(__cdecl) double _frexp(double a,int *e)
 {
 	return frexp(a,e);
 }
+__declspec(__cdecl) unsigned int _inp(int port)
+{
+	return inp(port);
+}
+__declspec(__cdecl) unsigned int _outp(int port,int val)
+{
+	return outp(port,val);
+}
 __declspec(__cdecl) unsigned int _clock()
 {
 	return clock();
@@ -195,12 +203,6 @@ __declspec(__cdecl) int d_main(int argc,char **argv);
 
 int main(int argc,char **argv)
 {
-	while(2){
-		int ext;
-		int key=dos_get_key(&ext);
-		if(key!=0)
-			printf("key=%02X\n",key);
-	}
 	return d_main(argc,argv);
 }
 

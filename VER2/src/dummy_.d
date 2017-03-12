@@ -156,3 +156,32 @@ int dos_put_key(int key)
 {
 	return ungetch(key);
 }
+static int cmos=0;
+int _outp(int port,int val)
+{
+	int result=0;
+	if(port==0x70){
+		cmos=val;
+		return result;
+	}else{
+		import core.sys.windows.windows;
+		char key[80];
+		char tmp[80];
+		_snprintf(key.ptr,key.length,"OFFSET%i",cmos);
+		_snprintf(tmp.ptr,tmp.length,"%i",val);
+		WritePrivateProfileStringA("DATA".ptr,key.ptr,tmp.ptr,".\\MPXPLAY_.INI".ptr);
+	}
+	return result;
+}
+int _inp(int port)
+{
+	int result=0;
+	import core.sys.windows.windows;
+	char key[80];
+	char tmp[80];
+	_snprintf(key.ptr,key.length,"OFFSET%i",cmos);
+	tmp[0]=0;
+	GetPrivateProfileStringA("DATA".ptr,key.ptr,"".ptr,tmp.ptr,tmp.length,".\\MPXPLAY_.INI".ptr);
+	result=atoi(tmp.ptr);
+	return result;
+}

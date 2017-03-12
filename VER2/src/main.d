@@ -8,6 +8,13 @@ import mp3_file;
 alias strncpy=_strncpy;
 alias strlen=_strlen;
 alias stricmp=__stricmp;
+alias malloc=_malloc;
+alias free=_free;
+alias inp=_inp;
+alias outp=_outp;
+alias fopen=_fopen;
+alias printf=_printf;
+
 enum MAX_PATH=256;
 
 extern (C):
@@ -251,7 +258,6 @@ int seek_next_folder(const char *buf,uint buf_size,ref uint offset,int dir)
 	ptr=cast(char*)buf+offset;
 	extract_line(ptr,line.ptr,line.length);
 	extract_folder(line.ptr,folder.ptr,folder.length);
-	printf("current folder:%s\n",folder.ptr);
 	if(dir>=0)
 		dir=1;
 	else
@@ -314,7 +320,102 @@ next:
 
 	return result;
 }
-
+int create_line_lookup(const char *buf,ref int *list,ref int list_size)
+{
+	int result=false;
+	int i=0,count=0;
+	while(1){
+		char a=buf[i++];
+		if(a==0)
+			break;
+		if(a=='\n')
+			count++;
+	}
+	list_size=count*int.sizeof;
+	list=cast(int*)malloc(list_size);
+	if(list!=null){
+		int start=false;
+		i=0;count=0;
+		while(1){
+			ubyte a=buf[i];
+			if(a==0)
+				break;
+			if(a>=' '){
+				if(!start){
+					start=true;
+					list[count]=i;
+					count++;
+				}
+			}else if(a=='\n'){
+				start=false;
+			}
+			i++;
+		}
+		result=true;
+	}
+	return result;
+}
+int get_current_line(uint offset,int *ltable,int ltable_size)
+{
+	int result=0;
+	int ltable_count=ltable_size/int.sizeof;
+	int i;
+	for(i=0;i<ltable_count;i++){
+		if(offset==ltable[i]){
+			result=i;
+			break;
+		}
+	}
+	return result;
+}
+uint get_line_offset(int line,int *ltable,int ltable_size)
+{
+	uint result=0;
+	int count=ltable_size/int.sizeof;
+	if(count==0)
+		return result;
+	if(line>=count)
+		line=count-1;
+	result=ltable[line];
+	return result;
+}
+enum CMOS_VAL{
+	LINE_NUMBER,
+	OFFSET
+}
+int read_cmos(CMOS_VAL val)
+{
+	int result=0;
+	int a;
+	if(val==CMOS_VAL.LINE_NUMBER){
+		outp(0x70,1);
+		a=inp(0x71);
+		result=a<<8;
+		outp(0x70,3);
+		a=inp(0x71);
+		result|=a;
+	}else{
+		outp(0x70,5);
+		a=inp(0x71);
+		result=a;
+	}
+	return result;
+}
+int write_cmos(CMOS_VAL val,int data)
+{
+	int result=0;
+	int a;
+	if(val==CMOS_VAL.LINE_NUMBER){
+		outp(0x70,1);
+		outp(0x71,(data>>8)&0xFF);
+		outp(0x70,3);
+		outp(0x71,data&0xFF);
+	}else{
+		outp(0x70,5);
+		outp(0x71,data&0xFF);
+	}
+	return result;
+}
 int process_playlist(const char *fname)
 {
 	FILE *f;
@@ -336,8 +437,19 @@ int process_playlist(const char *fname)
 		printf("unable to allocate mem for playlist\n");
 		return 0;
 	}
+	int *ltable=null;
+	int ltable_size=0;
+	create_line_lookup(playlist,ltable,ltable_size);
+	if(ltable is null){
+		printf("unable to allocate line table\n");
+		free(playlist);
+		return 0;
+	}
 	uint offset=0;
 	int dir=0;
+	int current_line;
+	current_line=read_cmos(CMOS_VAL.LINE_NUMBER);
+	offset=get_line_offset(current_line,ltable,ltable_size);
 	while(1){
 		if(!seek_line(playlist,len,dir,offset)){
 			if(dir<0){
@@ -348,11 +460,13 @@ int process_playlist(const char *fname)
 			}
 		}
 loop:
-		char current_line[256];
-		current_line[0]=0;
-		extract_line(playlist+offset,current_line.ptr,current_line.length);
-		printf("%08X %s\n",offset,current_line.ptr);
-		play_mp3(current_line.ptr);
+		char pfile[256];
+		pfile[0]=0;
+		extract_line(playlist+offset,pfile.ptr,pfile.length);
+		current_line=get_current_line(offset,ltable,ltable_size);
+		printf("%03i %08X %s\n",current_line,offset,pfile.ptr);
+		play_mp3(pfile.ptr);
+		write_cmos(CMOS_VAL.LINE_NUMBER,current_line);
 		dir=1;
 		int vkey,ext;
 		vkey=dos_get_key(&ext);
@@ -382,6 +496,8 @@ loop:
 		}
 	}
 exit:
+	free(playlist);
+	free(ltable);
 	printf("done\n");
 	return 0;
 }

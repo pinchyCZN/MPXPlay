@@ -36,6 +36,9 @@ double _sqrt(double);
 double _frexp(double,int *);
 double _pow(double,double);
 
+int _outp(int port,int val);
+int _inp(int port);
+
 uint _clock();
 enum CLOCKS_PER_SEC=1000;
 
