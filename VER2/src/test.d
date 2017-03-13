@@ -6,6 +6,7 @@ import core.sys.windows.windows;
 import dummy_;
 import libc_map:get_key;
 import minimp3;
+import drflac;
 import intel_hda;
 import dos_map;
 import main:process_file;

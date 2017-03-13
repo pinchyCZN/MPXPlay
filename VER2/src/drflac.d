@@ -102,12 +102,14 @@ nothrow @nogc:
 // - dr_flac is not thread-safe, but it's APIs can be called from any thread so long as you do your own synchronization.
 
 
+/*
 static if (is(typeof((){import iv.vfs;}()))) {
   enum DrFlacHasVFS = true;
   import iv.vfs;
 } else {
   enum DrFlacHasVFS = false;
 }
+*/
 
 
 // As data is read from the client it is placed into an internal buffer for fast access. This controls the
@@ -264,7 +266,7 @@ struct drflac_metadata {
 // bytesToRead [in]  The number of bytes to read.
 //
 // Returns the number of bytes actually read.
-alias drflac_read_proc = size_t delegate (void* pUserData, void* pBufferOut, size_t bytesToRead);
+alias drflac_read_proc = @nogc size_t delegate (void* pUserData, void* pBufferOut, size_t bytesToRead);
 
 // Callback for when data needs to be seeked.
 //
@@ -1841,54 +1843,29 @@ struct drflac_init_info {
 }
 
 private struct ReadStruct {
-  static if (DrFlacHasVFS) VFile srcfile;
   drflac_read_proc onReadCB;
   drflac_seek_proc onSeekCB;
   void* pUserData;
 
-  size_t read (void* pBufferOut, size_t bytesToRead) nothrow {
+  size_t read (void* pBufferOut, size_t bytesToRead) nothrow @nogc {
     auto b = cast(ubyte*)pBufferOut;
     auto res = 0;
-    try {
       while (bytesToRead > 0) {
         size_t rd = 0;
-        if (onReadCB !is null) {
+        if (onReadCB !is null)
           rd = onReadCB(pUserData, b, bytesToRead);
-        } else {
-          static if (DrFlacHasVFS) {
-            if (srcfile.isOpen) rd = srcfile.rawRead(b[0..bytesToRead]).length;
-          }
-        }
         if (rd == 0) break;
         b += rd;
         res += rd;
         bytesToRead -= rd;
       }
       return res;
-    } catch (Exception e) {
-      return 0;
-    }
   }
 
-  bool seek (int offset, drflac_seek_origin origin) nothrow {
-    try {
-      if (onSeekCB !is null) {
+  bool seek (int offset, drflac_seek_origin origin) nothrow @nogc{
+      if (onSeekCB !is null)
         return onSeekCB(pUserData, offset, origin);
-      } else {
-        static if (DrFlacHasVFS) {
-          if (srcfile.isOpen) {
-            switch (origin) {
-              case drflac_seek_origin_start: srcfile.seek(offset, Seek.Set); return true;
-              case drflac_seek_origin_current: srcfile.seek(offset, Seek.Cur); return true;
-              default: return false;
-            }
-          }
-        }
-      }
       return false;
-    } catch (Exception e) {
-      return 0;
-    }
   }
 }
 
@@ -2575,6 +2552,7 @@ bool drflac__init_private (drflac_init_info* pInit, drflac_read_proc onRead, drf
 
 } //nothrow
 
+/*
 static if (DrFlacHasVFS)
 bool drflac__init_private (drflac_init_info* pInit, VFile fl, scope drflac_meta_proc onMeta, void* pUserDataMD) {
   //import core.stdc.string : memset;
@@ -2589,6 +2567,7 @@ bool drflac__init_private (drflac_init_info* pInit, VFile fl, scope drflac_meta_
 
   return drflac__check_init_private(pInit, onMeta, pUserDataMD);
 }
+*/
 
 nothrow {
 void drflac__init_from_info (drflac* pFlac, drflac_init_info* pInit) {
@@ -2668,13 +2647,14 @@ drflac* drflac_open_with_metadata_private (drflac_read_proc onRead, drflac_seek_
 
 } //nothrow
 
+/*
 static if (DrFlacHasVFS)
 drflac* drflac_open_with_metadata_private (VFile fl, scope drflac_meta_proc onMeta, void* pUserDataMD, bool stdio) {
   drflac_init_info init;
   if (!drflac__init_private(&init, fl, onMeta, pUserDataMD)) return null;
   return drflac_open_with_metadata_private_xx(&init, onMeta, pUserDataMD, stdio);
 }
-
+*/
 
 nothrow {
 alias drflac_file = void*;
@@ -2737,6 +2717,7 @@ public drflac* drflac_open_file_with_metadata (const(char)[] filename, scope drf
 
 } //nothrow
 
+/*
 static if (DrFlacHasVFS) {
   public drflac* drflac_open_file (VFile fl, scope drflac_meta_proc onMeta=null) {
     import std.functional : toDelegate;
@@ -2753,6 +2734,7 @@ static if (DrFlacHasVFS) {
     return pFlac;
   }
 }
+*/
 
 nothrow {
 
@@ -2856,10 +2838,12 @@ public drflac* drflac_open (drflac_read_proc onRead, drflac_seek_proc onSeek, vo
 
 } //nothrow
 
+/*
 static if (DrFlacHasVFS)
 public drflac* drflac_open (VFile fl) {
   return drflac_open_with_metadata_private(fl, null, null, false);
 }
+*/
 
 nothrow {
 
