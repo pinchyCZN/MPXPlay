@@ -410,6 +410,7 @@
  </Config>
  <Folder name="DPLAY">
   <File path="src\dos_map.d" />
+  <File path="src\drflac.d" />
   <File path="src\dummy_.d" />
   <File path="src\intel_hda.d" />
   <File path="src\libc_map.d" />
