@@ -467,7 +467,7 @@ loop:
 		pfile[0]=0;
 		extract_line(playlist+offset,pfile.ptr,pfile.length);
 		current_line=get_current_line(offset,ltable,ltable_size);
-		printf("%03i %08X [%s]\n",current_line,offset,pfile.ptr);
+		printf("%03i [%s]\n",current_line,pfile.ptr);
 		write_cmos(CMOS_VAL.LINE_NUMBER,current_line);
 		play_mp3(pfile.ptr);
 		dir=1;
