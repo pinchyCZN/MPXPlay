@@ -4,6 +4,7 @@ import core.stdc.stdio: FILE,SEEK_SET,SEEK_END;
 import libc_map;
 import intel_hda;
 import mp3_file;
+import drflac;
 
 alias strncpy=_strncpy;
 alias strlen=_strlen;
@@ -514,6 +515,8 @@ int process_file(const char *fname)
 	if(strstri(tmp.ptr,"mp3".ptr)){
 		printf("playing mp3 file:%s\n",fname);
 		play_mp3(fname);		
+	}else if(strstri(tmp.ptr,"flac".ptr)){
+		play_flac(fname,0);
 	}else if(strstri(tmp.ptr,"txt".ptr)){
 		process_playlist(fname);
 	}

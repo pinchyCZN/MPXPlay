@@ -1,3 +1,4 @@
+
 // FLAC audio decoder. Public domain. See "unlicense" statement at the end of this file.
 // dr_flac - v0.3d - 11/06/2016
 // commit eebbf6ed17e9200a48c8f83a350a82722295558f
@@ -5,6 +6,33 @@
 // David Reid - mackron@gmail.com
 //
 // D translation by Ketmar // Invisible Vector
+/*
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+*/
+
 module drflac;
 nothrow @nogc:
 
@@ -2670,10 +2698,9 @@ bool drflac__on_seek_stdio (void* pUserData, int offset, drflac_seek_origin orig
   return fseek(cast(FILE*)pUserData, offset, (origin == drflac_seek_origin_current) ? SEEK_CUR : SEEK_SET) == 0;
 }
 
-drflac_file drflac__open_file_handle (const(char)[] filename) {
-  import std.internal.cstring : tempCString;
+drflac_file drflac__open_file_handle (const char *filename) {
   import core.stdc.stdio;
-  FILE* pFile = fopen(filename.tempCString, "rb");
+  FILE* pFile = fopen(filename, "rb");
   if (pFile is null) return null;
   return cast(drflac_file)pFile;
 }
@@ -2683,7 +2710,7 @@ void drflac__close_file_handle (drflac_file file) {
   fclose(cast(FILE*)file);
 }
 
-public drflac* drflac_open_file (const(char)[] filename) {
+public drflac* drflac_open_file (const char *filename) {
   import std.functional : toDelegate;
 
   drflac_file file = drflac__open_file_handle(filename);
@@ -2699,7 +2726,7 @@ public drflac* drflac_open_file (const(char)[] filename) {
   return pFlac;
 }
 
-public drflac* drflac_open_file_with_metadata (const(char)[] filename, scope drflac_meta_proc onMeta, void* pUserData=null) {
+public drflac* drflac_open_file_with_metadata (const char *filename, scope drflac_meta_proc onMeta, void* pUserData=null) {
   import std.functional : toDelegate;
 
   drflac_file file = drflac__open_file_handle(filename);
@@ -3175,7 +3202,7 @@ public int* drflac_open_and_decode (drflac_read_proc onRead, drflac_seek_proc on
   return drflac__full_decode_and_close(pFlac, sampleRate, channels, totalSampleCount);
 }
 
-public int* drflac_open_and_decode_file (const(char)[] filename, uint* sampleRate, uint* channels, ulong* totalSampleCount) {
+public int* drflac_open_and_decode_file (const char *filename, uint* sampleRate, uint* channels, ulong* totalSampleCount) {
   if (sampleRate) *sampleRate = 0;
   if (channels) *channels = 0;
   if (totalSampleCount) *totalSampleCount = 0;
@@ -3240,78 +3267,12 @@ public long drflac_vorbis_comment_size (uint commentCount, const(char)* pComment
 
 }
 
-// REVISION HISTORY
-//
-// v0.3d - 11/06/2016
-//   - Minor clean up.
-//
-// v0.3c - 28/05/2016
-//   - Fixed compilation error.
-//
-// v0.3b - 16/05/2016
-//   - Fixed Linux/GCC build.
-//   - Updated documentation.
-//
-// v0.3a - 15/05/2016
-//   - Minor fixes to documentation.
-//
-// v0.3 - 11/05/2016
-//   - Optimizations. Now at about parity with the reference implementation on 32-bit builds.
-//   - Lots of clean up.
-//
-// v0.2b - 10/05/2016
-//   - Bug fixes.
-//
-// v0.2a - 10/05/2016
-//   - Made drflac_open_and_decode() more robust.
-//   - Removed an unused debugging variable
-//
-// v0.2 - 09/05/2016
-//   - Added support for Ogg encapsulation.
-//   - API CHANGE. Have the onSeek callback take a third argument which specifies whether or not the seek
-//     should be relative to the start or the current position. Also changes the seeking rules such that
-//     seeking offsets will never be negative.
-//   - Have drflac_open_and_decode() fail gracefully if the stream has an unknown total sample count.
-//
-// v0.1b - 07/05/2016
-//   - Properly close the file handle in drflac_open_file() and family when the decoder fails to initialize.
-//   - Removed a stale comment.
-//
-// v0.1a - 05/05/2016
-//   - Minor formatting changes.
-//   - Fixed a warning on the GCC build.
-//
-// v0.1 - 03/05/2016
-//   - Initial versioned release.
-
-// TODO
-// - Add support for initializing the decoder without a header STREAMINFO block.
-// - Test CUESHEET metadata blocks.
-
-
-/*
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <http://unlicense.org/>
-*/
+public int play_flac(const char *fname,int inital_offset)
+{
+	int result=false;
+     drflac* pFlac = drflac_open_file(fname);
+     if (pFlac is null) {
+         // Failed to open FLAC file
+     }	
+	return result;
+}
