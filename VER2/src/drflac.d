@@ -34,6 +34,18 @@ For more information, please refer to <http://unlicense.org/>
 */
 
 module drflac;
+import libc_map;
+
+alias fopen=_fopen;
+alias fclose=_fclose;
+alias fread=_fread;
+alias fseek=_fseek;
+alias memset=_memset;
+alias memcpy=_memcpy;
+alias malloc=_malloc;
+alias free=_free;
+
+
 nothrow @nogc:
 
 // USAGE
@@ -294,7 +306,8 @@ struct drflac_metadata {
 // bytesToRead [in]  The number of bytes to read.
 //
 // Returns the number of bytes actually read.
-alias drflac_read_proc = @nogc size_t delegate (void* pUserData, void* pBufferOut, size_t bytesToRead);
+//alias drflac_read_proc = @nogc size_t delegate (void* pUserData, void* pBufferOut, size_t bytesToRead);
+alias drflac_read_proc = @nogc size_t function(void* pUserData, void* pBufferOut, size_t bytesToRead);
 
 // Callback for when data needs to be seeked.
 //
@@ -306,7 +319,8 @@ alias drflac_read_proc = @nogc size_t delegate (void* pUserData, void* pBufferOu
 //
 // The offset will never be negative. Whether or not it is relative to the beginning or current position is determined
 // by the "origin" parameter which will be either drflac_seek_origin_start or drflac_seek_origin_current.
-alias drflac_seek_proc = bool delegate (void* pUserData, int offset, drflac_seek_origin origin);
+//alias drflac_seek_proc = bool delegate (void* pUserData, int offset, drflac_seek_origin origin);
+alias drflac_seek_proc = bool function(void* pUserData, int offset, drflac_seek_origin origin);
 
 // Callback for when a metadata block is read.
 //
@@ -660,8 +674,12 @@ ushort drflac__be2host_16 (ushort n) pure nothrow @safe @nogc {
 uint drflac__be2host_32 (uint n) pure nothrow @safe @nogc {
   static if (__VERSION__ > 2067) pragma(inline, true);
   version(LittleEndian) {
-    import core.bitop : bswap;
-    return bswap(n);
+	asm @trusted{
+		mov EAX,n;
+		bswap EAX;
+		mov n,EAX;
+	}
+    return n;
   } else {
     return n;
   }
@@ -670,14 +688,14 @@ uint drflac__be2host_32 (uint n) pure nothrow @safe @nogc {
 ulong drflac__be2host_64 (ulong n) pure nothrow @safe @nogc {
   static if (__VERSION__ > 2067) pragma(inline, true);
   version(LittleEndian) {
-    import core.bitop : bswap;
-    version(GNU) {
-      auto n0 = cast(ulong)bswap(cast(uint)n);
-      auto n1 = cast(ulong)bswap(cast(uint)(n>>32));
-      return (n0<<32)|n1;
-    } else {
-      return bswap(n);
-    }
+      asm @trusted{
+		mov EAX,[n];
+		mov EBX,[n+4];
+		bswap EAX;
+		bswap EBX;
+		mov [n],EBX;
+		mov [n+4],EAX;
+      }
   } else {
     return n;
   }
@@ -1681,7 +1699,6 @@ ubyte drflac__get_channel_count_from_channel_assignment (byte channelAssignment)
 }
 
 bool drflac__decode_frame (drflac* pFlac) {
-  import core.stdc.string : memset;
   // This function should be called while the stream is sitting on the first byte after the frame header.
   memset(pFlac.currentFrame.subframes.ptr, 0, (pFlac.currentFrame.subframes).sizeof);
 
@@ -1732,7 +1749,6 @@ void drflac__get_current_frame_sample_range (drflac* pFlac, ulong* pFirstSampleI
 }
 
 bool drflac__seek_to_first_frame (drflac* pFlac) {
-  import core.stdc.string : memset;
   assert(pFlac !is null);
 
   bool result = drflac__seek_to_byte(&pFlac.bs, pFlac.firstFramePos);
@@ -1913,7 +1929,6 @@ bool drflac__read_and_decode_block_header (ref ReadStruct rs, ubyte* isLastBlock
 }
 
 bool drflac__read_streaminfo (ref ReadStruct rs, drflac_streaminfo* pStreamInfo) {
-  import core.stdc.string : memcpy;
   // min/max block size.
   uint blockSizes;
   if (rs.read(&blockSizes, 4) != 4) return false;
@@ -1945,7 +1960,6 @@ bool drflac__read_streaminfo (ref ReadStruct rs, drflac_streaminfo* pStreamInfo)
 }
 
 bool drflac__read_and_decode_metadata (drflac* pFlac, scope drflac_meta_proc onMeta, void* pUserDataMD) {
-  import core.stdc.stdlib : malloc, free;
   assert(pFlac !is null);
 
   // We want to keep track of the byte position in the stream of the seektable. At the time of calling this function we know that
@@ -2034,7 +2048,6 @@ bool drflac__read_and_decode_metadata (drflac* pFlac, scope drflac_meta_proc onM
 
       case DRFLAC_METADATA_BLOCK_TYPE_CUESHEET:
         if (onMeta) {
-          import core.stdc.string : memcpy;
           void* pRawData = malloc(blockSize);
           if (pRawData is null) return false;
           scope(exit) free(pRawData);
@@ -2599,7 +2612,6 @@ bool drflac__init_private (drflac_init_info* pInit, VFile fl, scope drflac_meta_
 
 nothrow {
 void drflac__init_from_info (drflac* pFlac, drflac_init_info* pInit) {
-  import core.stdc.string : memcpy, memset;
   assert(pFlac !is null);
   assert(pInit !is null);
 
@@ -2619,8 +2631,6 @@ void drflac__init_from_info (drflac* pFlac, drflac_init_info* pInit) {
 }
 
 drflac* drflac_open_with_metadata_private_xx (drflac_init_info* init, scope drflac_meta_proc onMeta, void* pUserDataMD, bool stdio) {
-  import core.stdc.stdlib : malloc, free;
-  import core.stdc.string : memset;
   import std.functional : toDelegate;
 
   size_t allocationSize = (drflac).sizeof;
@@ -2649,8 +2659,8 @@ drflac* drflac_open_with_metadata_private_xx (drflac_init_info* init, scope drfl
     oggbs.bytesRemainingInPage = 0;
 
     // The Ogg bistream needs to be layered on top of the original bitstream.
-    pFlac.bs.rs.onReadCB = toDelegate(&drflac__on_read_ogg);
-    pFlac.bs.rs.onSeekCB = toDelegate(&drflac__on_seek_ogg);
+    pFlac.bs.rs.onReadCB = &drflac__on_read_ogg;
+    pFlac.bs.rs.onSeekCB = &drflac__on_seek_ogg;
     pFlac.bs.rs.pUserData = cast(void*)oggbs;
   }
 //#endif
@@ -2688,25 +2698,25 @@ nothrow {
 alias drflac_file = void*;
 
 size_t drflac__on_read_stdio (void* pUserData, void* bufferOut, size_t bytesToRead) {
-  import core.stdc.stdio;
+import core.stdc.stdio: FILE;
   return fread(bufferOut, 1, bytesToRead, cast(FILE*)pUserData);
 }
 
 bool drflac__on_seek_stdio (void* pUserData, int offset, drflac_seek_origin origin) {
-  import core.stdc.stdio;
+import core.stdc.stdio: FILE,SEEK_CUR,SEEK_SET;
   assert(offset > 0 || (offset == 0 && origin == drflac_seek_origin_start));
   return fseek(cast(FILE*)pUserData, offset, (origin == drflac_seek_origin_current) ? SEEK_CUR : SEEK_SET) == 0;
 }
 
 drflac_file drflac__open_file_handle (const char *filename) {
-  import core.stdc.stdio;
+	import core.stdc.stdio: FILE;
   FILE* pFile = fopen(filename, "rb");
   if (pFile is null) return null;
   return cast(drflac_file)pFile;
 }
 
 void drflac__close_file_handle (drflac_file file) {
-  import core.stdc.stdio;
+import core.stdc.stdio: FILE;
   fclose(cast(FILE*)file);
 }
 
@@ -2716,7 +2726,7 @@ public drflac* drflac_open_file (const char *filename) {
   drflac_file file = drflac__open_file_handle(filename);
   if (file is null) return null;
 
-  drflac* pFlac = drflac_open(toDelegate(&drflac__on_read_stdio), toDelegate(&drflac__on_seek_stdio), cast(void*)file);
+  drflac* pFlac = drflac_open(&drflac__on_read_stdio, &drflac__on_seek_stdio, cast(void*)file);
   if (pFlac is null) {
     drflac__close_file_handle(file);
     return null;
@@ -2732,7 +2742,7 @@ public drflac* drflac_open_file_with_metadata (const char *filename, scope drfla
   drflac_file file = drflac__open_file_handle(filename);
   if (file is null) return null;
 
-  drflac* pFlac = drflac_open_with_metadata_private(toDelegate(&drflac__on_read_stdio), toDelegate(&drflac__on_seek_stdio), onMeta, cast(void*)file, pUserData, true);
+  drflac* pFlac = drflac_open_with_metadata_private(&drflac__on_read_stdio, &drflac__on_seek_stdio, onMeta, cast(void*)file, pUserData, true);
   if (pFlac is null) {
     drflac__close_file_handle(file);
     return pFlac;
@@ -2812,7 +2822,7 @@ public drflac* drflac_open_memory (const(void)* data, size_t dataSize) {
   memoryStream.dataSize = dataSize;
   memoryStream.currentReadPos = 0;
 
-  drflac* pFlac = drflac_open(toDelegate(&drflac__on_read_memory), toDelegate(&drflac__on_seek_memory), &memoryStream);
+  drflac* pFlac = drflac_open(&drflac__on_read_memory, &drflac__on_seek_memory, &memoryStream);
   if (pFlac is null) return null;
 
   pFlac.memoryStream = memoryStream;
@@ -2840,7 +2850,7 @@ public drflac* drflac_open_memory_with_metadata (const(void)* data, size_t dataS
   memoryStream.dataSize = dataSize;
   memoryStream.currentReadPos = 0;
 
-  drflac* pFlac = drflac_open_with_metadata_private(toDelegate(&drflac__on_read_memory), toDelegate(&drflac__on_seek_memory), onMeta, &memoryStream, pUserData, false);
+  drflac* pFlac = drflac_open_with_metadata_private(&drflac__on_read_memory, &drflac__on_seek_memory, onMeta, &memoryStream, pUserData, false);
   if (pFlac is null) return null;
 
   pFlac.memoryStream = memoryStream;
