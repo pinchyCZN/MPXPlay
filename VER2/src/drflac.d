@@ -3276,13 +3276,17 @@ public long drflac_vorbis_comment_size (uint commentCount, const(char)* pComment
 }
 
 }
-
+extern (C)
 public int play_flac(const char *fname,int inital_offset)
 {
 	int result=false;
      drflac* pFlac = drflac_open_file(fname);
      if (pFlac is null) {
-         // Failed to open FLAC file
+		int chunkSize=0;
+		int *pChunkSamples;
+	     while (drflac_read_s32(pFlac, chunkSize, pChunkSamples) > 0) {
+		     //do_something();
+	     }
      }	
 	return result;
 }
