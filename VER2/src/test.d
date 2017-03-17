@@ -24,8 +24,9 @@ alias printf=_printf;
 alias clock=_clock;
 alias kbhit=_kbhit;
 
-@nogc:
-nothrow:
+@nogc
+nothrow 
+{
 
 int fill_buffer(FILE *f,ubyte *buf,int buf_size,ref int buf_level,int forward)
 {
@@ -381,6 +382,7 @@ int test_d(const char *fname)
 	set_silence();
 	return 0;
 }
+}
 int main(string[] args)
 {
 	int result=0;
@@ -394,6 +396,8 @@ int main(string[] args)
 	}
 	fname[0..s.length]=s[0..s.length];
 	fname[s.length]=0;
+	import drflac2;
+	//play_flac2(fname,0);
 	test_d(fname.ptr);
 	return result;		
 }
