@@ -1229,8 +1229,100 @@ enum DRFLAC__DECODE_SAMPLES_WITH_RESIDULE__RICE__PROC(string funcName, string pr
 "  return true;\n"~
 "}\n";
 
-mixin(DRFLAC__DECODE_SAMPLES_WITH_RESIDULE__RICE__PROC!("drflac__decode_samples_with_residual__rice_64", "drflac__calculate_prediction_64"));
+//mixin(DRFLAC__DECODE_SAMPLES_WITH_RESIDULE__RICE__PROC!("drflac__decode_samples_with_residual__rice_64", "drflac__calculate_prediction_64"));
+//pragma(msg,DRFLAC__DECODE_SAMPLES_WITH_RESIDULE__RICE__PROC!("drflac__decode_samples_with_residual__rice_64", "drflac__calculate_prediction_64"));
 mixin(DRFLAC__DECODE_SAMPLES_WITH_RESIDULE__RICE__PROC!("drflac__decode_samples_with_residual__rice_32", "drflac__calculate_prediction_32"));
+
+static bool drflac__decode_samples_with_residual__rice_64 (drflac_bs* bs, uint count, ubyte riceParam, uint order, int shift, const(short)* coefficients, int* pSamplesOut) {
+	assert(bs !is null);
+	assert(count > 0);
+	assert(pSamplesOut !is null);
+
+	static immutable uint[16] bitOffsetTable = [
+		0,
+		4,
+		3, 3,
+		2, 2, 2, 2,
+		1, 1, 1, 1, 1, 1, 1, 1
+	];
+
+	drflac_cache_t riceParamMask = cast(drflac_cache_t)((~((cast(uint)-1)>>(riceParam))));
+	drflac_cache_t resultHiShift = cast(drflac_cache_t)((((bs).cache).sizeof*8)-riceParam);
+
+	for (int i = 0; i < cast(int)count; ++i) {
+		uint zeroCounter = 0;
+		while (bs.cache == 0) {
+			zeroCounter += cast(uint)((((bs).cache).sizeof*8)-((bs).consumedBits));
+			if (!drflac__reload_cache(bs)) return false;
+		}
+
+		/* At this point the cache should not be zero, in which case we know the first set bit should be somewhere in here. There is
+		no need for us to perform any cache reloading logic here which should make things much faster. */
+		assert(bs.cache != 0);
+		uint decodedRice;
+
+		uint setBitOffsetPlus1 = bitOffsetTable.ptr[((((bs).cache)&(~((cast(uint)-1)>>(4))))>>((((bs).cache).sizeof*8)-(4)))];
+		if (setBitOffsetPlus1 > 0) {
+			decodedRice = (zeroCounter+(setBitOffsetPlus1-1))<<riceParam;
+		} else {
+			if (bs.cache == 1) {
+				setBitOffsetPlus1 = cast(uint)((((bs).cache).sizeof*8));
+				decodedRice = cast(uint)((zeroCounter+((((bs).cache).sizeof*8)-1))<<riceParam);
+			} else {
+				setBitOffsetPlus1 = 5;
+				for (;;) {
+					if ((bs.cache&(((bs).cache)&(~((cast(uint)-1)>>(setBitOffsetPlus1)))))) {
+						decodedRice = (zeroCounter+(setBitOffsetPlus1-1))<<riceParam;
+						break;
+					}
+					setBitOffsetPlus1 += 1;
+				}
+			}
+		}
+
+		uint bitsLo = 0;
+		uint riceLength = setBitOffsetPlus1+riceParam;
+		if (riceLength < ((((bs).cache).sizeof*8)-((bs).consumedBits))) {
+			bitsLo = cast(uint)((bs.cache&(riceParamMask>>setBitOffsetPlus1))>>((((bs).cache).sizeof*8)-riceLength));
+			bs.consumedBits += riceLength;
+			bs.cache <<= riceLength;
+		} else {
+			bs.consumedBits += riceLength;
+			bs.cache <<= setBitOffsetPlus1;
+
+			/* It straddles the cached data. It will never cover more than the next chunk. We just read the number in two parts and combine them. */
+			size_t bitCountLo = bs.consumedBits-(((bs).cache).sizeof*8);
+			drflac_cache_t resultHi = bs.cache&riceParamMask;    /* <-- This mask is OK because all bits after the first bits are always zero. */
+
+			if (bs.nextL2Line < ((((bs).cacheL2).sizeof)/((bs).cacheL2[0]).sizeof)) {
+				bs.cache = drflac__be2host__cache_line(bs.cacheL2.ptr[bs.nextL2Line++]);
+			} else {
+				/* Slow path. We need to fetch more data from the client. */
+				if (!drflac__reload_cache(bs)) return false;
+			}
+
+			bitsLo = cast(uint)((resultHi>>resultHiShift)|((((bs).cache)&(~((cast(uint)-1)>>(bitCountLo))))>>((((bs).cache).sizeof*8)-(bitCountLo))));
+			bs.consumedBits = bitCountLo;
+			bs.cache <<= bitCountLo;
+		}
+
+		decodedRice |= bitsLo;
+		decodedRice = (decodedRice>>1)^(~(decodedRice&0x01)+1);   /* <-- Ah, much faster! :) */
+		/*
+		if ((decodedRice&0x01)) {
+		decodedRice = ~(decodedRice>>1);
+		} else {
+		decodedRice = (decodedRice>>1);
+		}
+		*/
+
+		/* In order to properly calculate the prediction when the bits per sample is >16 we need to do it using 64-bit arithmetic. We can assume this
+		is probably going to be slower on 32-bit systems so we'll do a more optimized 32-bit version when the bits per sample is low enough.*/
+		pSamplesOut[i] = (cast(int)decodedRice+drflac__calculate_prediction_64(order, shift, coefficients, pSamplesOut+i));
+	}
+
+	return true;
+}
 
 
 // Reads and seeks past a string of residual values as Rice codes. The decoder should be sitting on the first bit of the Rice codes.
@@ -3331,21 +3423,42 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org/>
 */
+import intel_hda;
+//import core.stdc.stdlib;
 public int play_flac2(char []fname,int init_offset)
 {
+	int result=0;
      drflac* pFlac = drflac_open_file(fname);
      if (pFlac is null){
 		return 0;
      }
-     import core.stdc.stdlib;
-     import core.stdc.stdio;
-     int chunkSize=0x1000;
-     int *pChunkSamples=cast(int*)malloc(0x4000);
-     while (drflac_read_s32(pFlac, chunkSize, pChunkSamples) > 0) {
-		int i;
-		printf("%i",i);
-         
-     }
+	 int *sample_buf;
+	 int sample_size;
+	 int sample_count=get_audio_buf_size();
+	 sample_count=get_audio_buf_size()/2;
+	 sample_size=sample_count*4;
+	 sample_buf=cast(int*)malloc(sample_size);
+	 if(sample_buf is null){
+		 return result;
+	 }
+	 ushort *tmp;
+	 int tmp_size=sample_size/2;
+	 tmp=cast(ushort*)malloc(tmp_size);
+	 if(tmp is null){
+//		 free(sample_buf);
+		 return result;
+	 }
+	 while(drflac_read_s32(pFlac,sample_count,sample_buf) > 0){
+		 int i;
+		 ushort *uptr=cast(ushort*)sample_buf;
+		 for(i=0;i<sample_count;i++){
+			 ushort a=uptr[i*2+1];
+			 tmp[i]=cast(ushort)a;
+		 }
+		 play_wav_buf(cast(ubyte*)tmp,tmp_size);
+
+	}
+
 
 	return 0;
 }

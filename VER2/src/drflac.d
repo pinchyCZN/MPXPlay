@@ -3637,11 +3637,32 @@ public int play_flac(const char *fname,int inital_offset)
 		set_silence();
 		return result;
 	}
-	int chunkSize      = 0x1000;
-	int *pChunkSamples = cast(int*) malloc(chunkSize);
-	while(drflac_read_s32(pFlac,chunkSize,pChunkSamples) > 0){
-		int i;
-		i++;
+	int *sample_buf;
+	int sample_size;
+	int sample_count=get_audio_buf_size();
+	sample_count=get_audio_buf_size()/2;
+	sample_size=sample_count*4;
+	sample_buf=cast(int*)malloc(sample_size);
+	if(sample_buf is null){
+		return result;
 	}
+	ushort *tmp;
+	int tmp_size=sample_size/2;
+	tmp=cast(ushort*)malloc(tmp_size);
+	if(tmp is null){
+		free(sample_buf);
+		return result;
+	}
+	while(drflac_read_s32(pFlac,sample_count,sample_buf) > 0){
+		int i;
+		for(i=0;i<sample_count;i++){
+			int a=sample_buf[i]>>16;
+			tmp[i]=cast(ushort)a;
+		}
+		play_wav_buf(cast(ubyte*)tmp,tmp_size);
+
+	}
+	free(tmp);
+	free(sample_buf);
 	return result;
 }

@@ -352,9 +352,7 @@ extern (Windows) DWORD hw_thread(void *param)
 	}
 	return 0;
 }
-
-extern(C)
-int test_d(const char *fname)
+int setup_audio()
 {
 	DWORD tid=0;
 	CreateThread(null,0,&hw_thread,null,0,&tid);
@@ -376,6 +374,12 @@ int test_d(const char *fname)
 			AudioCallback(hwo,0,0,cast(DWORD)&wh[i],0);
 		}
 	}
+	return 0;
+}
+extern(C)
+int test_d(const char *fname)
+{
+	setup_audio();
 	//mp3_test(fname);
 	//play_mp3(fname);
 	process_file(fname);
@@ -396,8 +400,12 @@ int main(string[] args)
 	}
 	fname[0..s.length]=s[0..s.length];
 	fname[s.length]=0;
+
+	setup_audio();
 	import drflac2;
-	//play_flac2(fname,0);
+	play_flac2(fname,0);
+	return 0;
+
 	test_d(fname.ptr);
 	return result;		
 }
