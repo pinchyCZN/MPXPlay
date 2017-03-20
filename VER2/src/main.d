@@ -521,7 +521,7 @@ int process_file(const char *fname)
 		process_playlist(fname);
 	}
 	else
-		printf("unkown file:%s\n",fname);
+		printf("unknown file:%s\n",fname);
 	return 0;
 }
 

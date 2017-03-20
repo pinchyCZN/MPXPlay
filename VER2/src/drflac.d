@@ -3629,7 +3629,7 @@ public long drflac_vorbis_comment_size(uint commentCount,const(char)* pComments)
 }
 
 
-private int check_keys(drflac* pFlac)
+private int check_keys(drflac* pFlac,ulong *current_sample)
 {
 	int result=false;
 	__gshared static DWORD tick=0;
@@ -3642,10 +3642,25 @@ private int check_keys(drflac* pFlac)
 		switch(vkey){
 		case VK_BACKSPACE:
 		case VK_4:
+			{
 			//seek reverse
+			ulong i=*current_sample;
+			ulong tmp=pFlac.channels*pFlac.sampleRate*3;
+			if(tmp>i)
+				i=tmp;
+			i-=tmp;
+			if(drflac_seek_to_sample(pFlac,i))
+				*current_sample=i;
+			}
 			break;
 		case VK_6:
+			{
 			//seek forward
+			ulong i=pFlac.channels*pFlac.sampleRate*3;
+			i+=*current_sample;
+			if(drflac_seek_to_sample(pFlac,i))
+				*current_sample=i;
+			}
 			break;
 		case VK_5:
 			set_silence();
@@ -3704,12 +3719,13 @@ public int play_flac(const char *fname,int inital_offset)
 	if(sample_buf is null){
 		return result;
 	}
+	ulong current_sample=0;	
 	ushort *tmp;
 	int tmp_size=sample_size/2;
 	tmp=cast(ushort*)malloc(tmp_size);
 	if(tmp is null)
 		goto exit;
-		
+	
 	while(drflac_read_s32(pFlac,sample_count,sample_buf) > 0){
 		int i;
 		for(i=0;i<sample_count;i++){
@@ -3717,7 +3733,8 @@ public int play_flac(const char *fname,int inital_offset)
 			tmp[i]=cast(ushort)a;
 		}
 		play_wav_buf(cast(ubyte*)tmp,tmp_size);
-		if(check_keys(pFlac))
+		current_sample+=sample_count;
+		if(check_keys(pFlac,&current_sample))
 			goto exit;
 	}
 exit:
