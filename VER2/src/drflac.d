@@ -3628,6 +3628,63 @@ public long drflac_vorbis_comment_size(uint commentCount,const(char)* pComments)
 	return res;
 }
 
+
+private int check_keys(drflac* pFlac)
+{
+	int result=false;
+	__gshared static DWORD tick=0;
+	DWORD delta;
+	delta=get_tick_count()-tick;
+	if(delta>200){
+		tick=get_tick_count();
+		int vkey,ext;
+		vkey=dos_get_key(&ext);
+		switch(vkey){
+		case VK_BACKSPACE:
+		case VK_4:
+			//seek reverse
+			break;
+		case VK_6:
+			//seek forward
+			break;
+		case VK_5:
+			set_silence();
+			while(1){
+				vkey=dos_get_key(&ext);
+				if(vkey!=0){
+					break;
+				}
+			}
+			break;
+		case VK_1:
+		case VK_2:
+		case VK_3:
+		case VK_7:
+		case VK_8:
+		case VK_9:
+			break;
+		case VK_0:
+			version(windows_exe){
+				dos_put_key(vkey);
+				result=true;
+			}
+			break;
+		case VK_TAB:
+		case VK_FWDSLASH:
+		case VK_ASTERISK:
+		case VK_PLUS:
+		case VK_MINUS:
+		case VK_ENTER:
+			dos_put_key(vkey);
+			result=true;
+			break;
+		default:
+			break;
+		}
+	}
+	return result;
+}
+
 extern (C)
 public int play_flac(const char *fname,int inital_offset)
 {
@@ -3650,10 +3707,9 @@ public int play_flac(const char *fname,int inital_offset)
 	ushort *tmp;
 	int tmp_size=sample_size/2;
 	tmp=cast(ushort*)malloc(tmp_size);
-	if(tmp is null){
-		free(sample_buf);
-		return result;
-	}
+	if(tmp is null)
+		goto exit;
+		
 	while(drflac_read_s32(pFlac,sample_count,sample_buf) > 0){
 		int i;
 		for(i=0;i<sample_count;i++){
@@ -3661,9 +3717,14 @@ public int play_flac(const char *fname,int inital_offset)
 			tmp[i]=cast(ushort)a;
 		}
 		play_wav_buf(cast(ubyte*)tmp,tmp_size);
-
+		if(check_keys(pFlac))
+			goto exit;
 	}
-	free(tmp);
-	free(sample_buf);
+exit:
+	drflac_close(pFlac);
+	if(tmp !is null)	
+		free(tmp);
+	if(sample_buf !is null)
+		free(sample_buf);
 	return result;
 }
