@@ -3649,6 +3649,7 @@ private int check_keys(drflac* pFlac,ulong *current_sample)
 			if(tmp>i)
 				i=tmp;
 			i-=tmp;
+			set_silence();
 			if(drflac_seek_to_sample(pFlac,i))
 				*current_sample=i;
 			}
@@ -3658,6 +3659,7 @@ private int check_keys(drflac* pFlac,ulong *current_sample)
 			//seek forward
 			ulong i=pFlac.channels*pFlac.sampleRate*3;
 			i+=*current_sample;
+			set_silence();
 			if(drflac_seek_to_sample(pFlac,i))
 				*current_sample=i;
 			}
