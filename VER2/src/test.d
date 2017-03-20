@@ -401,11 +401,6 @@ int main(string[] args)
 	fname[0..s.length]=s[0..s.length];
 	fname[s.length]=0;
 
-	setup_audio();
-	import drflac2;
-	play_flac2(fname,0);
-	return 0;
-
 	test_d(fname.ptr);
 	return result;		
 }

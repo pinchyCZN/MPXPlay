@@ -706,6 +706,7 @@ ulong drflac__be2host_64(ulong n) pure nothrow @safe @nogc
 			mov [n],EBX;
 			mov [n + 4],EAX;
 		}
+		return n;
 	} else {
 		return n;
 	}
