@@ -180,8 +180,27 @@ __declspec(__cdecl) int D9intel_hda7__arrayZ()
 {
 	return D7minimp37__arrayZ();
 }
-
-
+__declspec(__cdecl) int D6drflac8__assertFiZv()
+{
+	return 0;
+}
+__declspec(__cdecl) int _d_assert()
+{
+	return 0;
+}
+__declspec(__cdecl) int _d_assert_msg()
+{
+	return 0;
+}
+__declspec(__cdecl) int _d_local_unwind2()
+{
+	return 0;
+}
+__declspec(__cdecl) int _except_list=0;
+__declspec(__cdecl) int _d_framehandler()
+{
+	return 0;
+}
 
 __declspec(__cdecl) int play_mp3(const char *fname);
 __declspec(__cdecl) int init_hda();

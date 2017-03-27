@@ -18,3 +18,4 @@ dmd %_DPARAMS_% %_SRC_DIR_%\libc_map.d
 dmd %_DPARAMS_% %_SRC_DIR_%\main.d
 dmd %_DPARAMS_% %_SRC_DIR_%\minimp3.d
 dmd %_DPARAMS_% %_SRC_DIR_%\mp3_file.d
+dmd %_DPARAMS_% %_SRC_DIR_%\drflac.d

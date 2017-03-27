@@ -70,7 +70,7 @@ DWORD get_tick_count()
 		import core.sys.windows.windows;
 		tick=GetTickCount();
 	}else{
-		asm{
+		asm @trusted nothrow @nogc pure{
 			rdtsc;
 			mov tick,EAX;
 		}

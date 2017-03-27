@@ -7,6 +7,7 @@ FILE libc_map.obj
 FILE main.obj
 FILE minimp3.obj
 FILE mp3_file.obj
+FILE drflac.obj
 FILE MPXPLAY.obj
 
 

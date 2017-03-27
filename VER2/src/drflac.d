@@ -44,6 +44,7 @@ alias fseek  = _fseek;
 alias memset = _memset;
 alias memcpy = _memcpy;
 alias malloc = _malloc;
+alias realloc = _realloc;
 alias free   = _free;
 
 
@@ -641,6 +642,195 @@ struct drflac_vorbis_comment_iterator {
 // returned string is NOT null terminated.
 //const(char)* drflac_next_vorbis_comment(drflac_vorbis_comment_iterator* pIter, uint* pCommentLengthOut);
 
+/***************************************
+* Unsigned long divide.
+* Input:
+*      [EDX,EAX],[ECX,EBX]
+* Output:
+*      [EDX,EAX] = [EDX,EAX] / [ECX,EBX]
+*      [ECX,EBX] = [EDX,EAX] % [ECX,EBX]
+*/
+
+void __ULDIV__()
+{
+    version (D_InlineAsm_X86)
+    {
+        asm
+        {
+            naked                   ;
+            test    ECX,ECX         ;
+            jz      uldiv           ;
+
+            // if ECX > EDX, then quotient is 0 and remainder is [EDX,EAX]
+            cmp     ECX,EDX         ;
+            ja      quo0            ;
+
+            test    ECX,ECX         ;
+            js      Lleft           ;
+
+            /* We have n>d, and know that n/d will fit in 32 bits.
+			* d will be left justified if we shift it left s bits.
+			* [d1,d0] <<= s
+			* [n2,n1,n0] = [n1,n0] << s
+			*
+			* Use one divide, by this reasoning:
+			* ([n2,n1]<<32 + n0)/(d1<<32 + d0)
+			* becomes:
+			* ([n2,n1]<<32)/(d1<<32 + d0) + n0/(d1<<32 + d0)
+			* The second divide is always 0.
+			* Ignore the d0 in the first divide, which will yield a quotient
+			* that might be too high by 1 (because d1 is left justified).
+			* We can tell if it's too big if:
+			*  q*[d1,d0] > [n2,n1,n0]
+			* which is:
+			*  q*[d1,d0] > [[q*[d1,0]+q%[d1,0],n1,n0]
+			* If we subtract q*[d1,0] from both sides, we get:
+			*  q*d0 > [[n2,n1]%d1,n0]
+			* So if it is too big by one, reduce q by one to q'=q-one.
+			* Compute remainder as:
+			*  r = ([n1,n0] - q'*[d1,d0]) >> s
+			* Again, we can subtract q*[d1,0]:
+			*  r = ([n1,n0] - q*[d1,0] - (q'*[d1,d0] - q*[d1,0])) >> s
+			*  r = ([[n2,n1]%d1,n0] + (q*[d1,0] - (q - one)*[d1,d0])) >> s
+			*  r = ([[n2,n1]%d1,n0] + (q*[d1,0] - [d1 *(q-one),d0*(1-q)])) >> s
+			*  r = ([[n2,n1]%d1,n0] + [d1 *one,d0*(one-q)])) >> s
+			*/
+
+            push    EBP             ;
+            push    ESI             ;
+            push    EDI             ;
+
+            mov     ESI,EDX         ;
+            mov     EDI,EAX         ;
+            mov     EBP,ECX         ;
+
+            bsr     EAX,ECX         ;       // EAX is now 30..0
+            xor     EAX,0x1F        ;       // EAX is now 1..31
+            mov     CH,AL           ;
+            neg     EAX             ;
+            add     EAX,32          ;
+            mov     CL,AL           ;
+
+            mov     EAX,EBX         ;
+            shr     EAX,CL          ;
+            xchg    CH,CL           ;
+            shl     EBP,CL          ;
+            or      EBP,EAX         ;
+            shl     EBX,CL          ;
+
+            mov     EDX,ESI         ;
+            xchg    CH,CL           ;
+            shr     EDX,CL          ;
+
+            mov     EAX,EDI         ;
+            shr     EAX,CL          ;
+            xchg    CH,CL           ;
+            shl     EDI,CL          ;
+            shl     ESI,CL          ;
+            or      EAX,ESI         ;
+
+            div     EBP             ;
+            push    EBP             ;
+            mov     EBP,EAX         ;
+            mov     ESI,EDX         ;
+
+            mul     EBX             ;
+            cmp     EDX,ESI         ;
+            ja      L1              ;
+            jb      L2              ;
+            cmp     EAX,EDI         ;
+            jbe     L2              ;
+		L1:         dec     EBP             ;
+            sub     EAX,EBX         ;
+            sbb     EDX,0[ESP]      ;
+		L2:
+            add     ESP,4           ;
+            sub     EDI,EAX         ;
+            sbb     ESI,EDX         ;
+            mov     EAX,ESI         ;
+            xchg    CH,CL           ;
+            shl     EAX,CL          ;
+            xchg    CH,CL           ;
+            shr     EDI,CL          ;
+            or      EDI,EAX         ;
+            shr     ESI,CL          ;
+            mov     EBX,EDI         ;
+            mov     ECX,ESI         ;
+            mov     EAX,EBP         ;
+            xor     EDX,EDX         ;
+
+            pop     EDI             ;
+            pop     ESI             ;
+            pop     EBP             ;
+            ret                     ;
+
+		uldiv:      test    EDX,EDX         ;
+            jnz     D3              ;
+            // Both high words are 0, we can use the DIV instruction
+            div     EBX             ;
+            mov     EBX,EDX         ;
+            mov     EDX,ECX         ;       // EDX = ECX = 0
+            ret                     ;
+
+            even                    ;
+		D3:         // Divide [EDX,EAX] by EBX
+            mov     ECX,EAX         ;
+            mov     EAX,EDX         ;
+            xor     EDX,EDX         ;
+            div     EBX             ;
+            xchg    ECX,EAX         ;
+            div     EBX             ;
+            // ECX,EAX = result
+            // EDX = remainder
+            mov     EBX,EDX         ;
+            mov     EDX,ECX         ;
+            xor     ECX,ECX         ;
+            ret                     ;
+
+		quo0:       // Quotient is 0
+            // Remainder is [EDX,EAX]
+            mov     EBX,EAX         ;
+            mov     ECX,EDX         ;
+            xor     EAX,EAX         ;
+            xor     EDX,EDX         ;
+            ret                     ;
+
+		Lleft:      // The quotient is 0 or 1 and EDX >= ECX
+            cmp     EDX,ECX         ;
+            ja      quo1            ;       // [EDX,EAX] > [ECX,EBX]
+            // EDX == ECX
+            cmp     EAX,EBX         ;
+            jb      quo0            ;
+
+		quo1:       // Quotient is 1
+            // Remainder is [EDX,EAX] - [ECX,EBX]
+            sub     EAX,EBX         ;
+            sbb     EDX,ECX         ;
+            mov     EBX,EAX         ;
+            mov     ECX,EDX         ;
+            mov     EAX,1           ;
+            xor     EDX,EDX         ;
+            ret                     ;
+        }
+    }
+    else version (D_InlineAsm_X86_64)
+        assert(0);
+    else
+        static assert(0);
+}
+int divide_64(ulong a,ulong b,ref ulong c)
+{
+	asm{
+		mov EDX,[a];
+		mov EAX,[a+4];
+		mov ECX,[b];
+		mov EBX,[b+4];
+		call __ULDIV__;
+		mov [c],EDX;
+		mov [c+4],EAX;
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -682,7 +872,7 @@ uint drflac__be2host_32(uint n) pure nothrow @safe @nogc
 	static if(__VERSION__ > 2067)
 		pragma(inline,true);
 	version(LittleEndian){
-		asm @trusted {
+		asm @trusted @nogc nothrow pure{
 			mov   EAX,n;
 			bswap EAX;
 			mov   n,EAX;
@@ -698,7 +888,7 @@ ulong drflac__be2host_64(ulong n) pure nothrow @safe @nogc
 	static if(__VERSION__ > 2067)
 		pragma(inline,true);
 	version(LittleEndian){
-		asm @trusted {
+		asm @trusted @nogc nothrow pure{
 			mov   EAX,[n];
 			mov   EBX,[n + 4];
 			bswap EAX;
@@ -3087,7 +3277,6 @@ size_t drflac__on_read_memory(void* pUserData,void* bufferOut,size_t bytesToRead
 		bytesToRead = bytesRemaining;
 
 	if(bytesToRead > 0){
-		import core.stdc.string:memcpy;
 		memcpy(bufferOut,memoryStream.data + memoryStream.currentReadPos,bytesToRead);
 		memoryStream.currentReadPos += bytesToRead;
 	}
@@ -3196,7 +3385,6 @@ public drflac* drflac_open_with_metadata(drflac_read_proc onRead,drflac_seek_pro
 
 public void drflac_close(drflac* pFlac)
 {
-	import core.stdc.stdlib:free;
 	if(pFlac is null)
 		return;
 
@@ -3466,8 +3654,6 @@ public bool drflac_seek_to_sample(drflac* pFlac,ulong sampleIndex)
 //// High Level APIs ////
 int* drflac__full_decode_and_close(drflac* pFlac,uint* sampleRateOut,uint* channelsOut,ulong* totalSampleCountOut)
 {
-	import core.stdc.stdlib:malloc,realloc,free;
-	import core.stdc.string:memset,memcpy;
 	assert(pFlac !is null);
 
 	int   * pSampleData    = null;
@@ -3580,7 +3766,6 @@ public int* drflac_open_and_decode_memory(const void* data,size_t dataSize,uint*
 
 public void drflac_free(void* pSampleDataReturnedByOpenAndDecode)
 {
-	import core.stdc.stdlib:free;
 	free(pSampleDataReturnedByOpenAndDecode);
 }
 
