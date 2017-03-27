@@ -655,7 +655,7 @@ void __ULDIV__()
 {
     version (D_InlineAsm_X86)
     {
-        asm
+        asm @nogc nothrow
         {
             naked                   ;
             test    ECX,ECX         ;
@@ -821,28 +821,28 @@ void __ULDIV__()
 ulong divide_64(ulong a,ulong b)
 {
 	ulong result;
-	asm{
-		mov EDX,[a];
-		mov EAX,[a+4];
-		mov ECX,[b];
-		mov EBX,[b+4];
+	asm @nogc nothrow{
+		mov EDX,[a+4];
+		mov EAX,[a];
+		mov ECX,[b+4];
+		mov EBX,[b];
 		call __ULDIV__;
-		mov [result],EDX;
-		mov [result+4],EAX;
+		mov [result+4],EDX;
+		mov [result],EAX;
 	}
 	return result;
 }
 ulong mod_64(ulong a,ulong b)
 {
 	ulong result;
-	asm{
-		mov EDX,[a];
-		mov EAX,[a+4];
-		mov ECX,[b];
-		mov EBX,[b+4];
+	asm @nogc nothrow{
+		mov EDX,[a+4];
+		mov EAX,[a];
+		mov ECX,[b+4];
+		mov EBX,[b];
 		call __ULDIV__;
-		mov [result],ECX;
-		mov [result+4],EBX;
+		mov [result+4],ECX;
+		mov [result],EBX;
 	}
 	return result;
 }
@@ -3436,10 +3436,8 @@ ulong drflac__read_s32__misaligned(drflac* pFlac,ulong samplesToRead,int* buffer
 	while(samplesToRead > 0){
 		ulong totalSamplesInFrame       = pFlac.currentFrame.header.blockSize * channelCount;
 		ulong samplesReadFromFrameSoFar = totalSamplesInFrame - pFlac.currentFrame.samplesRemaining;
-		//ULDIV
-		uint  channelIndex              = samplesReadFromFrameSoFar % channelCount;
-		//ULDIV
-		ulong nextSampleInFrame = samplesReadFromFrameSoFar / channelCount;
+		uint  channelIndex              = cast(uint)mod_64(samplesReadFromFrameSoFar,channelCount);
+		ulong nextSampleInFrame = divide_64(samplesReadFromFrameSoFar,channelCount);
 
 		int   decodedSample = 0;
 		switch(pFlac.currentFrame.header.channelAssignment){
@@ -3536,8 +3534,7 @@ public ulong drflac_read_s32(drflac* pFlac,ulong samplesToRead,int* bufferOut)
 			uint  channelCount              = drflac__get_channel_count_from_channel_assignment(pFlac.currentFrame.header.channelAssignment);
 			ulong totalSamplesInFrame       = pFlac.currentFrame.header.blockSize * channelCount;
 			ulong samplesReadFromFrameSoFar = totalSamplesInFrame - pFlac.currentFrame.samplesRemaining;
-			//ULDIV
-			int   misalignedSampleCount = cast(int)(samplesReadFromFrameSoFar % channelCount);
+			int   misalignedSampleCount = cast(int)mod_64(samplesReadFromFrameSoFar,channelCount);
 			if(misalignedSampleCount > 0){
 				ulong misalignedSamplesRead = drflac__read_s32__misaligned(pFlac,misalignedSampleCount,bufferOut);
 				samplesRead               += misalignedSamplesRead;
@@ -3546,13 +3543,12 @@ public ulong drflac_read_s32(drflac* pFlac,ulong samplesToRead,int* bufferOut)
 				samplesToRead             -= misalignedSamplesRead;
 			}
 
-			ulong alignedSampleCountPerChannel = samplesToRead / channelCount;
-			if(alignedSampleCountPerChannel > pFlac.currentFrame.samplesRemaining / channelCount){
-				//ULDIV
-				alignedSampleCountPerChannel = pFlac.currentFrame.samplesRemaining / channelCount;
+			ulong alignedSampleCountPerChannel = divide_64(samplesToRead,channelCount);
+			ulong tmp=divide_64(pFlac.currentFrame.samplesRemaining,channelCount);
+			if(alignedSampleCountPerChannel > tmp){
+				alignedSampleCountPerChannel = tmp;
 			}
-			//ULDIV
-			ulong firstAlignedSampleInFrame = samplesReadFromFrameSoFar / channelCount;
+			ulong firstAlignedSampleInFrame = divide_64(samplesReadFromFrameSoFar,channelCount);
 			uint  unusedBitsPerSample       = 32 - pFlac.bitsPerSample;
 
 			switch(pFlac.currentFrame.header.channelAssignment){
