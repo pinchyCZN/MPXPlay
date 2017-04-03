@@ -175,6 +175,7 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 		return result;
 	}
 	int trys=0;
+	DWORD tick;
 	while(1){
 		int consumed=0;
 		int written=0;
@@ -208,13 +209,22 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 			version(Windows){
 				printf("\n");
 			}
+			if(trys==0){
+				tick=get_tick_count();
+			}else{
+				DWORD delta=get_tick_count()-tick;
+				if(get_msec(delta)>2500){
+					break;
+				}
+			}
 			trys++;
-			if(trys>400){
+			if(trys>1000){
 				break;
 			}
 			if(trys==0)
 				memset(&mp3,0,mp3.sizeof);
-			else if(trys>4){
+			else if(trys>3)
+			{
 				int tmp=fbuf_size/2;
 				if(buf_level>4){
 					tmp=buf_level-4;
