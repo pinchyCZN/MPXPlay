@@ -1,5 +1,5 @@
 module mp3_file;
-import core.stdc.stdio: FILE,SEEK_CUR;
+import core.stdc.stdio: FILE,SEEK_CUR,SEEK_SET,SEEK_END;
 
 import minimp3;
 import libc_map;
@@ -174,6 +174,7 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 		result=true;
 		return result;
 	}
+	int trys=0;
 	while(1){
 		int consumed=0;
 		int written=0;
@@ -204,7 +205,11 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 				break;
 			}
 		}else{
-			break;
+			buf_level=0;
+			fill_buffer(f,fbuf,fbuf_size,buf_level,consumed);
+			trys++;
+			if(trys>3)
+				break;
 		}
 	}
 	if(!result)
@@ -213,18 +218,66 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 	return result;
 }
 
+int seek_initial_offset(FILE *f,int flen,int initial_offset)
+{
+	int result=false;
+	if(initial_offset>0 && initial_offset<=0xFF){
+		uint tmp=flen;
+		tmp=tmp/0xFF;
+		tmp=tmp*initial_offset;
+		if(0 == fseek(f,tmp,SEEK_SET))
+			result=true;
+	}
+	return result;
+}
 
-
+int save_file_offset(FILE *f,int flen)
+{
+	int result=false;
+	__gshared static DWORD tick=0;
+	DWORD delta;
+	delta=get_tick_count()-tick;
+	if(get_msec(delta)>5000){
+		tick=get_tick_count();
+		uint divisor=flen/0xE0;
+		if(divisor!=0){
+			uint tmp=ftell(f);
+			tmp=tmp/divisor;
+			if(tmp>0xFF)
+				tmp=0xFF;
+			import main: write_cmos,CMOS_VAL;
+			result=write_cmos(CMOS_VAL.OFFSET,tmp);
+		}
+	}
+	return result;
+}
+int seek_mp3(FILE *f,int flen,int dir)
+{
+	int result=false;
+	int tmp=flen/36;
+	if(tmp!=0){
+		if(dir<0)
+			tmp=-tmp;
+		if(0==fseek(f,tmp,SEEK_CUR))
+			result=true;
+	}
+	return result;
+}
 extern (C)
-int play_mp3(const char *fname)
+int play_mp3(const char *fname,int initial_offset)
 {
 	int result=false;
 	FILE *f;
+	int flen;
 	f=fopen(fname,"rb");
 	if(f is null){
 		printf("unable to open file:%s\n",fname);
 		return result;
 	}
+	import main:get_flen;
+	flen=get_flen(f);
+	seek_initial_offset(f,flen,initial_offset);
+
 	__gshared static ubyte *buf;
 	const uint buf_size=0x10000;
 	uint buf_level;
@@ -273,22 +326,27 @@ int play_mp3(const char *fname)
 		}
 		else
 			break;
+		
+		save_file_offset(f,flen);
+
 		DWORD delta=get_tick_count()-tick;
-		if(delta>200){
+		if(get_msec(delta)>200){
 			tick=get_tick_count();
 			int vkey,ext;
 			vkey=dos_get_key(&ext);
 			switch(vkey){
 			case VK_BACKSPACE:
 			case VK_4:
-				//fill_audio_buf(null,null,0,__tmp,0);
-				//fseek(f,-1024,SEEK_CUR);
-				//buf_level=0;
+				set_silence();
+				if(seek_mp3(f,flen,-1))
+					buf_level=0;
+				tick>>=2;
 				break;
 			case VK_6:
-				//fill_audio_buf(null,null,0,__tmp,0);
-				//fseek(f,1024,SEEK_CUR);
-				//buf_level=0;
+				set_silence();
+				if(seek_mp3(f,flen,1))
+					buf_level=0;
+				tick>>=2;
 				break;
 			case VK_5:
 				set_silence();

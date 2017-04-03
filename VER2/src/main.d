@@ -420,6 +420,19 @@ int write_cmos(CMOS_VAL val,int data)
 	}
 	return result;
 }
+enum FILETYPE{
+	MP3,
+	FLAC
+}
+FILETYPE get_file_type(const char *fname)
+{
+	FILETYPE result=FILETYPE.MP3;
+	char [10]ext;
+	extract_ext(fname,ext.ptr,ext.length);
+	if(0==stricmp(ext.ptr,"flac"))
+		result=FILETYPE.FLAC;
+	return result;
+}
 int process_playlist(const char *fname)
 {
 	FILE *f;
@@ -452,7 +465,9 @@ int process_playlist(const char *fname)
 	uint offset=0;
 	int dir=0;
 	int current_line;
+	int initial_offset;
 	current_line=read_cmos(CMOS_VAL.LINE_NUMBER);
+	initial_offset=read_cmos(CMOS_VAL.OFFSET);
 	offset=get_line_offset(current_line,ltable,ltable_size);
 	while(1){
 		if(!seek_line(playlist,len,dir,offset)){
@@ -470,8 +485,18 @@ loop:
 		current_line=get_current_line(offset,ltable,ltable_size);
 		printf("%03i [%s]\n",current_line,pfile.ptr);
 		write_cmos(CMOS_VAL.LINE_NUMBER,current_line);
-		play_mp3(pfile.ptr);
+
+		if(FILETYPE.MP3==get_file_type(pfile.ptr))
+			play_mp3(pfile.ptr,initial_offset);
+		else if(FILETYPE.FLAC==get_file_type(pfile.ptr))
+			play_flac(pfile.ptr,initial_offset);
+		else
+			printf("unknown file:%s\n",pfile.ptr);
+
+		initial_offset=0;
+		write_cmos(CMOS_VAL.OFFSET,initial_offset);
 		dir=1;
+
 		int vkey,ext;
 		vkey=dos_get_key(&ext);
 		if(vkey==0)
@@ -514,7 +539,7 @@ int process_file(const char *fname)
 	extract_ext(fname,tmp.ptr,tmp.length);
 	if(strstri(tmp.ptr,"mp3".ptr)){
 		printf("playing mp3 file:%s\n",fname);
-		play_mp3(fname);		
+		play_mp3(fname,0);
 	}else if(strstri(tmp.ptr,"flac".ptr)){
 		play_flac(fname,0);
 	}else if(strstri(tmp.ptr,"txt".ptr)){

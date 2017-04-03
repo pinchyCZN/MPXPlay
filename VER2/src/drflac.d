@@ -3852,6 +3852,7 @@ private int check_keys(drflac* pFlac,ulong *current_sample)
 			if(drflac_seek_to_sample(pFlac,i))
 				*current_sample=i;
 			}
+			tick>>=2;
 			break;
 		case VK_6:
 			{
@@ -3862,6 +3863,7 @@ private int check_keys(drflac* pFlac,ulong *current_sample)
 			if(drflac_seek_to_sample(pFlac,i))
 				*current_sample=i;
 			}
+			tick>>=2;
 			break;
 		case VK_5:
 			set_silence();
@@ -3900,9 +3902,43 @@ private int check_keys(drflac* pFlac,ulong *current_sample)
 	}
 	return result;
 }
+int seek_initial_offset(drflac *pFlac,int initial_offset,ulong *current_sample)
+{
+	int result=false;
+	ulong offset;
+	initial_offset&=0xFF;
+	offset=divide_64(pFlac.totalSampleCount,0xFF);
+	offset=initial_offset*offset;
+	if(drflac_seek_to_sample(pFlac,offset)){
+		*current_sample=offset;
+		result=true;
+	}
+	return result;
+}
+int save_offset_position(drflac *pFlac,ulong current_sample)
+{
+	int result=false;
+	__gshared static DWORD tick=0;
+	DWORD delta;
+	delta=get_tick_count()-tick;
+	if(get_msec(delta)>5000){
+		ulong tmp;
+		tick=get_tick_count();
+		tmp=divide_64(pFlac.totalSampleCount,0xF0);
+		if(tmp!=0){
+			tmp=divide_64(current_sample,tmp);
+			if(tmp>0xFF)
+				tmp=0xFF;
+			int data=cast(int)tmp;
+			import main: write_cmos,CMOS_VAL;
+			result=write_cmos(CMOS_VAL.OFFSET,data);
+		}
+	}
+	return result;
+}
 
 extern (C)
-public int play_flac(const char *fname,int inital_offset)
+public int play_flac(const char *fname,int initial_offset)
 {
 	int   result  = false;
 	drflac* pFlac = drflac_open_file(fname);
@@ -3926,6 +3962,9 @@ public int play_flac(const char *fname,int inital_offset)
 	tmp=cast(ushort*)malloc(tmp_size);
 	if(tmp is null)
 		goto exit;
+
+	if(initial_offset!=0)
+		seek_initial_offset(pFlac,initial_offset,&current_sample);
 	
 	while(drflac_read_s32(pFlac,sample_count,sample_buf) > 0){
 		int i;
@@ -3937,6 +3976,7 @@ public int play_flac(const char *fname,int inital_offset)
 		current_sample+=sample_count;
 		if(check_keys(pFlac,&current_sample))
 			goto exit;
+		save_offset_position(pFlac,current_sample);
 	}
 exit:
 	drflac_close(pFlac);

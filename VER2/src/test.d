@@ -280,7 +280,7 @@ int play_mp3(const char *fname)
 		else
 			break;
 		DWORD delta=get_tick_count()-tick;
-		if(delta>200){
+		if(get_msec(delta)>200){
 			tick=get_tick_count();
 			if(kbhit())
 				break;
