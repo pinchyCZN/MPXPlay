@@ -205,26 +205,36 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 				break;
 			}
 		}else{
-			buf_level=0;
+			version(Windows){
+				printf("\n");
+			}
+			trys++;
+			if(trys>400){
+				break;
+			}
 			if(trys==0)
 				memset(&mp3,0,mp3.sizeof);
-			version(Windows){
-				printf("\ntry %i\n",trys);
+			else if(trys>4){
+				int tmp=fbuf_size/2;
+				if(buf_level>4){
+					tmp=buf_level-4;
+				}
+				fseek(f,-tmp,SEEK_CUR);
+				memset(&mp3,0,mp3.sizeof);
 			}
-			seek_nearest_frame(f);
+			buf_level=0;
+			if(!seek_nearest_frame(f))
+				break;
 			skip_tags(f,buf,buf_size,buf_level);
 			if(0==fill_buffer(f,fbuf,fbuf_size,buf_level,0))
 				break;
-			trys++;
-			if(trys>20){
-				break;
-			}
 			version(Windows){
-				printf("boffset=%08X\n",ftell(f));
+				printf("try %i\n",trys);
+				printf("offset after fill=%08X\n",ftell(f));
 			}
 		}
 		version(Windows){
-			printf("offse t=%08X \r",ftell(f));
+			printf("offset=%08X    \r",ftell(f));
 		}
 	}
 	if(!result)
@@ -253,6 +263,11 @@ int save_file_offset(FILE *f,int flen)
 	int result=false;
 	__gshared static DWORD tick=0;
 	DWORD delta;
+	version(Windows){
+		const DWORD max=1000;
+	}else{
+		const DWORD max=5000;
+	}
 	delta=get_tick_count()-tick;
 	if(get_msec(delta)>5000){
 		tick=get_tick_count();
