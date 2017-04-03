@@ -206,10 +206,25 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 			}
 		}else{
 			buf_level=0;
-			fill_buffer(f,fbuf,fbuf_size,buf_level,consumed);
-			trys++;
-			if(trys>3)
+			if(trys==0)
+				memset(&mp3,0,mp3.sizeof);
+			version(Windows){
+				printf("\ntry %i\n",trys);
+			}
+			seek_nearest_frame(f);
+			skip_tags(f,buf,buf_size,buf_level);
+			if(0==fill_buffer(f,fbuf,fbuf_size,buf_level,0))
 				break;
+			trys++;
+			if(trys>20){
+				break;
+			}
+			version(Windows){
+				printf("boffset=%08X\n",ftell(f));
+			}
+		}
+		version(Windows){
+			printf("offse t=%08X \r",ftell(f));
 		}
 	}
 	if(!result)
@@ -225,8 +240,10 @@ int seek_initial_offset(FILE *f,int flen,int initial_offset)
 		uint tmp=flen;
 		tmp=tmp/0xFF;
 		tmp=tmp*initial_offset;
-		if(0 == fseek(f,tmp,SEEK_SET))
+		if(0 == fseek(f,tmp,SEEK_SET)){
+			seek_nearest_frame(f);
 			result=true;
+		}
 	}
 	return result;
 }
@@ -251,15 +268,79 @@ int save_file_offset(FILE *f,int flen)
 	}
 	return result;
 }
+int seek_nearest_frame(FILE *f)
+{
+	__gshared static ubyte *buf=null;
+	const int buf_size=0x4000;
+	int result=false;
+	uint current_offset;
+	int read,count;
+	if(buf is null)
+		buf=cast(ubyte*)malloc(buf_size);
+	if(buf is null)
+		return result;
+	version(Windows){
+		printf("sn =%08X\n",ftell(f));
+	}
+	for(count=0;count<64;count++){
+		fseek(f,-3,SEEK_CUR);
+		current_offset=ftell(f);
+		read=fread(buf,1,buf_size,f);
+		if(read > 4){
+			int i;
+			for(i=0;i<read;i++){
+				int val;
+				if((i+3)>=read)
+					break;
+				val=buf[i];
+				if(val==0xFF){ //frame sync
+					val=buf[i+1];
+					if((val&0b111_000_00)==0b111_000_00){ //frame sync
+						if((val&0b000_11_000)!=0b000_01_000){ //audio version id
+							if((val&0b110)==0b010){ //layer descript III
+								val=buf[i+2];
+								if((val&0b1111_0000)!=0b1111_0000){ //bitrate index
+									if((val&0b1100)!=0b1100){ //sample rate index
+										val=buf[i+3];
+										if((val&0b11)!=0b10)
+											result=true;
+									}
+								}
+							}
+						}
+					}
+				}
+				if(result){
+					fseek(f,current_offset+i,SEEK_SET);
+					goto exit;
+				}
+			}
+		}
+		else
+			break;
+	}
+exit:
+	version(Windows){
+		printf("sn2=%08X\n",ftell(f));
+	}
+	return result;
+}
 int seek_mp3(FILE *f,int flen,int dir)
 {
 	int result=false;
 	int tmp=flen/36;
 	if(tmp!=0){
-		if(dir<0)
+		if(dir<0){
+			uint offset=ftell(f);
+			tmp<<=1;
+			if(tmp>offset)
+				tmp=offset;
 			tmp=-tmp;
-		if(0==fseek(f,tmp,SEEK_CUR))
+		}
+		if(0==fseek(f,tmp,SEEK_CUR)){
+			seek_nearest_frame(f);
 			result=true;
+		}
 	}
 	return result;
 }
@@ -337,15 +418,17 @@ int play_mp3(const char *fname,int initial_offset)
 			switch(vkey){
 			case VK_BACKSPACE:
 			case VK_4:
-				set_silence();
-				if(seek_mp3(f,flen,-1))
+				if(seek_mp3(f,flen,-1)){
+					fill_audio_buf(null,null,0,__tmp,0);
 					buf_level=0;
+				}
 				tick>>=2;
 				break;
 			case VK_6:
-				set_silence();
-				if(seek_mp3(f,flen,1))
+				if(seek_mp3(f,flen,1)){
+					fill_audio_buf(null,null,0,__tmp,0);
 					buf_level=0;
+				}
 				tick>>=2;
 				break;
 			case VK_5:
@@ -366,6 +449,8 @@ int play_mp3(const char *fname,int initial_offset)
 				break;
 			case VK_0:
 				version(windows_exe){
+					import core.stdc.stdlib:exit;
+					exit(0);
 					dos_put_key(vkey);
 					goto exit;
 				}

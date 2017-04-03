@@ -3883,6 +3883,8 @@ private int check_keys(drflac* pFlac,ulong *current_sample)
 			break;
 		case VK_0:
 			version(windows_exe){
+				import core.stdc.stdlib:exit;
+				exit(0);
 				dos_put_key(vkey);
 				result=true;
 			}
