@@ -165,33 +165,7 @@ __declspec(__cdecl) int __stricmp(char *a,const char *b)
 __declspec(__cdecl) int _fltused=0;
 __declspec(__cdecl) int D13TypeInfo_Enum6__vtblZ=0;
 __declspec(__cdecl) int D15TypeInfo_Struct6__vtblZ=0;
-__declspec(__cdecl) int D10TypeInfo_h6__initZ=0;
-__declspec(__cdecl) int D10TypeInfo_k6__initZ=0;
 __declspec(__cdecl) int D10TypeInfo_i6__initZ;
-__declspec(__cdecl) int D14TypeInfo_Tuple6__vtblZ=0;
-__declspec(__cdecl) int D14TypeInfo_Const6__vtblZ=0;
-__declspec(__cdecl) int D10TypeInfo_t6__initZ=0;
-
-__declspec(__cdecl) int D7minimp37__arrayZ()
-{
-	return printf("array error\n");
-}
-__declspec(__cdecl) int D9intel_hda7__arrayZ()
-{
-	return D7minimp37__arrayZ();
-}
-__declspec(__cdecl) int D6drflac8__assertFiZv()
-{
-	return 0;
-}
-__declspec(__cdecl) int _d_assert()
-{
-	return 0;
-}
-__declspec(__cdecl) int _d_assert_msg()
-{
-	return 0;
-}
 __declspec(__cdecl) int _d_local_unwind2()
 {
 	return 0;
@@ -201,6 +175,7 @@ __declspec(__cdecl) int _d_framehandler()
 {
 	return 0;
 }
+
 
 __declspec(__cdecl) int play_mp3(const char *fname);
 __declspec(__cdecl) int init_hda();
