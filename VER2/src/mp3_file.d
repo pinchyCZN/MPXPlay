@@ -219,7 +219,7 @@ int fill_audio_buf(FILE_INFO *finfo,ubyte *abuf,uint abuf_size,ref uint abuf_lev
 			}else{
 				DWORD delta=get_tick_count()-tick;
 				if(get_msec(delta)>2500){
-					printf("timeout----------\n");
+					printf("timeout!!!!!!----------\n");
 					break;
 				}
 			}
@@ -241,12 +241,14 @@ int fill_audio_buf(FILE_INFO *finfo,ubyte *abuf,uint abuf_size,ref uint abuf_lev
 				fseek(finfo.f,-tmp,SEEK_CUR);
 				memset(&mp3,0,mp3.sizeof);
 			}else if(trys>=9){
-				uint fwd=0x4000-((trys-9)*256);
+				uint fwd=0x1000-((trys-9)*256);
+				if(fwd<256)
+					fwd=256;
 				uint pos=ftell(finfo.f)+fwd;
 				if(pos<finfo.flen){
 					fseek(finfo.f,fwd,SEEK_CUR);
 				}
-				memset(&mp3,0,mp3.sizeof);
+				//memset(&mp3,0,mp3.sizeof);
 			}
 			buf_level=0;
 			if(!seek_nearest_frame(finfo))
@@ -377,7 +379,7 @@ int seek_mp3(FILE_INFO *finfo,int dir)
 		uint offset=ftell(finfo.f);
 		if(dir>=0){ //forward
 			if((offset+tmp)>finfo.flen){
-				printf("seeked to end\n");
+				printf("-----seeked to end\n");
 				fseek(finfo.f,0,SEEK_END);
 				return false;
 			}
@@ -519,6 +521,13 @@ int play_mp3(const char *fname,int initial_offset)
 				goto exit;
 			default:
 				break;
+			}
+			int count=0;
+			while(vkey){
+				vkey=dos_get_key(&ext);
+				count++;
+				if(count>100)
+					break;
 			}
 		}
 	}
