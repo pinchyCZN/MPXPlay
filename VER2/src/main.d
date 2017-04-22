@@ -73,7 +73,7 @@ int extract_ext(const char *fname,char *ext,int ext_len)
 		ext[ext_len-1]=0;
 	return 0;
 }
-int get_flen(FILE *f)
+uint get_flen(FILE *f)
 {
 	uint offset,len;
 	offset=ftell(f);

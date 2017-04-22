@@ -22,7 +22,11 @@ alias kbhit=__kbhit;
 @nogc:
 nothrow:
 
-int fill_buffer(FILE *f,ubyte *buf,int buf_size,ref int buf_level,int forward)
+struct FILE_INFO{
+	FILE *f;
+	uint flen;
+};
+int fill_buffer(FILE_INFO *finfo,ubyte *buf,int buf_size,ref int buf_level,int forward)
 {
 	int result=0;
 	if(buf_level>buf_size)
@@ -30,8 +34,8 @@ int fill_buffer(FILE *f,ubyte *buf,int buf_size,ref int buf_level,int forward)
 	if(forward>buf_level){
 		int offset;
 		offset=forward-buf_level;
-		if(0==fseek(f,offset,SEEK_CUR)){
-			result=fread(buf,1,buf_size,f);
+		if(0==fseek(finfo.f,offset,SEEK_CUR)){
+			result=fread(buf,1,buf_size,finfo.f);
 			buf_level=result;
 			if(buf_level<buf_size)
 				memset(buf+buf_level,0,buf_size-buf_level);
@@ -44,14 +48,14 @@ int fill_buffer(FILE *f,ubyte *buf,int buf_size,ref int buf_level,int forward)
 			memmove(buf,buf+forward,len);
 		offset=len;
 		len=buf_size-offset;
-		result=fread(buf+offset,1,len,f);
+		result=fread(buf+offset,1,len,finfo.f);
 		buf_level=result+offset;
 		if(buf_level<buf_size)
 			memset(buf+buf_level,0,buf_size-buf_level);
 	}
 	return result;
 }
-int skip_tags(FILE *f,ubyte *buf,int buf_size,ref int buf_level)
+int skip_tags(FILE_INFO *finfo,ubyte *buf,int buf_size,ref int buf_level)
 {
 	int result=false;
 	if(buf_level>=10){
@@ -59,7 +63,7 @@ int skip_tags(FILE *f,ubyte *buf,int buf_size,ref int buf_level)
 			&& ((buf[6]|buf[7]|buf[8]|buf[9])&0x80)==0){
 			uint size=(buf[9]|(buf[8]<<7)|(buf[7]<<14)|(buf[6]<<21))+10;
 			if(size>0){
-				if(0<fill_buffer(f,buf,buf_size,buf_level,size))
+				if(0<fill_buffer(finfo,buf,buf_size,buf_level,size))
 					result=true;
 			}
 		}
@@ -70,10 +74,13 @@ int skip_tags(FILE *f,ubyte *buf,int buf_size,ref int buf_level)
 extern (C)
 int mp3_test(const char *fname)
 {
+	import main:get_flen;
 	printf("fname=%s\n",fname);
-	FILE *f=cast(FILE*)fopen(fname,"rb");
-	if(f is null)
+	FILE_INFO finfo;
+	finfo.f=cast(FILE*)fopen(fname,"rb");
+	if(finfo.f is null)
 		return 0;
+	finfo.flen=get_flen(finfo.f);
 	mp3_decode_init();
 	
 	mp3_context_t mp3;
@@ -95,10 +102,10 @@ int mp3_test(const char *fname)
 	buffer=cast(short*)malloc(buffer_len);
 	while(1){
 		int buf_level=0;
-		fill_buffer(f,fbuf,fbuf_len,buf_level,0);
+		fill_buffer(&finfo,fbuf,fbuf_len,buf_level,0);
 		if(buf_level<=0)
 			break;
-		skip_tags(f,fbuf,fbuf_len,buf_level);
+		skip_tags(&finfo,fbuf,fbuf_len,buf_level);
 		uint tick,delta;
 		tick=clock();
 
@@ -114,7 +121,7 @@ int mp3_test(const char *fname)
 				delta/=CLOCKS_PER_SEC;
 				if(delta>1){
 					tick=clock();
-					uint p=ftell(f);
+					uint p=ftell(finfo.f);
 					printf("%08X\n",p);
 				}
 				int extended=0;
@@ -124,8 +131,8 @@ int mp3_test(const char *fname)
 					printf("key=%02X %i\n",key,key);
 					goto exit;
 				}
-				fill_buffer(f,fbuf,fbuf_len,buf_level,consumed);
-				skip_tags(f,fbuf,fbuf_len,buf_level);
+				fill_buffer(&finfo,fbuf,fbuf_len,buf_level,consumed);
+				skip_tags(&finfo,fbuf,fbuf_len,buf_level);
 			}else{
 				break;
 			}
@@ -135,11 +142,11 @@ exit:
 	printf("done\n");
 	if(fout !is null)
 		fclose(fout);
-	fclose(f);
+	fclose(finfo.f);
 	return 0;
 }
 
-int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint need_amount)
+int fill_audio_buf(FILE_INFO *finfo,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint need_amount)
 {
 	int result=false;
 	__gshared static ubyte *fbuf;
@@ -152,7 +159,7 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 
 	mp3_decode_init();
 
-	if(f is null || abuf is null){
+	if(finfo is null || abuf is null){
 		buf_level=0;
 		memset(&mp3,0,mp3.sizeof);
 		return result;
@@ -166,10 +173,10 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 	if(fbuf is null || buf is null)
 		return result;
 
-	fill_buffer(f,fbuf,fbuf_size,buf_level,0);
+	fill_buffer(finfo,fbuf,fbuf_size,buf_level,0);
 	if(buf_level==0)
 		return result;
-	skip_tags(f,fbuf,fbuf_size,buf_level);
+	skip_tags(finfo,fbuf,fbuf_size,buf_level);
 	if(abuf_level>=need_amount){
 		result=true;
 		return result;
@@ -199,21 +206,20 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 
 				abuf_level+=len;
 			}
-			fill_buffer(f,fbuf,fbuf_size,buf_level,consumed);
-			skip_tags(f,fbuf,fbuf_size,buf_level);
+			fill_buffer(finfo,fbuf,fbuf_size,buf_level,consumed);
+			skip_tags(finfo,fbuf,fbuf_size,buf_level);
 			if(abuf_level>=need_amount){
 				result=true;
 				break;
 			}
 		}else{
-			version(Windows){
-				printf("\n");
-			}
+			printf("try %i\n",trys);
 			if(trys==0){
 				tick=get_tick_count();
 			}else{
 				DWORD delta=get_tick_count()-tick;
 				if(get_msec(delta)>2500){
+					printf("timeout----------\n");
 					break;
 				}
 			}
@@ -223,28 +229,34 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 			}
 			if(trys==0)
 				memset(&mp3,0,mp3.sizeof);
-			else if(trys>3)
+			else if(trys>5 && trys<9)
 			{
 				int tmp=fbuf_size/2;
 				if(buf_level>4){
 					tmp=buf_level-4;
 				}
-				fseek(f,-tmp,SEEK_CUR);
+				uint pos=ftell(finfo.f);
+				if(tmp>pos)
+					tmp=0;
+				fseek(finfo.f,-tmp,SEEK_CUR);
+				memset(&mp3,0,mp3.sizeof);
+			}else if(trys>=9){
+				uint fwd=0x4000-((trys-9)*256);
+				uint pos=ftell(finfo.f)+fwd;
+				if(pos<finfo.flen){
+					fseek(finfo.f,fwd,SEEK_CUR);
+				}
 				memset(&mp3,0,mp3.sizeof);
 			}
 			buf_level=0;
-			if(!seek_nearest_frame(f))
+			if(!seek_nearest_frame(finfo))
 				break;
-			skip_tags(f,buf,buf_size,buf_level);
-			if(0==fill_buffer(f,fbuf,fbuf_size,buf_level,0))
+			skip_tags(finfo,buf,buf_size,buf_level);
+			if(0==fill_buffer(finfo,fbuf,fbuf_size,buf_level,0))
 				break;
-			version(Windows){
-				printf("try %i\n",trys);
-				printf("offset after fill=%08X\n",ftell(f));
-			}
 		}
-		version(Windows){
-			printf("offset=%08X    \r",ftell(f));
+		version(windows_exe){
+			printf("pos=%08X\r",ftell(finfo.f));
 		}
 	}
 	if(!result)
@@ -253,27 +265,29 @@ int fill_audio_buf(FILE *f,ubyte *abuf,uint abuf_size,ref uint abuf_level,uint n
 	return result;
 }
 
-int seek_initial_offset(FILE *f,int flen,int initial_offset)
+int seek_initial_offset(FILE_INFO *finfo,int initial_offset)
 {
 	int result=false;
 	if(initial_offset>0 && initial_offset<=0xFF){
-		uint tmp=flen;
+		uint tmp=finfo.flen;
 		tmp=tmp/0xFF;
 		tmp=tmp*initial_offset;
-		if(0 == fseek(f,tmp,SEEK_SET)){
-			seek_nearest_frame(f);
+		if(tmp>finfo.flen)
+			tmp=finfo.flen;
+		if(0 == fseek(finfo.f,tmp,SEEK_SET)){
+			seek_nearest_frame(finfo);
 			result=true;
 		}
 	}
 	return result;
 }
 
-int save_file_offset(FILE *f,int flen)
+int save_file_offset(FILE_INFO *finfo)
 {
 	int result=false;
 	__gshared static DWORD tick=0;
 	DWORD delta;
-	version(Windows){
+	version(windows_exe){
 		const DWORD max=1000;
 	}else{
 		const DWORD max=5000;
@@ -281,9 +295,9 @@ int save_file_offset(FILE *f,int flen)
 	delta=get_tick_count()-tick;
 	if(get_msec(delta)>5000){
 		tick=get_tick_count();
-		uint divisor=flen/0xE0;
+		uint divisor=finfo.flen/0xE0;
 		if(divisor!=0){
-			uint tmp=ftell(f);
+			uint tmp=ftell(finfo.f);
 			tmp=tmp/divisor;
 			if(tmp>0xFF)
 				tmp=0xFF;
@@ -293,7 +307,7 @@ int save_file_offset(FILE *f,int flen)
 	}
 	return result;
 }
-int seek_nearest_frame(FILE *f)
+int seek_nearest_frame(FILE_INFO *finfo)
 {
 	__gshared static ubyte *buf=null;
 	const int buf_size=0x4000;
@@ -304,13 +318,18 @@ int seek_nearest_frame(FILE *f)
 		buf=cast(ubyte*)malloc(buf_size);
 	if(buf is null)
 		return result;
-	version(Windows){
-		printf("sn =%08X\n",ftell(f));
-	}
+	printf("sn =%08X\n",ftell(finfo.f));
 	for(count=0;count<64;count++){
-		fseek(f,-3,SEEK_CUR);
-		current_offset=ftell(f);
-		read=fread(buf,1,buf_size,f);
+		const uint rwind=3;
+		current_offset=ftell(finfo.f);
+		if(current_offset>=rwind){
+			if(0==fseek(finfo.f,-rwind,SEEK_CUR))
+				current_offset-=rwind;
+		}
+		if((current_offset+buf_size)>=finfo.flen){
+			break;
+		}
+		read=fread(buf,1,buf_size,finfo.f);
 		if(read > 4){
 			int i;
 			for(i=0;i<read;i++){
@@ -336,34 +355,41 @@ int seek_nearest_frame(FILE *f)
 					}
 				}
 				if(result){
-					fseek(f,current_offset+i,SEEK_SET);
+					fseek(finfo.f,current_offset+i,SEEK_SET);
 					goto exit;
 				}
 			}
 		}
-		else
+		else{
 			break;
+		}
 	}
 exit:
-	version(Windows){
-		printf("sn2=%08X\n",ftell(f));
-	}
+	printf("sn2=%08X\n",ftell(finfo.f));
 	return result;
 }
-int seek_mp3(FILE *f,int flen,int dir)
+int seek_mp3(FILE_INFO *finfo,int dir)
 {
 	int result=false;
-	int tmp=flen/36;
+	uint tmp=finfo.flen/36;
+	printf("fln=%08X\n",finfo.flen);
 	if(tmp!=0){
-		if(dir<0){
-			uint offset=ftell(f);
+		uint offset=ftell(finfo.f);
+		if(dir>=0){ //forward
+			if((offset+tmp)>finfo.flen){
+				printf("seeked to end\n");
+				fseek(finfo.f,0,SEEK_END);
+				return false;
+			}
+		}
+		else{ //reverse
 			tmp<<=1;
 			if(tmp>offset)
 				tmp=offset;
 			tmp=-tmp;
 		}
-		if(0==fseek(f,tmp,SEEK_CUR)){
-			seek_nearest_frame(f);
+		if(0==fseek(finfo.f,tmp,SEEK_CUR)){
+			seek_nearest_frame(finfo);
 			result=true;
 		}
 	}
@@ -373,16 +399,16 @@ extern (C)
 int play_mp3(const char *fname,int initial_offset)
 {
 	int result=false;
-	FILE *f;
-	int flen;
-	f=fopen(fname,"rb");
-	if(f is null){
+	FILE_INFO finfo;
+	uint flen;
+	finfo.f=fopen(fname,"rb");
+	if(finfo.f is null){
 		printf("unable to open file:%s\n",fname);
 		return result;
 	}
 	import main:get_flen;
-	flen=get_flen(f);
-	seek_initial_offset(f,flen,initial_offset);
+	finfo.flen=get_flen(finfo.f);
+	seek_initial_offset(&finfo,initial_offset);
 
 	__gshared static ubyte *buf;
 	const uint buf_size=0x10000;
@@ -413,7 +439,7 @@ int play_mp3(const char *fname,int initial_offset)
 		goto exit;
 
 	while(1){
-		if(fill_audio_buf(f,buf,buf_size,buf_level,full_level)){
+		if(fill_audio_buf(&finfo,buf,buf_size,buf_level,full_level)){
 			play_wav_buf(buf,full_level);
 			if(fout !is null)
 				fwrite(buf,full_level,1,fout);
@@ -427,13 +453,13 @@ int play_mp3(const char *fname,int initial_offset)
 			}else
 				buf_level=0;
 			int len;
-			len=ftell(f);
+			len=ftell(finfo.f);
 			//printf("len=%06i %06i\n",len,buf_level);
 		}
 		else
 			break;
 		
-		save_file_offset(f,flen);
+		save_file_offset(&finfo);
 
 		DWORD delta=get_tick_count()-tick;
 		if(get_msec(delta)>200){
@@ -443,16 +469,19 @@ int play_mp3(const char *fname,int initial_offset)
 			switch(vkey){
 			case VK_BACKSPACE:
 			case VK_4:
-				if(seek_mp3(f,flen,-1)){
+				if(seek_mp3(&finfo,-1)){
 					fill_audio_buf(null,null,0,__tmp,0);
 					buf_level=0;
 				}
 				tick>>=2;
 				break;
 			case VK_6:
-				if(seek_mp3(f,flen,1)){
+				if(seek_mp3(&finfo,1)){
 					fill_audio_buf(null,null,0,__tmp,0);
 					buf_level=0;
+				}
+				else{
+					goto exit;
 				}
 				tick>>=2;
 				break;
@@ -496,6 +525,6 @@ int play_mp3(const char *fname,int initial_offset)
 	memset(buf,0,buf_size);
 	
 exit:
-	fclose(f);
+	fclose(finfo.f);
 	return result;
 }
