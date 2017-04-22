@@ -9,7 +9,7 @@ SET _SRC_DIR_=.\src
 SET _OBJ_DIR_=.\obj
 @echo on
 
-SET _DPARAMS_=-m32 -c -betterC -I%_SRC_DIR_% -od%_OBJ_DIR_%
+SET _DPARAMS_=-m32 -c -betterC -boundscheck=off -release -I%_SRC_DIR_% -od%_OBJ_DIR_%
 
 dmd %_DPARAMS_% %_SRC_DIR_%\dos_map.d
 dmd %_DPARAMS_% %_SRC_DIR_%\dummy_.d
