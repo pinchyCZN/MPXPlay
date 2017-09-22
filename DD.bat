@@ -9,13 +9,14 @@ SET _SRC_DIR_=.\src
 SET _OBJ_DIR_=.\obj
 @echo on
 
+REM SET _DPARAMS_=-m32 -c -betterC -I%_SRC_DIR_% -od%_OBJ_DIR_%
 SET _DPARAMS_=-m32 -c -betterC -boundscheck=off -release -I%_SRC_DIR_% -od%_OBJ_DIR_%
 
-REM dmd %_DPARAMS_% %_SRC_DIR_%\dos_map.d
-REM dmd %_DPARAMS_% %_SRC_DIR_%\dummy_.d
-REM dmd %_DPARAMS_% %_SRC_DIR_%\intel_hda.d
-REM dmd %_DPARAMS_% %_SRC_DIR_%\libc_map.d
-REM dmd %_DPARAMS_% %_SRC_DIR_%\main.d
-REM dmd %_DPARAMS_% %_SRC_DIR_%\minimp3.d
+dmd %_DPARAMS_% %_SRC_DIR_%\dos_map.d
+dmd %_DPARAMS_% %_SRC_DIR_%\dummy_.d
+dmd %_DPARAMS_% %_SRC_DIR_%\intel_hda.d
+dmd %_DPARAMS_% %_SRC_DIR_%\libc_map.d
+dmd %_DPARAMS_% %_SRC_DIR_%\main.d
+dmd %_DPARAMS_% %_SRC_DIR_%\minimp3.d
 dmd %_DPARAMS_% %_SRC_DIR_%\mp3_file.d
-REM dmd %_DPARAMS_% %_SRC_DIR_%\drflac.d
+dmd %_DPARAMS_% %_SRC_DIR_%\drflac.d
