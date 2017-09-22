@@ -1,0 +1,56 @@
+#------------ Mpxplay main (root) files ----------------------------
+NAME MPXPLAY.EXE
+PATH .\OBJ
+#FILE dos_map.obj
+FILE intel_hda.obj
+FILE libc_map.obj
+FILE main.obj
+FILE minimp3.obj
+FILE mp3_file.obj
+FILE drflac.obj
+FILE MPXPLAY.obj
+
+
+
+
+
+
+
+
+
+
+
+
+#------------- Link config -----------------------------------------
+option osname='32-bit protected mode DOS'
+format os2 le
+
+#usually enough
+#option STACK=65535
+
+#recommended for DLL handling
+option STACK=262144
+
+#------------ Watcom C libraries -----------------------------------
+libpath %WATCOM%\lib386
+libpath %WATCOM%\lib386\dos
+
+#------------ Mpxplay libraries (sub-routines) ---------------------
+
+#containers
+#library demuxers\demuxers.lib
+#library demuxers\mp4ff\mp4ff.lib
+#library demuxers\ffmpegaf\avformat.lib
+
+
+#------------ extenders/stubs --------------------------------------
+# DOS/32a :
+op stub=dos32a.exe
+
+# DOS4G v2.60 (for DLL handling):
+# op stub=stub_4g2.exe
+export DOS4GOPTIONS=_DOS4GOPTIONS
+
+
+#option map
+#option map=MPXPLAY.MAP
