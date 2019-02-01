@@ -2401,7 +2401,7 @@ bool drflac__read_and_decode_metadata(drflac* pFlac,scope drflac_meta_proc onMet
 				metadata.data.application.id       = drflac__be2host_32(*cast(uint*)pRawData);
 				metadata.data.application.pData    = cast(const(void)*)(cast(ubyte*)pRawData + uint.sizeof);
 				metadata.data.application.dataSize = blockSize - cast(uint)uint.sizeof;
-				try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+				onMeta(pUserDataMD,&metadata);
 			}
 			break;
 
@@ -2431,7 +2431,7 @@ bool drflac__read_and_decode_metadata(drflac* pFlac,scope drflac_meta_proc onMet
 					pSeekpoint.sampleCount = drflac__be2host_16(pSeekpoint.sampleCount);
 				}
 
-				try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+				onMeta(pUserDataMD,&metadata);
 			}
 			break;
 
@@ -2453,7 +2453,7 @@ bool drflac__read_and_decode_metadata(drflac* pFlac,scope drflac_meta_proc onMet
 				metadata.data.vorbis_comment.vendor       = pRunningData;                                 pRunningData += metadata.data.vorbis_comment.vendorLength;
 				metadata.data.vorbis_comment.commentCount = drflac__le2host_32(*cast(uint*)pRunningData); pRunningData += 4;
 				metadata.data.vorbis_comment.comments     = pRunningData;
-				try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+				onMeta(pUserDataMD,&metadata);
 			}
 			break;
 
@@ -2476,7 +2476,7 @@ bool drflac__read_and_decode_metadata(drflac* pFlac,scope drflac_meta_proc onMet
 				metadata.data.cuesheet.isCD                                                                          = ((pRunningData[0] & 0x80) >> 7) != 0;         pRunningData += 259;
 				metadata.data.cuesheet.trackCount                                                                    = pRunningData[0];                              pRunningData += 1;
 				metadata.data.cuesheet.pTrackData                                                                    = cast(const(ubyte)*)pRunningData;
-				try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+				onMeta(pUserDataMD,&metadata);
 			}
 			break;
 
@@ -2505,7 +2505,7 @@ bool drflac__read_and_decode_metadata(drflac* pFlac,scope drflac_meta_proc onMet
 				metadata.data.picture.indexColorCount   = drflac__be2host_32(*cast(uint*)pRunningData); pRunningData += 4;
 				metadata.data.picture.pictureDataSize   = drflac__be2host_32(*cast(uint*)pRunningData); pRunningData += 4;
 				metadata.data.picture.pPictureData      = cast(const(ubyte)*)pRunningData;
-				try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+				onMeta(pUserDataMD,&metadata);
 			}
 			break;
 
@@ -2541,7 +2541,7 @@ bool drflac__read_and_decode_metadata(drflac* pFlac,scope drflac_meta_proc onMet
 
 				metadata.pRawData    = pRawData;
 				metadata.rawDataSize = blockSize;
-				try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+				onMeta(pUserDataMD,&metadata);
 			}
 			break;
 		}
@@ -2596,7 +2596,7 @@ bool drflac__init_private__native(drflac_init_info* pInit,ref ReadStruct rs,scop
 		metadata.pRawData        = null;
 		metadata.rawDataSize     = 0;
 		metadata.data.streaminfo = streaminfo;
-		try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+		onMeta(pUserDataMD,&metadata);
 	}
 
 	pInit.hasMetadataBlocks = !isLastBlock;
@@ -3009,7 +3009,7 @@ bool drflac__init_private__ogg(drflac_init_info* pInit,ref ReadStruct rs,scope d
 								metadata.pRawData        = null;
 								metadata.rawDataSize     = 0;
 								metadata.data.streaminfo = streaminfo;
-								try { onMeta(pUserDataMD,&metadata); } catch(Exception e){ return false; }
+								onMeta(pUserDataMD,&metadata);
 							}
 
 							pInit.runningFilePos += pageBodySize;
