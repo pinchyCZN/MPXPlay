@@ -38,21 +38,6 @@ int fill_buffer(FILE_INFO finfo,unsigned char *buf,int buf_size,int *buf_level,i
 	}
 	return result;
 }
-int skip_tags(FILE_INFO finfo,unsigned char *buf,int buf_size,int *buf_level)
-{
-	int result=FALSE;
-	if(*buf_level>=10){
-		if(buf[0]=='I' && buf[1]=='D' && buf[2]=='3' && buf[3]!=0xFF && buf[4]!=0xFF
-			&& ((buf[6]|buf[7]|buf[8]|buf[9])&0x80)==0){
-			unsigned int size=(buf[9]|(buf[8]<<7)|(buf[7]<<14)|(buf[6]<<21))+10;
-			if(size>0){
-				if(0<fill_buffer(finfo,buf,buf_size,buf_level,size))
-					result=TRUE;
-			}
-		}
-	}
-	return result;
-}
 
 
 int mp3_test(const char *fname)
