@@ -86,6 +86,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\cmos.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\intel_hda.c
 # End Source File
 # Begin Source File
@@ -104,6 +108,10 @@ SOURCE=.\win32_audio.c
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\cmos.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
