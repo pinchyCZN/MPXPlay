@@ -1,8 +1,11 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "minimp3_ex.h"
+#include "cmos.h"
 #define FALSE 0
 #define TRUE 1
+typedef unsigned int DWORD;
 
 typedef struct{
 	FILE *f;
@@ -42,236 +45,39 @@ int fill_buffer(FILE_INFO finfo,unsigned char *buf,int buf_size,int *buf_level,i
 
 int mp3_test(const char *fname)
 {
-	mp3_context_t mp3;
-	short *buffer;
-	int buffer_len=0x10000;
-	unsigned char *fbuf;
-	int fbuf_len=0x10000;
-	int data_size;
-	FILE *fout=0;
-	FILE_INFO finfo;
-
-	printf("fname=%s\n",fname);
-	finfo.f=(FILE*)fopen(fname,"rb");
-	if(0==finfo.f)
-		return 0;
-	finfo.flen=get_flen(finfo.f);
-	mp3_decode_init();
-	
-	//fout=fopen("1.wav","rb");
-	if(fout !is null){
-		char tmp[1024];
-		fread(tmp.ptr,1,1024,fout);
-		fclose(fout);
-		fout=fopen("out.wav","wb");
-		fwrite(tmp.ptr,1,16*4,fout);
-	}
-	fbuf=cast(unsigned char*)malloc(fbuf_len);
-	buffer=cast(short*)malloc(buffer_len);
-	while(1){
-		int buf_level=0;
-		fill_buffer(finfo,fbuf,fbuf_len,buf_level,0);
-		if(buf_level<=0)
-			break;
-		skip_tags(finfo,fbuf,fbuf_len,buf_level);
-		uint tick,delta;
-		tick=clock();
-
-		while(1){
-			int consumed=0;
-			int written=0;
-			int result;
-			result=mp3_decode_frame(&mp3,buffer,written,fbuf,fbuf_len,consumed);
-			if(result){
-				if(fout !is null)
-					fwrite(buffer,1,written,fout);
-				delta=clock()-tick;
-				delta/=CLOCKS_PER_SEC;
-				if(delta>1){
-					tick=clock();
-					uint p=ftell(finfo.f);
-					printf("%08X\n",p);
-				}
-				int extended=0;
-				int key=0;
-				key=get_key(extended);
-				if(key!=0){
-					printf("key=%02X %i\n",key,key);
-					goto exit;
-				}
-				fill_buffer(finfo,fbuf,fbuf_len,buf_level,consumed);
-				skip_tags(finfo,fbuf,fbuf_len,buf_level);
-			}else{
-				break;
-			}
-		}
-	}
-exit:
-	printf("done\n");
-	if(fout !is null)
-		fclose(fout);
-	fclose(finfo.f);
-	return 0;
 }
 
-int fill_audio_buf(FILE_INFO finfo,unsigned char *abuf,uint abuf_size,ref uint abuf_level,uint need_amount)
+int fill_audio_buf(FILE_INFO finfo,unsigned char *abuf,unsigned int abuf_size,unsigned int *abuf_level,unsigned int need_amount)
 {
-	int result=FALSE;
-	__gshared static unsigned char *fbuf;
-	const int fbuf_size=0x10000;
-	__gshared static unsigned char *buf;
-	const int buf_size=0x10000;
-
-	__gshared static int buf_level=0;
-	__gshared static mp3_context_t mp3;
-
-	mp3_decode_init();
-
-	if(abuf is null){
-		buf_level=0;
-		memset(&mp3,0,mp3.sizeof);
-		return result;
-	}
-
-
-	if(fbuf is null)
-		fbuf=cast(unsigned char*)malloc(fbuf_size);
-	if(buf is null)
-		buf=cast(unsigned char*)malloc(buf_size);
-	if(fbuf is null || buf is null)
-		return result;
-
-	fill_buffer(finfo,fbuf,fbuf_size,buf_level,0);
-	if(buf_level==0)
-		return result;
-	skip_tags(finfo,fbuf,fbuf_size,buf_level);
-	if(abuf_level>=need_amount){
-		result=TRUE;
-		return result;
-	}
-	int trys=0;
-	DWORD tick;
-	while(1){
-		int consumed=0;
-		int written=0;
-		int mp3_res;
-		mp3_res=mp3_decode_frame(&mp3,cast(short*)buf,written,fbuf,fbuf_size,consumed);
-		if(mp3_res){
-			if(written>0){
-				if(abuf_level>abuf_size)
-					abuf_level=abuf_size;
-				if(need_amount>abuf_size)
-					need_amount=abuf_size;
-
-				int len;
-				len=written+abuf_level;
-				if(len>abuf_size)
-					len=abuf_size-abuf_level;
-				else
-					len=written;
-
-				memmove(abuf+abuf_level,buf,len);
-
-				abuf_level+=len;
-			}
-			fill_buffer(finfo,fbuf,fbuf_size,buf_level,consumed);
-			skip_tags(finfo,fbuf,fbuf_size,buf_level);
-			if(abuf_level>=need_amount){
-				result=TRUE;
-				break;
-			}
-		}else{
-			printf("try %i\n",trys);
-			if(trys==0){
-				tick=get_tick_count();
-			}else{
-				DWORD delta=get_tick_count()-tick;
-				if(get_msec(delta)>2500){
-					printf("timeout!!!!!!----------\n");
-					break;
-				}
-			}
-			trys++;
-			if(trys>1000){
-				break;
-			}
-			if(trys==0)
-				memset(&mp3,0,mp3.sizeof);
-			else if(trys>5 && trys<9)
-			{
-				int tmp=fbuf_size/2;
-				if(buf_level>4){
-					tmp=buf_level-4;
-				}
-				uint pos=ftell(finfo.f);
-				if(tmp>pos)
-					tmp=0;
-				fseek(finfo.f,-tmp,SEEK_CUR);
-				memset(&mp3,0,mp3.sizeof);
-			}else if(trys>=9){
-				uint fwd=0x1000-((trys-9)*256);
-				if(fwd<256)
-					fwd=256;
-				uint pos=ftell(finfo.f)+fwd;
-				if(pos<finfo.flen){
-					fseek(finfo.f,fwd,SEEK_CUR);
-				}
-				//memset(&mp3,0,mp3.sizeof);
-			}
-			buf_level=0;
-			if(!seek_nearest_frame(finfo))
-				break;
-			skip_tags(finfo,buf,buf_size,buf_level);
-			if(0==fill_buffer(finfo,fbuf,fbuf_size,buf_level,0))
-				break;
-		}
-		version(windows_exe){
-			printf("pos=%08X\r",ftell(finfo.f));
-		}
-	}
-	if(!result)
-		buf_level=0;
-
-	return result;
 }
 
 int seek_initial_offset(FILE_INFO finfo,int initial_offset)
 {
 	int result=FALSE;
-	if(initial_offset>0 && initial_offset<=0xFF){
-		uint tmp=finfo.flen;
-		tmp=tmp/0xFF;
-		tmp=tmp*initial_offset;
-		if(tmp>finfo.flen)
-			tmp=finfo.flen;
-		if(0 == fseek(finfo.f,tmp,SEEK_SET)){
-			seek_nearest_frame(finfo);
-			result=TRUE;
-		}
-	}
 	return result;
 }
 
 int save_file_offset(FILE_INFO finfo)
 {
+	DWORD get_tick_count();
+	int get_msec(DWORD);
 	int result=FALSE;
-	__gshared static DWORD tick=0;
+	static DWORD tick=0;
 	DWORD delta;
-	version(windows_exe){
-		const DWORD max=1000;
-	}else{
-		const DWORD max=5000;
-	}
+#ifdef _WIN32
+	const DWORD max=1000;
+#else
+	const DWORD max=5000;
+#endif
 	delta=get_tick_count()-tick;
 	if(get_msec(delta)>5000){
+		unsigned int divisor=finfo.flen/0xE0;
 		tick=get_tick_count();
-		uint divisor=finfo.flen/0xE0;
 		if(divisor!=0){
-			uint tmp=ftell(finfo.f);
+			unsigned int tmp=ftell(finfo.f);
 			tmp=tmp/divisor;
 			if(tmp>0xFF)
 				tmp=0xFF;
-			import main: write_cmos,CMOS_VAL;
 			result=write_cmos(CMOS_VAL.OFFSET,tmp);
 		}
 	}
@@ -279,18 +85,18 @@ int save_file_offset(FILE_INFO finfo)
 }
 int seek_nearest_frame(FILE_INFO finfo)
 {
-	__gshared static unsigned char *buf=null;
+	static unsigned char *buf=0;
 	const int buf_size=0x4000;
 	int result=FALSE;
 	uint current_offset;
 	int read,count;
-	if(buf is null)
-		buf=cast(unsigned char*)malloc(buf_size);
-	if(buf is null)
+	if(0==buf)
+		buf=(unsigned char*)malloc(buf_size);
+	if(0==buf)
 		return result;
 	printf("sn =%08X\n",ftell(finfo.f));
 	for(count=0;count<64;count++){
-		const uint rwind=3;
+		const unsigned int rwind=3;
 		current_offset=ftell(finfo.f);
 		if(current_offset>=rwind){
 			if(0==fseek(finfo.f,-rwind,SEEK_CUR))
