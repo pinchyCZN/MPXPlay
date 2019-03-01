@@ -77,20 +77,23 @@ static size_t mp3dec_skip_id3v2(const uint8_t *buf, size_t buf_size)
 
 void mp3dec_load_buf(mp3dec_t *dec, const uint8_t *buf, size_t buf_size, mp3dec_file_info_t *info, MP3D_PROGRESS_CB progress_cb, void *user_data)
 {
+#if 0
     size_t orig_buf_size = buf_size;
     mp3d_sample_t pcm[MINIMP3_MAX_SAMPLES_PER_FRAME];
     mp3dec_frame_info_t frame_info;
+	size_t id3v2size;
+    int samples;
+	size_t allocated;
     memset(info, 0, sizeof(*info));
     memset(&frame_info, 0, sizeof(frame_info));
     /* skip id3v2 */
-    size_t id3v2size = mp3dec_skip_id3v2(buf, buf_size);
+    id3v2size = mp3dec_skip_id3v2(buf, buf_size);
     if (id3v2size > buf_size)
         return;
     buf      += id3v2size;
     buf_size -= id3v2size;
     /* try to make allocation size assumption by first frame */
     mp3dec_init(dec);
-    int samples;
     do
     {
         samples = mp3dec_decode_frame(dec, buf, buf_size, pcm, &frame_info);
@@ -102,7 +105,7 @@ void mp3dec_load_buf(mp3dec_t *dec, const uint8_t *buf, size_t buf_size, mp3dec_
     if (!samples)
         return;
     samples *= frame_info.channels;
-    size_t allocated = (buf_size/frame_info.frame_bytes)*samples*sizeof(mp3d_sample_t) + MINIMP3_MAX_SAMPLES_PER_FRAME*sizeof(mp3d_sample_t);
+    allocated = (buf_size/frame_info.frame_bytes)*samples*sizeof(mp3d_sample_t) + MINIMP3_MAX_SAMPLES_PER_FRAME*sizeof(mp3d_sample_t);
     info->buffer = (mp3d_sample_t*)malloc(allocated);
     if (!info->buffer)
         return;
@@ -112,6 +115,7 @@ void mp3dec_load_buf(mp3dec_t *dec, const uint8_t *buf, size_t buf_size, mp3dec_
     info->channels = frame_info.channels;
     info->hz       = frame_info.hz;
     info->layer    = frame_info.layer;
+	{
     size_t avg_bitrate_kbps = frame_info.bitrate_kbps;
     size_t frames = 1;
     /* decode rest frames */
@@ -148,13 +152,16 @@ void mp3dec_load_buf(mp3dec_t *dec, const uint8_t *buf, size_t buf_size, mp3dec_
     if (allocated != info->samples*sizeof(mp3d_sample_t))
         info->buffer = (mp3d_sample_t*)realloc(info->buffer, info->samples*sizeof(mp3d_sample_t));
     info->avg_bitrate_kbps = avg_bitrate_kbps/frames;
+	}
+#endif
 }
 
 void mp3dec_iterate_buf(const uint8_t *buf, size_t buf_size, MP3D_ITERATE_CB callback, void *user_data)
 {
+#if 0
+    mp3dec_frame_info_t frame_info;
     if (!callback)
         return;
-    mp3dec_frame_info_t frame_info;
     memset(&frame_info, 0, sizeof(frame_info));
     /* skip id3v2 */
     size_t id3v2size = mp3dec_skip_id3v2(buf, buf_size);
@@ -185,6 +192,7 @@ void mp3dec_iterate_buf(const uint8_t *buf, size_t buf_size, MP3D_ITERATE_CB cal
         buf      += frame_size;
         buf_size -= frame_size;
     } while (1);
+#endif
 }
 
 int mp3dec_ex_open_buf(mp3dec_ex_t *dec, const uint8_t *buf, size_t buf_size, int seek_method)
@@ -267,6 +275,7 @@ static void mp3dec_close_file(mp3dec_map_info_t *map_info)
 
 static int mp3dec_open_file(const char *file_name, mp3dec_map_info_t *map_info)
 {
+	/*
     memset(map_info, 0, sizeof(*map_info));
 
     HANDLE file = CreateFileA(file_name, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
@@ -292,6 +301,7 @@ error:
     mp3dec_close_file(map_info);
     CloseHandle(file);
     return -1;
+	*/
 }
 #else
 #include <stdio.h>

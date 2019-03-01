@@ -1,6 +1,6 @@
-enum CMOS_VAL{
-	LINE_NUMBER,
-	OFFSET
+enum {
+	CMOS_LINE_NUMBER,
+	CMOS_OFFSET
 };
 
 int read_cmos(int cmos_val);

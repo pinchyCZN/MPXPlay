@@ -1,11 +1,14 @@
 #include <conio.h>
 #include "cmos.h"
 
+#define outp _outp
+#define inp _inp
+
 int read_cmos(int cmos_val)
 {
 	int result=0;
 	int a;
-	if(cmos_val==LINE_NUMBER){
+	if(cmos_val==CMOS_LINE_NUMBER){
 		outp(0x70,1);
 		a=inp(0x71);
 		result=a<<8;
@@ -22,7 +25,7 @@ int read_cmos(int cmos_val)
 int write_cmos(int cmos_val,int data)
 {
 	int result=0;
-	if(cmos_val==LINE_NUMBER){
+	if(cmos_val==CMOS_LINE_NUMBER){
 		outp(0x70,1);
 		outp(0x71,(data>>8)&0xFF);
 		outp(0x70,3);

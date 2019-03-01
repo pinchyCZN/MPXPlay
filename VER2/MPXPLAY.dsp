@@ -112,6 +112,18 @@ SOURCE=.\win32_audio.c
 
 SOURCE=.\cmos.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\minimp3.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\minimp3_ex.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\stdint.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

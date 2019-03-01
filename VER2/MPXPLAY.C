@@ -10,9 +10,9 @@ int get_fname_ext(const char *str,const char **out)
 	int len=strlen(str);
 	int i;
 	for(i=0;i<len;i++){
-		char a=str[len-1];
+		char a=str[len-1-i];
 		if('.'==a){
-			*out=str+len;
+			*out=str+len-i;
 			result=TRUE;
 			break;
 		}else if('\\'==a){
@@ -83,7 +83,10 @@ int stricmp(const char *a,const char *b)
 
 int play_mp3_file(const char *fname)
 {
-	return 0;
+	int offset=0;
+	int res;
+	res=play_mp3(fname,offset);
+	return res;
 }
 int play_flac_file(const char *fname)
 {
