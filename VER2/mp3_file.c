@@ -14,6 +14,12 @@ typedef struct{
 	unsigned int flen;
 }FILE_INFO;
 
+typedef struct{
+	char *data;
+	int data_size;
+	int position;
+}DATA_BUF;
+
 int fill_buffer(FILE_INFO finfo,unsigned char *buf,int buf_size,int *buf_level,int forward)
 {
 	int result=0;
@@ -46,11 +52,6 @@ int fill_buffer(FILE_INFO finfo,unsigned char *buf,int buf_size,int *buf_level,i
 
 
 
-int fill_audio_buf(FILE_INFO finfo,unsigned char *abuf,unsigned int abuf_size,unsigned int *abuf_level,unsigned int need_amount)
-{
-	int result=FALSE;
-	return result;
-}
 
 int seek_initial_offset(FILE_INFO finfo,int initial_offset)
 {
@@ -90,42 +91,106 @@ int seek_mp3(FILE_INFO finfo,int dir)
 	return result;
 }
 
+int setup_data_buf(DATA_BUF *dbuf,int size)
+{
+	int result=FALSE;
+	char *tmp;
+	if(0==dbuf->data){
+		tmp=calloc(1,size);
+		if(tmp){
+			dbuf->data=tmp;
+			dbuf->data_size=size;
+			result=TRUE;
+		}
+	}else{
+		result=TRUE;
+	}
+	return result;
+}
+int fill_file_buf(DATA_BUF *buf,FILE *f)
+{
+	int amount;
+	int position,size;
+	char *tmp;
+	int read;
+	size=buf->data_size;
+	position=buf->position;
+	amount=size-position;
+	tmp=buf->data+position;
+	read=fread(tmp,1,amount,f);
+	buf->position+=read;
+	return read;
+}
+
+int fill_audio_buf(DATA_BUF *buf,char *audio,int alen)
+{
+	int len;
+	int position,size;
+	char *tmp;
+	size=buf->data_size;
+	position=buf->position;
+	len=size-position;
+	if(len>alen)
+		len=alen;
+	tmp+=buf->data+position;
+	memcpy(tmp,audio,len);
+	return len;
+}
+
 int play_mp3(const char *fname,int initial_offset)
 {
 	int result=FALSE;
 	FILE *f;
-	static char *buf=0;
-	int buf_size=0x10000;
-	if(0==buf){
-		buf=calloc(1,buf_size);
-		if(0==buf)
-			return result;
-	}
+	mp3dec_t mp3_dec={0};
+	static DATA_BUF file_buf={0};
+	static DATA_BUF audio_buf={0};
+	if(!setup_data_buf(file_buf,0x10000))
+		return result;
+	if(!setup_data_buf(audio_buf,get_audio_buf_size()*4))
+		return result;
 	f=fopen(fname,"rb");
 	if(0==f)
 		return result;
+	mp3dec_init(&mp3_dec);
 	while(1){
-		char *tmp;
-		int len;
-		int offset;
-		len=fread(buf,1,buf_size,f);
-		tmp=buf;
-		if(len<=0)
+		int fmt_bytes,frame_bytes;
+	    mp3d_sample_t pcm[MINIMP3_MAX_SAMPLES_PER_FRAME];
+		mp3dec_frame_info_t frame_info;
+		fill_file_buf(&file_buf,f);
+		if(0==file_buf.position)
 			break;
-		offset=mp3dec_skip_id3v2(tmp,len);
-		if(offset>0){
-			if(offset>len){
-				fseek(f,offset-len,SEEK_CUR);
-				continue;
-			}else{
-				memcpy(tmp,tmp+offset,len-offset);
-				len-=offset;
+		do{
+			char *tmp;
+			int tmp_size;
+			int samples;
+			int fwd;
+			tmp=file_buf.data;
+			tmp_size=file_buf.position;
+			memset(pcm,0xBB,sizeof(pcm));
+			samples=mp3dec_decode_frame(&mp3_dec,tmp,tmp_size,pcm,&frame_info);
+			if(0==samples)
+				break;
+			{
+				int amount;
+				samples*=2;
+				amount=fill_audio_buf(audio_buf,pcm,samples);
+				if(afill>=abuf_size){
+					play_wav_buf(abuf,abuf_size);
+					afill-=abuf_size;
+				}
 			}
-		}
-		if(len<MAX_FREE_FORMAT_FRAME_SIZE){
-			int x=fread(tmp+len,1,buf_size-len,f);
-			len+=x;
-		}
+
+			fwd=frame_info.frame_bytes;
+			tmp+=fwd;
+			len-=fwd;
+			if(0==fwd)
+				break;
+			if(len<=0){
+				break;
+			}
+
+		}while(1);
+
 		
 
 	}

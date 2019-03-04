@@ -295,7 +295,7 @@ static WAVEHDR wh_template = {
 static WAVEHDR wh[BUFFER_COUNT];
 
 
-void AudioCallback(
+void WINAPI AudioCallback(
 	HWAVEOUT hwo,      
 	DWORD uMsg,         
 	DWORD *dwInstance,  
