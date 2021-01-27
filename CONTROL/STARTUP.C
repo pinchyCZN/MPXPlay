@@ -85,9 +85,74 @@ static void shortdelay(val)
 }
 #endif
 
+static const char *CMOS_FILE="CMOS.TXT";
+static int save_cmos_file(unsigned long filenum,unsigned long listnum,unsigned long percent)
+{
+	static const char *CMOS_TMP_FILE="CMOS_TMP.TXT";
+	int result=0;
+	static int counter=0;
+	FILE *f;
+	counter++;
+	if(counter>=2){
+		counter=0;
+	}else{
+		return result;
+	}
+	f=fopen(CMOS_TMP_FILE,"wb");
+	if(f){
+		fprintf(f,"FILENUM=%u\n",filenum);
+		fprintf(f,"LISTNUM=%u\n",listnum);
+		fprintf(f,"PERCENT=%u\n",percent);
+		fclose(f);
+		MoveFileEx(CMOS_TMP_FILE,CMOS_FILE,MOVEFILE_REPLACE_EXISTING);
+		result=1;
+	}
+	return result;
+}
+static int load_cmos_file(unsigned long *filenum,unsigned long *listnum,unsigned long *percent)
+{
+	int result=0;
+	FILE *f;
+	f=fopen(CMOS_FILE,"rb");
+	if(f){
+		typedef struct{
+			const char *name;
+			unsigned long *ptr;
+		}PARAM_MAP;
+		PARAM_MAP map[]={
+			{"FILENUM",filenum},
+			{"LISTNUM",listnum},
+			{"PERCENT",percent},
+		};
+		while(1){
+			char tmp[80]={0};
+			char *ptr;
+			int i,count;
+			ptr=fgets(tmp,sizeof(tmp),f);
+			if(0==ptr){
+				break;
+			}
+			count=sizeof(map)/sizeof(map[0]);
+			for(i=0;i<count;i++){
+				PARAM_MAP *entry=&map[i];
+				const char *name=entry->name;
+				unsigned long *val=entry->ptr;
+				if(strstr(tmp,name)){
+					ptr=strchr(tmp,'=');
+					if(ptr){
+						val[0]=atoi(ptr+1);
+					}
+					break;
+				}
+			}
+		}
+		fclose(f);
+		result=1;
+	}
+	return result;
+}
 static void mpxplay_control_startup_savetocmos(struct mainvars *mvp)
 {
-#ifdef __DOS__
 	struct frame *frp0 = mvp->frp0;
 	struct playlist_side_info *psip = mvp->psip;
 	long index_pos = frp0->frameNum - frp0->index_start;
@@ -96,7 +161,7 @@ static void mpxplay_control_startup_savetocmos(struct mainvars *mvp)
 	unsigned long filenum = (((mvp->adone == ADONE_EOF) && (mvp->aktfilenum == psip->lastentry)) || (mvp->aktfilenum < psip->firstsong)) ? 0 : (mvp->aktfilenum - psip->firstsong + 1);
 	unsigned long listnum = (playstartlist >= 0) ? (playstartlist & 0x7) : 0;	// 3 bits
 	unsigned int intsoundcntrl_save;
-
+#ifdef __DOS__
 	MPXPLAY_INTSOUNDDECODER_DISALLOW;
 	outp(0x70, 1);
 	shortdelay(1);				// ???
@@ -115,14 +180,16 @@ static void mpxplay_control_startup_savetocmos(struct mainvars *mvp)
 		outp(0x71, (percent & 0x7f) | ((filenum >> (16 - 7)) & 0x80));	// 7 (lower) bits percent & 1 (higher) bit filenum
 	}
 	MPXPLAY_INTSOUNDDECODER_ALLOW;
+#else
+	save_cmos_file(filenum,listnum,percent);
 #endif
 }
 
 static void mpxplay_control_startup_loadfromcmos_listnum(void)
 {
-#ifdef __DOS__
 	unsigned int c2, c3;
 
+#ifdef __DOS__
 	if((playstartlist < 0) && mpxplay_control_fastlist_enabled()) {
 		outp(0x70, 3);
 		shortdelay(3);
@@ -132,15 +199,22 @@ static void mpxplay_control_startup_loadfromcmos_listnum(void)
 		c3 = inp(0x71);
 		playstartlist = ((c2 >> 6) & 0x03) | ((c3 >> (7 - 2)) & 0x04);
 	}
+#else
+	unsigned long filenum=0,listnum=0,percent=0;
+	int res;
+	res=load_cmos_file(&filenum,&listnum,&percent);
+	if(res){
+		playstartlist=listnum;
+	}
 #endif
 }
 
 static void mpxplay_control_startup_loadfromcmos_songpos(struct mainvars *mvp)
 {
-#ifdef __DOS__
 	struct playlist_side_info *psip = mvp->psip;
 	unsigned int c1, c2, c3;
 
+#ifdef __DOS__
 	if(!playstartsong) {
 		outp(0x70, 1);
 		shortdelay(3);
@@ -161,6 +235,14 @@ static void mpxplay_control_startup_loadfromcmos_songpos(struct mainvars *mvp)
 			playcontrol |= PLAYC_STARTNEXT;
 		}
 	}
+#else
+	unsigned long filenum=0,listnum=0,percent=0;
+	int res;
+	res=load_cmos_file(&filenum,&listnum,&percent);
+	if(res){
+		playstartsong=filenum;
+		playstartpercent=percent;
+	}
 #endif
 }
 
@@ -180,7 +262,7 @@ void mpxplay_control_startup_loadini(mpxini_line_t * mpxini_lines, struct mpxini
 	else
 		mpxplay_control_general_loadini(mpxini_lines, mpxini_partp, startup_vars_singleside);
 #ifndef __DOS__
-	funcbit_disable(su_startuptype, STARTUP_FLAG_CMOS);
+//	funcbit_disable(su_startuptype, STARTUP_FLAG_CMOS);
 #endif
 }
 

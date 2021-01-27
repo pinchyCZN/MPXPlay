@@ -65,7 +65,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I ".\\" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I ".\\" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "EMULATE_INTTYPES" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -629,24 +629,10 @@ InputName=L3_MDCT
 # Begin Source File
 
 SOURCE=.\DECODERS\AD_MP3\LAYER2.C
-
-!IF  "$(CFG)" == "mpxplay - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\DECODERS\AD_MP3\LAYER3.C
-
-!IF  "$(CFG)" == "mpxplay - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -735,16 +721,85 @@ SOURCE=.\DECODERS\AD_WAVPA\WORDS.C
 SOURCE=.\DECODERS\AD_WAVPA\WPUTILS.C
 # End Source File
 # End Group
+# Begin Group "AD_FLAC"
+
+# PROP Default_Filter "*.c;*.h"
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\AVCODEC.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\BITSTREA.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\BITSTREA.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\BSWAP.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\COMMON.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\DSPUTIL.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\FFT.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\FLAC.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\GOLOMB.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\GOLOMB.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\MDCT.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\MEM.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\MPEGAUDI.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\RATIONAL.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\UTILS.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\WMADATA.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\FFMPEGAC\WMADEC.C
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_FFMPG.C
+# End Source File
 # Begin Source File
 
 SOURCE=.\DECODERS\AD_MP3.C
-
-!IF  "$(CFG)" == "mpxplay - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "mpxplay - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 

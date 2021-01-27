@@ -25,7 +25,9 @@
 #include "ffmpegac\avcodec.h"
 #undef malloc
 #undef free
+#ifndef WIN32
 #include <mem.h>
+#endif
 
 #define FFMPG_BS_FRAMESIZE_MAX      16384	// if there's no other bufsize
 #define FFMPG_SAMPLES_PER_FRAME_MAX (AVCODEC_MAX_AUDIO_FRAME_SIZE/4)

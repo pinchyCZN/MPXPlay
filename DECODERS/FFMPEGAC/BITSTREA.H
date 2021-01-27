@@ -581,7 +581,7 @@ static inline int get_xbits(GetBitContext * s, int n)
 	} else {
 		//   tmp = (-1<<n) | NEG_USR32(cache,n) + 1; mpeg12.c algo
 		//   tmp = - (NEG_USR32(cache,n) ^ ((1 << n) - 1)); h263.c algo
-		tmp = -NEG_USR32(~cache, n);
+		tmp = -((int)NEG_USR32(~cache, n));
 	}
 	LAST_SKIP_BITS(re, s, n)
 		CLOSE_READER(re, s)

@@ -275,7 +275,7 @@ static int wma_decode_init(AVCodecContext * avctx)
 
 	/* init rate dependant parameters */
 	s->use_noise_coding = 1;
-	high_freq = s->sample_rate * 0.5;
+	high_freq = (float)(s->sample_rate * 0.5);
 
 	/* if version 2, then the rates are normalized */
 	sample_rate1 = s->sample_rate;

@@ -20,6 +20,21 @@
 #define __attribute__(a)
 #include <malloc.h>
 #endif
+#ifdef WIN32
+#define HAVE_AV_CONFIG_H 1
+#define CONFIG_DECODERS  1
+#include <stddef.h>
+#include <assert.h>
+#include <limits.h>
+#define inline __inline
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+#define strcasecmp stricmp
+#define rint(x) (floor((x)+0.5F))
+#define __attribute__(a)
+#define alloca _alloca
+#pragma warning(error:4013)
+#endif
 
 /*#ifndef INLINE
  #define INLINE inline

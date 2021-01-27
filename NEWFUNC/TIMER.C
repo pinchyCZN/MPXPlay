@@ -686,11 +686,6 @@ void newfunc_newhandler08_close(void)
 		TerminateThread(handle_maincycle1, 0);
 	if(handle_maincycle2)
 		TerminateThread(handle_maincycle2, 0);
-	if(int08_timer_handle) {
-		CancelWaitableTimer(int08_timer_handle);
-		CloseHandle(int08_timer_handle);
-		int08_timer_handle = NULL;
-	}
 	if(int08_timer_thread_handle)
 		TerminateThread(int08_timer_thread_handle, 0);
 	if(int08_thread_handle)
