@@ -19,6 +19,9 @@
 
 #include <math.h>
 #include "os_types.h"
+#ifndef MPXPLAY
+#define MPXPLAY 1
+#endif
 
 #ifndef _V_IFDEFJAIL_H_
 #  define _V_IFDEFJAIL_H_
