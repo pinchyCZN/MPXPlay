@@ -793,6 +793,114 @@ SOURCE=.\DECODERS\FFMPEGAC\WMADATA.H
 SOURCE=.\DECODERS\FFMPEGAC\WMADEC.C
 # End Source File
 # End Group
+# Begin Group "AD_VORBI"
+
+# PROP Default_Filter "*.c;*.h"
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\BACKENDS.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\BITWISE.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\BLOCK.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\CODEBOOK.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\CODEBOOK.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\CODEC.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\CODECINT.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\FLOOR0.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\FLOOR1.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\FRAMING.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\INFO.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\LSP.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\LSP.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\MAPPING0.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\OGG.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\OS.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\OS_TYPES.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\REGISTRY.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\RES0.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\SCALES.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\SHARBOOK.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\SYNTHESI.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\VORBI_MDCT.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\VORBI_MDCT.H
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\WINDOW.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI\WINDOW.H
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\DECODERS\AD_FFMPG.C
@@ -804,6 +912,10 @@ SOURCE=.\DECODERS\AD_MP3.C
 # Begin Source File
 
 SOURCE=.\DECODERS\AD_PCM.C
+# End Source File
+# Begin Source File
+
+SOURCE=.\DECODERS\AD_VORBI.C
 # End Source File
 # Begin Source File
 
@@ -823,14 +935,6 @@ SOURCE=.\DEPARSER\IN_AAC.C
 # End Source File
 # Begin Source File
 
-SOURCE=.\DEPARSER\IN_AC3.C
-# End Source File
-# Begin Source File
-
-SOURCE=.\DEPARSER\IN_APE.C
-# End Source File
-# Begin Source File
-
 SOURCE=.\DEPARSER\IN_FLAC.C
 # End Source File
 # Begin Source File
@@ -839,15 +943,7 @@ SOURCE=.\DEPARSER\IN_MP3.C
 # End Source File
 # Begin Source File
 
-SOURCE=.\DEPARSER\IN_MPC.C
-# End Source File
-# Begin Source File
-
 SOURCE=.\DEPARSER\IN_RAWAU.C
-# End Source File
-# Begin Source File
-
-SOURCE=.\DEPARSER\IN_RAWAU.H
 # End Source File
 # Begin Source File
 

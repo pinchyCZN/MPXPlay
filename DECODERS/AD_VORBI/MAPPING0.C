@@ -26,7 +26,7 @@
 #include "window.h"
 #include "registry.h"
 #include "os.h"
-#include "mdct.h"
+#include "vorbi_mdct.h"
 
 static void mapping0_free_info(vorbis_info_mapping * i)
 {
@@ -140,6 +140,7 @@ static vorbis_info_mapping *mapping0_unpack(vorbis_info * vi, oggpack_buffer * o
 	return (NULL);
 }
 
+#define OGG_SPECTRUM_ANALISER 
 #ifdef OGG_SPECTRUM_ANALISER	// defined in os_types.h
 
 static unsigned int analiser_bandnum;

@@ -1,19 +1,19 @@
 /********************************************************************
- *                                                                  *
- * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
- * USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS     *
- * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
- * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
- *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2001             *
- * by the XIPHOPHORUS Company http://www.xiph.org/                  *
- *                                                                  *
- ********************************************************************
+*                                                                  *
+* THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
+* USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS     *
+* GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
+* IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
+*                                                                  *
+* THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2001             *
+* by the XIPHOPHORUS Company http://www.xiph.org/                  *
+*                                                                  *
+********************************************************************
 
- function: basic codebook pack/unpack/code/decode operations
- last mod: $Id: codebook.c,v 1.35 2003/02/10 00:00:00 PDSoft Exp $
-
- ********************************************************************/
+  function: basic codebook pack/unpack/code/decode operations
+  last mod: $Id: codebook.c,v 1.35 2003/02/10 00:00:00 PDSoft Exp $
+  
+********************************************************************/
 
 // a short note about Mpxplay:
 //
@@ -32,63 +32,63 @@ long vorbis_book_inline_decode(const decode_aux * t, oggpack_buffer * b);
 //(I assume/hope that the huffbits are never more than 32 bits)
 
 #pragma aux vorbis_book_inline_decode=\
- "mov edx,dword ptr 4[esi]"\
- "sub edx,dword ptr [esi]"\
- "cmp edx,dword ptr [edi]"\
- "jg vbd_use_lookup"\
-  "test edx,edx"\
-  "jg vbd_ok1"\
-   "mov eax,-1"\
-   "jmp vbd_end"\
-  "vbd_ok1:"\
-  "xor eax,eax"\
-  "jmp vbd_huffdec_begin"\
- "vbd_use_lookup:"\
-  "mov eax,dword ptr [esi]"\
-  "mov ecx,eax"\
-  "shr eax,3"\
-  "add eax,dword ptr 8[esi]"\
-  "and ecx,7"\
-  "mov eax,dword ptr [eax]"\
-  "shr eax,cl"\
-  "mov ecx,dword ptr [edi]"\
-  "and eax,mask[ecx*4]"\
-  "mov ecx,dword ptr 8[edi]"\
-  "movzx ebx,byte ptr [ecx+eax]"\
-  "mov ecx,dword ptr 4[edi]"\
-  "movsx eax,word ptr [ecx+eax*2]"\
-  "add dword ptr [esi],ebx"\
-  "test eax,eax"\
-  "jle vbd_end_neg"\
-  "sub edx,ebx"\
- "vbd_huffdec_begin:"\
- "mov ebx,dword ptr [esi]"\
- "mov ecx,ebx"\
- "shr ebx,3"\
- "add ebx,dword ptr 8[esi]"\
- "and ecx,7"\
- "mov ebx,dword ptr [ebx]"\
- "shr ebx,cl"\
- "mov ecx,dword ptr 12[edi]"\
- "mov edi,dword ptr 16[edi]"\
- "vbd_huffdec_back:"\
-  "shr ebx,1"\
-  "jnc vbd_ptr0"\
-   "movsx eax,word ptr [edi+eax*2]"\
-  "jmp vbd_ptr_end"\
-  "vbd_ptr0:"\
-   "movsx eax,word ptr [ecx+eax*2]"\
-  "vbd_ptr_end:"\
-  "dec edx"\
-  "jz vbd_huffdec_end"\
-  "test eax,eax"\
- "jg vbd_huffdec_back"\
- "vbd_huffdec_end:"\
- "mov ebx,dword ptr 4[esi]"\
- "sub ebx,edx"\
- "mov dword ptr [esi],ebx"\
- "vbd_end_neg:neg eax"\
- "vbd_end:"\
+	"mov edx,dword ptr 4[esi]"\
+	"sub edx,dword ptr [esi]"\
+	"cmp edx,dword ptr [edi]"\
+	"jg vbd_use_lookup"\
+	"test edx,edx"\
+	"jg vbd_ok1"\
+	"mov eax,-1"\
+	"jmp vbd_end"\
+	"vbd_ok1:"\
+	"xor eax,eax"\
+	"jmp vbd_huffdec_begin"\
+	"vbd_use_lookup:"\
+	"mov eax,dword ptr [esi]"\
+	"mov ecx,eax"\
+	"shr eax,3"\
+	"add eax,dword ptr 8[esi]"\
+	"and ecx,7"\
+	"mov eax,dword ptr [eax]"\
+	"shr eax,cl"\
+	"mov ecx,dword ptr [edi]"\
+	"and eax,mask[ecx*4]"\
+	"mov ecx,dword ptr 8[edi]"\
+	"movzx ebx,byte ptr [ecx+eax]"\
+	"mov ecx,dword ptr 4[edi]"\
+	"movsx eax,word ptr [ecx+eax*2]"\
+	"add dword ptr [esi],ebx"\
+	"test eax,eax"\
+	"jle vbd_end_neg"\
+	"sub edx,ebx"\
+	"vbd_huffdec_begin:"\
+	"mov ebx,dword ptr [esi]"\
+	"mov ecx,ebx"\
+	"shr ebx,3"\
+	"add ebx,dword ptr 8[esi]"\
+	"and ecx,7"\
+	"mov ebx,dword ptr [ebx]"\
+	"shr ebx,cl"\
+	"mov ecx,dword ptr 12[edi]"\
+	"mov edi,dword ptr 16[edi]"\
+	"vbd_huffdec_back:"\
+	"shr ebx,1"\
+	"jnc vbd_ptr0"\
+	"movsx eax,word ptr [edi+eax*2]"\
+	"jmp vbd_ptr_end"\
+	"vbd_ptr0:"\
+	"movsx eax,word ptr [ecx+eax*2]"\
+	"vbd_ptr_end:"\
+	"dec edx"\
+	"jz vbd_huffdec_end"\
+	"test eax,eax"\
+	"jg vbd_huffdec_back"\
+	"vbd_huffdec_end:"\
+	"mov ebx,dword ptr 4[esi]"\
+	"sub ebx,edx"\
+	"mov dword ptr [esi],ebx"\
+	"vbd_end_neg:neg eax"\
+	"vbd_end:"\
 parm[edi][esi] value[eax] modify[eax ebx ecx edx edi esi];
 
 long vorbis_book_decode(const decode_aux * t, oggpack_buffer * b)
@@ -99,83 +99,82 @@ long vorbis_book_decode(const decode_aux * t, oggpack_buffer * b)
 // C version of the asm routine (don't use this)
 /*long vorbis_book_decode(const decode_aux *t,oggpack_buffer *b)
 {
- unsigned long bitstore;
- long ptr,leftbits;
- short *ptr0p,*ptr1p;
+unsigned long bitstore;
+long ptr,leftbits;
+short *ptr0p,*ptr1p;
 
- leftbits=oggpack_inline_leftbits(b);
- if(leftbits<=t->tab_maxlen){
+  leftbits=oggpack_inline_leftbits(b);
+  if(leftbits<=t->tab_maxlen){
   if(leftbits<=0)
-   return -1;
+  return -1;
   ptr=0;
- }else{
+  }else{
   unsigned int lok=oggpack_inline_look24noc(b,t->tab_maxlen),adv;
   ptr=t->tab_ptr[lok];
   adv=t->tab_codelen[lok];
   oggpack_inline_adv(b,adv);
   if(ptr<=0)
-   return(-ptr);
+  return(-ptr);
   leftbits-=adv;
- }
-
- bitstore=oggpack_inline_look2432noc(b);
- ptr0p=t->ptr0;
- ptr1p=t->ptr1;
- do{
-  if(bitstore&1)
-   ptr=ptr1p[ptr];
-  else
-   ptr=ptr0p[ptr];
-  bitstore>>=1;
-  if(!(--leftbits))
-   break;
- }while(ptr>0);
-
- oggpack_inline_setleft(b,leftbits);
-
- return(-ptr);
+  }
+  
+	bitstore=oggpack_inline_look2432noc(b);
+	ptr0p=t->ptr0;
+	ptr1p=t->ptr1;
+	do{
+	if(bitstore&1)
+	ptr=ptr1p[ptr];
+	else
+	ptr=ptr0p[ptr];
+	bitstore>>=1;
+	if(!(--leftbits))
+	break;
+	}while(ptr>0);
+	
+	  oggpack_inline_setleft(b,leftbits);
+	  
+		return(-ptr);
 }*/
 
 #else
 
-long vorbis_book_decode(const decode_aux * t, oggpack_buffer * b)
+long vorbis_book_decode(const decode_aux *t,oggpack_buffer *b)
 {
-	ogg_uint32_t bitstore;
-	ogg_int32_t ptr, leftbits;
-	ogg_int16_t *ptr0p, *ptr1p;
-
-	leftbits = oggpack_inline_leftbits(b);
-	if(leftbits <= t->tab_maxlen) {
-		if(leftbits <= 0)
+	unsigned long bitstore;
+	long ptr,leftbits;
+	short *ptr0p,*ptr1p;
+	
+	leftbits=oggpack_inline_leftbits(b);
+	if(leftbits<=t->tab_maxlen){
+		if(leftbits<=0)
 			return -1;
-		ptr = 0;
-	} else
-		ogg_uint32_t lok = oggpack_inline_look24noc(b, t->tab_maxlen), adv;
-	ptr = t->tab_ptr[lok];
-	adv = t->tab_codelen[lok];
-	oggpack_inline_adv(b, adv);
-	if(ptr <= 0)
-		return (-ptr);
-	leftbits -= adv;
-}
-
- // I assume/hope that the huffbits are never more than t->tab_maxlen+32
-bitstore = oggpack_inline_look32(b, (leftbits > 32) ? 32 : leftbits);
-ptr0p = t->ptr0;
-ptr1p = t->ptr1;
-do {
-	if(bitstore & 1)
-		ptr = ptr1p[ptr];
-	else
-		ptr = ptr0p[ptr];
-	bitstore >>= 1;
-	if(!(--leftbits))
-		break;
-} while(ptr > 0);
-
-oggpack_inline_setleft(b, leftbits);
-
-return (-ptr);
+		ptr=0;
+	}else{
+		unsigned int lok=oggpack_inline_look24noc(b,t->tab_maxlen),adv;
+		ptr=t->tab_ptr[lok];
+		adv=t->tab_codelen[lok];
+		oggpack_inline_adv(b,adv);
+		if(ptr<=0)
+			return(-ptr);
+		leftbits-=adv;
+	}
+	
+	bitstore=oggpack_inline_look2432noc(b);
+	ptr0p=t->ptr0;
+	ptr1p=t->ptr1;
+	do{
+		if(bitstore&1)
+			ptr=ptr1p[ptr];
+		else
+			ptr=ptr0p[ptr];
+		bitstore>>=1;
+		if(!(--leftbits))
+			break;
+	}while(ptr>0);
+	
+	oggpack_inline_setleft(b,leftbits);
+	
+	return(-ptr);
 }
 
 #define vorbis_book_inline_decode(t,b) vorbis_book_decode(t,b)
@@ -191,7 +190,7 @@ long vorbis_book_decodevs_add(codebook * book, ogg_double_t * a0, oggpack_buffer
 	const unsigned int bookdim = book->dim;
 	const unsigned int step = n / bookdim;
 	unsigned int i, j;
-
+	
 	i = step;
 	do {
 		ogg_float_t *t;
@@ -217,7 +216,7 @@ long vorbis_book_decodevs_set(codebook * book, ogg_double_t * a0, oggpack_buffer
 	const unsigned int bookdim = book->dim;
 	const unsigned int step = n / bookdim;
 	unsigned int i, j;
-
+	
 	i = step;
 	do {
 		ogg_float_t *t;
@@ -243,7 +242,7 @@ long vorbis_book_decodev_add(codebook * book, ogg_double_t * a, oggpack_buffer *
 	const ogg_float_t *bookvallist = book->valuelist;
 	const decode_aux *bookdectree = book->decode_tree;
 	const unsigned int bookdim = book->dim;
-
+	
 	if(bookdim > 8) {
 		do {
 			ogg_float_t *t;
@@ -296,7 +295,7 @@ long vorbis_book_decodev_set(codebook * book, ogg_double_t * a, oggpack_buffer *
 	const ogg_float_t *bookvallist = book->valuelist;
 	const decode_aux *bookdectree = book->decode_tree;
 	const unsigned int bookdim = book->dim;
-
+	
 	if(bookdim > 8) {
 		do {
 			ogg_float_t *t;
@@ -352,7 +351,7 @@ long vorbis_book_decodevv_add(codebook * book, ogg_double_t ** a, long offset, i
 	const ogg_float_t *bookvallist = book->valuelist;
 	const decode_aux *bookdectree = book->decode_tree;
 	unsigned int i;
-
+	
 	if((ch == 2) && (bookdim <= 8) && !(bookdim & 1)) {
 		ogg_double_t *al = a[0] + (offset >> 1), *ar = a[1] + (offset >> 1);
 		const unsigned int bd2 = bookdim >> 1;
@@ -414,7 +413,7 @@ long vorbis_book_decodevv_set(codebook * book, ogg_double_t ** a, long offset, i
 	const ogg_float_t *bookvallist = book->valuelist;
 	const decode_aux *bookdectree = book->decode_tree;
 	unsigned int i;
-
+	
 	if((ch == 2) && (bookdim <= 8) && !(bookdim & 1)) {
 		ogg_double_t *al = a[0] + (offset >> 1), *ar = a[1] + (offset >> 1);
 		const unsigned int bdp2 = bookdim >> 1;

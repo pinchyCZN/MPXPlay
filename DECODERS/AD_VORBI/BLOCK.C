@@ -25,7 +25,7 @@
 #include "codec.h"
 #include "codecint.h"
 #include "window.h"
-#include "mdct.h"
+#include "vorbi_mdct.h"
 #include "registry.h"
 
 int vorbis_block_init(vorbis_dsp_state * vd, vorbis_block * vb)
