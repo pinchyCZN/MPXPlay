@@ -11,11 +11,11 @@ SET _OBJ_DIR_=.\obj
 
 SET _DPARAMS_=-m32 -c -betterC -boundscheck=off -release -I%_SRC_DIR_% -od%_OBJ_DIR_%
 
-dmd %_DPARAMS_% %_SRC_DIR_%\dos_map.d
-dmd %_DPARAMS_% %_SRC_DIR_%\dummy_.d
-dmd %_DPARAMS_% %_SRC_DIR_%\intel_hda.d
-dmd %_DPARAMS_% %_SRC_DIR_%\libc_map.d
-dmd %_DPARAMS_% %_SRC_DIR_%\main.d
-dmd %_DPARAMS_% %_SRC_DIR_%\minimp3.d
+REM dmd %_DPARAMS_% %_SRC_DIR_%\dos_map.d
+REM dmd %_DPARAMS_% %_SRC_DIR_%\dummy_.d
+REM dmd %_DPARAMS_% %_SRC_DIR_%\intel_hda.d
+REM dmd %_DPARAMS_% %_SRC_DIR_%\libc_map.d
+REM dmd %_DPARAMS_% %_SRC_DIR_%\main.d
+REM dmd %_DPARAMS_% %_SRC_DIR_%\minimp3.d
 dmd %_DPARAMS_% %_SRC_DIR_%\mp3_file.d
-dmd %_DPARAMS_% %_SRC_DIR_%\drflac.d
+REM dmd %_DPARAMS_% %_SRC_DIR_%\drflac.d
