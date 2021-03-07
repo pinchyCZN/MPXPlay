@@ -14,7 +14,7 @@
 //**************************************************************************
 //function: mouse functions
 
-#define MPXPLAY_USE_DEBUGF 1
+//#define MPXPLAY_USE_DEBUGF 1
 #define MOUSE_DEBUG_OUTPUT NULL
 
 #include "control.h"
@@ -234,7 +234,7 @@ void mouse_clickhand_endptr(void)
 #include <malloc.h>
 #include <wincon.h>
 
-static HANDLE hConsoleInput;
+static HANDLE hConsoleInput=0;
 
 // called/refreshed from pds_kbhit()
 void mpxplay_control_mouse_winconsole_getevent(void)
@@ -244,24 +244,39 @@ void mpxplay_control_mouse_winconsole_getevent(void)
 	MOUSE_EVENT_RECORD *mer;
 	struct callback_data *cbp = &cbd;
 	//char sout[100];
+	static int mouse_init=0;
+
 
 	if(!hConsoleInput)
 		hConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
 	if(!hConsoleInput)
 		return;
-
+	if(0==mouse_init)
+	{
+#ifndef ENABLE_EXTENDED_FLAGS
+#	define ENABLE_EXTENDED_FLAGS 128
+#endif
+		DWORD mode=ENABLE_EXTENDED_FLAGS|ENABLE_WINDOW_INPUT|ENABLE_MOUSE_INPUT;
+		SetConsoleMode(hConsoleInput,mode);
+		mouse_init=1;
+	}
+	nb_events=0;
 	if(!GetNumberOfConsoleInputEvents(hConsoleInput, &nb_events))
 		return;
-	if(!nb_events || nb_events > 64)
+	if(0==nb_events)
 		return;
-	nb_events += 8;				// for safe (ReadConsoleInput can freeze if we don't give enough space to store datas (if nbe>nb_events))
-	inprec = alloca(nb_events * sizeof(INPUT_RECORD));
+	if(nb_events > 64){
+		 FlushConsoleInputBuffer(hConsoleInput);
+		 return;
+	}
+	inprec = alloca((nb_events+1) * sizeof(INPUT_RECORD));
 	if(!inprec)
 		return;
 
-	if(!ReadConsoleInput(hConsoleInput, inprec, nb_events * sizeof(INPUT_RECORD), &nbe))
+	nbe=0;
+	if(!ReadConsoleInput(hConsoleInput, inprec, nb_events, &nbe))
 		return;
-	for(n = 0; (n < nbe) && (n < nb_events); n++) {
+	for(n = 0; n < nbe; n++) {
 		switch (inprec[n].EventType) {
 		case KEY_EVENT:
 			if(inprec[n].Event.KeyEvent.bKeyDown) {
@@ -269,15 +284,18 @@ void mpxplay_control_mouse_winconsole_getevent(void)
 					newfunc_keyboard_winkey_to_extkey(inprec[n].Event.KeyEvent.dwControlKeyState, inprec[n].Event.KeyEvent.wVirtualKeyCode, inprec[n].Event.KeyEvent.uChar.AsciiChar);
 				if(scancode)
 					pds_pushkey(scancode);
-				//mpxplay_debugf(MOUSE_DEBUG_OUTPUT,
-				/*sprintf(sout,"\scan:%4.4X vk:%4.4X asc:%2.2X sc:%2.2X nbe:%d e:%d n:%d",
+				/*
+				mpxplay_debugf(MOUSE_DEBUG_OUTPUT,
+				//sprintf(sout,
+				"\scan:%4.4X vk:%4.4X asc:%2.2X sc:%2.2X nbe:%d e:%d n:%d",
 				   scancode,
 				   (int)inprec[n].Event.KeyEvent.wVirtualKeyCode,
 				   (int)inprec[n].Event.KeyEvent.uChar.AsciiChar,
 				   (int)inprec[n].Event.KeyEvent.wVirtualScanCode,
 				   //(int)inprec[n].Event.KeyEvent.wRepeatCount,
 				   nbe,nb_events,n);
-				   display_message(1,0,sout); */
+				  // display_message(1,0,sout);
+				  */
 			}
 			break;
 		case MOUSE_EVENT:

@@ -101,7 +101,7 @@ unsigned int pds_extgetch(void)
 
 unsigned int pds_look_extgetch(void)
 {
-	if(pds_kbhit()) {
+	if(pds_kbhit()) { 
 #ifdef KEYBOARD_USE_BIOSMEM
 		char *biosmem = (char *)BIOSMEM_ADDRESS;
 		unsigned int keybufferpos = KEYBUF_STARTOFFSET + *((unsigned short *)&biosmem[KEYBUF_HEADPTR]);
@@ -184,7 +184,7 @@ char newfunc_keyboard_extkey_to_char(unsigned short extkey)
 			return table->c;
 		table++;
 	} while(table->c);
-	return 0xff;
+	return (char)0xff;
 }
 
 //------------------------------------------------------------------
