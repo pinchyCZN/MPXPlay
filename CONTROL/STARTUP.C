@@ -85,35 +85,79 @@ static void shortdelay(val)
 }
 #endif
 
-static const char *CMOS_FILE="CMOS.TXT";
+#define MAX_CMOS_FILES 2
 static int save_cmos_file(unsigned long filenum,unsigned long listnum,unsigned long percent)
 {
-	static const char *CMOS_TMP_FILE="CMOS_TMP.TXT";
+	static const char *fmt="CMOS%i.TXT";
+	char tmp[40]={0};
+	static int file_counter=1;
 	int result=0;
 	static int counter=0;
 	FILE *f;
 	counter++;
-	if(counter>=2){
-		counter=0;
-	}else{
-		return result;
+	snprintf(tmp,sizeof(tmp),fmt,file_counter);
+	file_counter++;
+	if(file_counter>MAX_CMOS_FILES){
+		file_counter=1;
 	}
-	f=fopen(CMOS_TMP_FILE,"wb");
+	f=fopen(tmp,"wb");
 	if(f){
 		fprintf(f,"FILENUM=%u\n",filenum);
 		fprintf(f,"LISTNUM=%u\n",listnum);
 		fprintf(f,"PERCENT=%u\n",percent);
+		fflush(f);
 		fclose(f);
-		MoveFileEx(CMOS_TMP_FILE,CMOS_FILE,MOVEFILE_REPLACE_EXISTING);
 		result=1;
 	}
 	return result;
 }
+
+static int find_valid_cmos_file(FILE **fout)
+{
+	const char *fmt="CMOS%i.TXT";
+	int result=0;
+	char tmp[80];
+	int i;
+	char *buf;
+	const int buf_size=1024;
+	fout[0]=0;
+	buf=malloc(buf_size);
+	if(0==buf){
+		return result;
+	}
+	for(i=1;i<MAX_CMOS_FILES;i++){
+		FILE *f;
+		snprintf(tmp,sizeof(tmp),fmt,i);
+		f=fopen(tmp,"rb");
+		if(f){
+			int valid=0;
+			memset(buf,0,buf_size);
+			fread(buf,buf_size-1,1,f);
+			if(strstr(buf,"FILENUM")
+				&& strstr(buf,"LISTNUM")
+				&& strstr(buf,"PERCENT")){
+				valid=1;
+			}
+			if(valid){
+				fseek(f,0,SEEK_SET);
+				fout[0]=f;
+				result=1;
+				break;
+			}else{
+				fclose(f);
+			}
+		}
+
+	}
+	free(buf);
+	return result;
+}
+
 static int load_cmos_file(unsigned long *filenum,unsigned long *listnum,unsigned long *percent)
 {
 	int result=0;
-	FILE *f;
-	f=fopen(CMOS_FILE,"rb");
+	FILE *f=0;
+	find_valid_cmos_file(&f);
 	if(f){
 		typedef struct{
 			const char *name;
