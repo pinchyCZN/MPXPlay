@@ -167,9 +167,12 @@ static void newfunc_timer_delete_entry(mpxplay_timed_s * mtf)
 //------------------------------------------------------------------------
 unsigned long mpxplay_timer_secs_to_counternum(unsigned long secs)
 {
+#ifdef WIN32
+#pragma warning(disable:4244)
+#endif
 	mpxp_int64_t cn;			// 1000.0ms/55.0ms = 18.181818 ticks per sec
 	pds_fto64i((float)secs * (1000.0 / 55.0) * (float)INT08_DIVISOR_DEFAULT / (float)INT08_DIVISOR_NEW, &cn);
-	return cn;
+	return (unsigned long)cn;
 }
 
 int mpxplay_timer_addfunc(void *func, void *data, unsigned int timer_flags, unsigned int refresh_delay)
@@ -602,7 +605,12 @@ static void newhandler_08_thread(void *empty)
 			ResumeThread(handle_maincycle1);
 		if(handle_maincycle2)
 			ResumeThread(handle_maincycle2);
-		WaitForSingleObjectEx(int08_timer_handle, (long)(1000 / INT08_CYCLES_NEW) + 2, 1);
+		//WaitForSingleObjectEx(int08_timer_handle, (long)(1000 / INT08_CYCLES_NEW) + 2, 1);
+		{
+			DWORD x=(DWORD)(1000 / INT08_CYCLES_NEW) + 2;
+			x=5;
+			WaitForSingleObjectEx(int08_timer_handle, x, 1);
+		}
 	} while(mpxplay_timed_functions);
 }
 
@@ -686,6 +694,11 @@ void newfunc_newhandler08_close(void)
 		TerminateThread(handle_maincycle1, 0);
 	if(handle_maincycle2)
 		TerminateThread(handle_maincycle2, 0);
+	if(int08_timer_handle) {
+		CancelWaitableTimer(int08_timer_handle);
+		CloseHandle(int08_timer_handle);
+		int08_timer_handle = NULL;
+	}
 	if(int08_timer_thread_handle)
 		TerminateThread(int08_timer_thread_handle, 0);
 	if(int08_thread_handle)
@@ -717,7 +730,7 @@ static unsigned long thread_maincycle_2(struct mainvars *mvp)
 	do {
 		((call_timedfunc_nodata) (main_cycle2)) ();
 		if(!funcbit_smp_test(mpxplay_signal_events, MPXPLAY_SIGNALMASK_OTHER))
-			Sleep(1000 / INT08_CYCLES_NEW);
+			Sleep((DWORD)(1000 / INT08_CYCLES_NEW));
 		else
 			Sleep(0);
 	} while(mvps.partselect);

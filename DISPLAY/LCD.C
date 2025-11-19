@@ -18,6 +18,7 @@
 #include "control\control.h"
 
 #ifdef WIN32
+#include <stdarg.h> 
 unsigned int outp(DWORD port, DWORD val)
 {
 	__asm mov edx, port;
@@ -327,6 +328,7 @@ static lcd_lowlevelfunc_s LCD_TYPE6_funcs;
 static lcd_lowlevelfunc_s LCD_TYPE7_funcs;
 static lcd_lowlevelfunc_s LCD_TYPE8_funcs;
 static lcd_lowlevelfunc_s LCD_TYPE9_funcs;
+static lcd_lowlevelfunc_s LCD_TYPE10_funcs;
 
 static lcd_lowlevelfunc_s *lcd_all_lowlevelfuncs[] = {
 	NULL,						// no type 0
@@ -338,7 +340,8 @@ static lcd_lowlevelfunc_s *lcd_all_lowlevelfuncs[] = {
 	&LCD_TYPE6_funcs,
 	&LCD_TYPE7_funcs,
 	&LCD_TYPE8_funcs,
-	&LCD_TYPE9_funcs
+	&LCD_TYPE9_funcs,
+	&LCD_TYPE10_funcs,
 };
 
 #define LCD_STANDARDITEMTYPES (sizeof(mpxini_standarditems)/sizeof(mpxini_standarditem_s) - 1)
@@ -374,13 +377,13 @@ void mpxplay_display_lcd_loadini(mpxini_line_t * mpxini_lines, struct mpxini_par
 		return;
 
 	LCD_portnum = pds_atol(&lcd_portname[3]);	// LPTn or COMn
-	if(LCD_portnum < 1 || LCD_portnum > 4) {
+	if(LCD_portnum < 1 || LCD_portnum > 255) {
 		LCD_portnum = 0;
 		display_warning_message("Invalid LCD-port number (must be 1-4)!");
 		return;
 	}
 #ifdef WIN32
-	LCD_portnum = 0x378;
+//	LCD_portnum = 0x378;
 #else
 	LCD_portnum = *((unsigned short *)&biosmem[biosaddr + (LCD_portnum - 1) * 2]);
 #endif
@@ -1280,6 +1283,36 @@ static void LCD_draw(struct mainvars *mvp)
 	//pds_textdisplay_printf(lcd_mirror[2]);
 	//pds_textdisplay_textxy(7,50,3,lcd_mirror[1]);
 	//pds_textdisplay_textxy(7,50,4,lcd_mirror[2]);
+}
+static void LCD_draw_new(struct mainvars *mvp)
+{
+	unsigned int y, x, skippedchars;
+	//unsigned int outchars=0;
+	if(!LCD_portnum)
+		return;
+
+	build_lcdlines_from_lcditems(mvp);
+
+	// partial refresh (send only the new/changed chars to LCD to reduce communication (speed up))
+	for(y = 1; y <= LCD_lines; y++) {
+		unsigned int linelen = disp_lcdlines[LCD_currpage][y].length;	// length of line
+		unsigned int linepos = disp_lcdlines[LCD_currpage][y].scrollpos;	// display position of line (at scroll)
+		char *linesp = &(disp_lcdlines[LCD_currpage][y].linestr[0]);	// begin of linestring
+		LCD_hw_gotoyx(y, 1);
+		for(x = 0; x < LCD_rows; x++) {
+			unsigned int lpx = linepos + x;
+			char linechar;
+			if(lpx >= linelen){
+				lpx -= linelen;
+			}
+			linechar = linesp[lpx];
+			LCD_hw_put_char(linechar);
+		}
+	}
+	{
+		int i=0;
+		i++;
+	}
 }
 
 #endif							// MPXPLAY_LINK_LCD
@@ -2806,30 +2839,194 @@ static lcd_lowlevelfunc_s LCD_TYPE8_funcs = {
 //-----------------------------------------------------------------------
 //type 10 (you can add a new lcd type here)
 
-/*
+static HANDLE LCD_10_hcom=0;
+#define LCD_10_REBOOT 26
+#define LCD_10_CURHOME 1
+#define LCD_10_CURHIDE 4
+#define LCD_10_CLEAR 12
+#define LCD_10_POSXY 17
+#define LCD_10_SCROLL_OFF 20
+#define LCD_10_WRAP_OFF 24
+
+
+static void LCD_10_set_baud(const HANDLE h,const int baud)
+{
+	DCB	config={0};
+	COMMTIMEOUTS to={0};
+    GetCommState(h,&config);
+	config.BaudRate=baud;
+	config.ByteSize=8;
+	config.Parity=NOPARITY;
+	config.StopBits=ONESTOPBIT;
+	config.fOutX=0;
+	config.fInX=0;
+
+	SetCommState(h,&config);
+
+	GetCommTimeouts(h,&to);
+    to.ReadIntervalTimeout = 20;
+    to.ReadTotalTimeoutMultiplier = 0;
+    to.ReadTotalTimeoutConstant = 10;
+    to.WriteTotalTimeoutMultiplier = 20;
+    to.WriteTotalTimeoutConstant = 10;
+    SetCommTimeouts(h,&to);
+}
+static HANDLE LCD_10_open(const int port)
+{
+	HANDLE h;
+	char tmp[40]={0};
+	_snprintf(tmp,sizeof(tmp),"\\\\.\\COM%i",port);
+	h = CreateFile(tmp,	// Specify port device: default "\\.\COM1"
+		GENERIC_READ|GENERIC_WRITE,	// Specify mode that open device.
+		0,							// share mode.
+		NULL,                       // the object gets a default security.
+		OPEN_EXISTING,              // Specify which action to take on file. 
+		0,							// overlap
+		NULL);
+	if(INVALID_HANDLE_VALUE==h){
+		return 0;
+	}
+	return h;
+}
+static void LCD_10_throttle()
+{
+	static DWORD tick=0,counter=0;
+	DWORD current,delta;
+	current=GetTickCount();
+	delta=current-tick;
+	if(delta<=1){
+		counter++;
+		if(counter>=40){
+			Sleep(1);
+			counter=0;
+		}
+	}else{
+		counter=0;
+	}
+	tick=current;
+}
+static void LCD_10_send_cmd(HANDLE h,const BYTE cmd,...)
+{
+	BYTE buf[8]={0};
+	DWORD len=0;
+	DWORD amount=0;
+	BOOL ret;
+	va_list ap;
+	va_start(ap,cmd);
+	buf[0]=cmd;
+	amount++;
+	switch(cmd){
+	case LCD_10_POSXY:
+		{
+			buf[1]=va_arg(ap,BYTE); //col 0-19
+			buf[2]=va_arg(ap,BYTE); //row 0-3
+			amount+=2;
+		}
+		break;
+	}
+	ret=WriteFile(h,buf,amount,&len,NULL);
+	if(ret){
+		LCD_10_throttle();
+	}
+}
 static void LCD_type10_init(void)
 {
+	HANDLE hcom;
+	hcom=LCD_10_open(LCD_portnum);
+	if(!hcom){
+		return;
+	}
+	//LCD_10_set_baud(hcom,CBR_19200);
+	LCD_10_set_baud(hcom,CBR_115200);
+	LCD_10_send_cmd(hcom,LCD_10_REBOOT);
+	Sleep(20);
+	LCD_10_send_cmd(hcom,LCD_10_CLEAR);
+	LCD_10_send_cmd(hcom,LCD_10_CURHOME);
+	LCD_10_send_cmd(hcom,LCD_10_SCROLL_OFF);
+	LCD_10_send_cmd(hcom,LCD_10_WRAP_OFF);
+	LCD_10_send_cmd(hcom,LCD_10_CURHIDE);
 
+	LCD_10_hcom=hcom;
 }
 
 static void LCD_type10_close(void)
 {
-
+	if(!LCD_10_hcom){
+		return;
+	}
+	CloseHandle(LCD_10_hcom);
+	LCD_10_hcom=0;
 }
 
-static void LCD_type10_put_char(char Chr)
+static void LCD_type10_put_char(char a)
 {
-
+	DWORD len=0;
+	BOOL ret;
+	BYTE c=(BYTE)a;
+	if(!LCD_10_hcom){
+		return;
+	}
+	switch(c){
+	case '[':
+		c=250;
+		break;
+	case '\\':
+		c=251;
+		break;
+	case ']':
+		c=252;
+		break;
+	case '{':
+		c=253;
+		break;
+	case '|':
+		c=254;
+		break;
+	case '}':
+		c=255;
+		break;
+	case '_':
+		c=196;
+		break;
+	case '~':
+		c=206;
+		break;
+	case '@':
+		c=160;
+		break;
+	case '$':
+		c=162;
+		break;
+	case '`':
+		c=39;
+		break;
+	case '^':
+		c=29;
+		break;
+	}
+	if(c<' '){
+		c='.';
+	}
+	ret=WriteFile(LCD_10_hcom,&c,1,&len,NULL);
+	if(ret){
+		LCD_10_throttle();
+	}
 }
 
 static void LCD_type10_gotoyx(int y,int x)
 {
-
+	if(LCD_10_hcom){
+		x--;
+		y--;
+		LCD_10_send_cmd(LCD_10_hcom,LCD_10_POSXY,(BYTE)x,(BYTE)y);
+	}
 }
 
 static void LCD_type10_cleardisplay(void)
 {
-
+	if(LCD_10_hcom){
+		LCD_10_send_cmd(LCD_10_hcom,LCD_10_CLEAR);
+	}
 }
 
 static lcd_lowlevelfunc_s LCD_TYPE10_funcs={
@@ -2840,6 +3037,5 @@ static lcd_lowlevelfunc_s LCD_TYPE10_funcs={
  &LCD_type10_cleardisplay,       // not required
  NULL                            // not required (hw_scroll_left)
 };
-*/
 
 #endif							// MPXPLAY_LINK_LCD

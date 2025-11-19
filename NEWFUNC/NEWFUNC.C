@@ -23,6 +23,18 @@ extern unsigned int oldposrow, intsoundconfig, intsoundcontrol;
 char DOS4GOPTIONS[] = "dos4g=StartupBanner:OFF\n";	// for DOS4G v2.xx
 
 #ifdef WIN32
+static format_msg(int error,char *prefix)
+{
+	char buffer[128];
+	if (FormatMessageA(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, error, 0, buffer, sizeof(buffer)/sizeof(char), NULL))
+		printf("%s(%i)=%s\n",prefix,error,buffer);
+}
+int print_lasterror()
+{
+	format_msg(GetLastError(),"error");
+	return 0;
+}
 /*
 unsigned _dos_findfirst(const char *path,unsigned attr,struct find_t *buf )
 {
