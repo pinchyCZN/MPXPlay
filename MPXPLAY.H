@@ -32,6 +32,7 @@
 #if defined(WIN32) || defined(__WINDOWS_386__) || defined(__NT__)
 #define MPXPLAY_WIN32 1
 #define _WIN32_WINDOWS 0x0500
+#define _WIN32_WINNT 0x0500
 #include <windows.h>
 #endif
 

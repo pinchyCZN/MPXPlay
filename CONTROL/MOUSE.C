@@ -15,6 +15,7 @@
 //function: mouse functions
 
 //#define MPXPLAY_USE_DEBUGF 1
+//#define MPXPLAY_USE_DEBUGMSG 1
 #define MOUSE_DEBUG_OUTPUT NULL
 
 #include "control.h"
@@ -284,19 +285,22 @@ void mpxplay_control_mouse_winconsole_getevent(void)
 					newfunc_keyboard_winkey_to_extkey(inprec[n].Event.KeyEvent.dwControlKeyState, inprec[n].Event.KeyEvent.wVirtualKeyCode, inprec[n].Event.KeyEvent.uChar.AsciiChar);
 				if(scancode)
 					pds_pushkey(scancode);
-				/*
+			}
+			/*
+			{
+				int scancode=0;
 				mpxplay_debugf(MOUSE_DEBUG_OUTPUT,
 				//sprintf(sout,
 				"\scan:%4.4X vk:%4.4X asc:%2.2X sc:%2.2X nbe:%d e:%d n:%d",
-				   scancode,
+				   (int)inprec[n].Event.KeyEvent.bKeyDown,
 				   (int)inprec[n].Event.KeyEvent.wVirtualKeyCode,
 				   (int)inprec[n].Event.KeyEvent.uChar.AsciiChar,
 				   (int)inprec[n].Event.KeyEvent.wVirtualScanCode,
 				   //(int)inprec[n].Event.KeyEvent.wRepeatCount,
 				   nbe,nb_events,n);
 				  // display_message(1,0,sout);
-				  */
 			}
+			*/
 			break;
 		case MOUSE_EVENT:
 			mer = &inprec[n].Event.MouseEvent;

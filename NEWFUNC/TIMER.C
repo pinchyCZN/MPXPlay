@@ -308,6 +308,71 @@ void mpxplay_timer_reset_counters(void)
 	funcbit_smp_disable(mpxplay_signal_events, MPXPLAY_SIGNALMASK_TIMER);	// !!!
 }
 
+static void debug_print(const char *s,...)
+{
+	char tmp[60]={0};
+	va_list ap;
+	va_start(ap,s);
+	_vsnprintf(tmp,sizeof(tmp),s,ap);
+	OutputDebugStringA(tmp);
+}
+static void toggle_play(struct mpxplay_audioout_info_s *aui,const int pause)
+{
+#define RDT_OPTIONS      8		// crossfade,swapchan,volume,surround,speed, etc.
+	extern unsigned int playcontrol;
+	extern unsigned int refdisp;
+	if(pause){
+		if(playcontrol & PLAYC_RUNNING){
+			debug_print("pausing\n");
+			AU_stop(aui);
+			refdisp |= RDT_OPTIONS;
+		}
+	}else{
+		if(!(playcontrol & PLAYC_RUNNING)){
+			debug_print("resuming\n");
+			AU_prestart(aui);
+			clear_message();
+			refdisp |= RDT_OPTIONS;
+		}
+	}
+
+}
+static void check_battery_status(struct mainvars *mvp)
+{
+	static DWORD tick=0;
+	DWORD current,delta;
+	current=GetTickCount();
+	delta=current-tick;
+	if(delta<1000){
+		return;
+	}
+	tick=current;
+	{
+		static int last_flag=-1;
+		SYSTEM_POWER_STATUS ps={0};
+		GetSystemPowerStatus(&ps);
+		if((BATTERY_FLAG_UNKNOWN==ps.BatteryFlag)||(BATTERY_FLAG_NO_BATTERY==ps.BatteryFlag)){
+			debug_print("battery unknown\n");
+			return;
+		}
+		if(AC_LINE_UNKNOWN==ps.ACLineStatus){
+			debug_print("ac status unknown\n");
+			return;
+		}
+		if(ps.ACLineStatus!=last_flag){
+			last_flag=ps.ACLineStatus;
+			if((AC_LINE_OFFLINE==ps.ACLineStatus)||(AC_LINE_BACKUP_POWER==ps.ACLineStatus)){
+				debug_print("AC OFF\n");
+				toggle_play(mvp->aui,1);
+			}else{
+				debug_print("AC ON\n");
+				toggle_play(mvp->aui,0);
+			}
+		}
+
+	}
+}
+
 #define MPXPLAY_TIMER_MAINCYCLE_EXCLUSION (MPXPLAY_TIMERTYPE_INT08|MPXPLAY_TIMERFLAG_BUSY)
 
 void mpxplay_timer_execute_maincycle_funcs(void)	// not reentrant!
@@ -372,8 +437,10 @@ void mpxplay_timer_execute_maincycle_funcs(void)	// not reentrant!
 
 					funcbit_smp_value_put(mtf->refresh_counter, funcbit_smp_value_get(int08counter));
 
-					if(funcbit_smp_pointer_get(mtf->data))
+					if(funcbit_smp_pointer_get(mtf->data)){
+						check_battery_status(mtf->data);
 						((call_timedfunc_withdata) (mtf_func)) (mtf->data);
+					}
 					else
 						((call_timedfunc_nodata) (mtf_func)) ();
 

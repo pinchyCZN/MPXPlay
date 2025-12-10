@@ -2416,6 +2416,14 @@ void display_message(unsigned int linepos, unsigned int blink, char *msg)
 		funcbit_disable(mpxplay_signal_events, MPXPLAY_SIGNALTYPE_CLEARMESSAGE);	//
 		funcbit_disable(refdisp, RDT_ID3INFO);	// !!! hack
 	}
+/*
+	{
+		char tmp[80]={0};
+		_snprintf(tmp,sizeof(tmp),"%s\n",msg);
+		tmp[sizeof(tmp)-1]=0;
+		OutputDebugStringA(tmp);
+	}
+*/
 }
 
 void clear_message(void)
