@@ -329,6 +329,7 @@ static void toggle_play(struct mpxplay_audioout_info_s *aui,const int pause)
 		}
 	}else{
 		if(!(playcontrol & PLAYC_RUNNING)){
+			extern void clear_message(void);
 			debug_print("resuming\n");
 			AU_prestart(aui);
 			clear_message();
@@ -336,6 +337,72 @@ static void toggle_play(struct mpxplay_audioout_info_s *aui,const int pause)
 		}
 	}
 
+}
+typedef unsigned char (*FgetUPSState)();
+typedef unsigned char (*FupsOpenDeviceHandler)(unsigned int timer);
+typedef void (*FupsCloseDeviceHandler)();
+typedef unsigned char (*FisUPSConnected)();
+static FgetUPSState getUPSState=0;
+static FupsOpenDeviceHandler upsOpenDeviceHandler=0;
+static FupsCloseDeviceHandler upsCloseDeviceHandler=0;
+static FisUPSConnected isUPSConnected=0;
+static int open_ups_ready=0;
+static void close_ups(void)
+{
+	if(upsCloseDeviceHandler){
+		debug_print("close handler\n");
+		upsCloseDeviceHandler();
+	}
+}
+static void load_lib_thread(void *arg)
+{
+	static HINSTANCE hlib=0;
+	static int ignore=0;
+	if(ignore){
+		return;
+	}
+	if(0==hlib){
+		debug_print("load lib\n");
+		hlib=LoadLibrary("OpenUPS2Lib.dll");
+		if(0==hlib){
+			ignore=1;
+		}
+	}
+	if(hlib){
+		debug_print("open funcs\n");
+		if(0==upsOpenDeviceHandler){
+			upsOpenDeviceHandler=(FupsOpenDeviceHandler)GetProcAddress(hlib,"upsOpenDeviceHandler");
+		}
+		if(0==upsCloseDeviceHandler){
+			upsCloseDeviceHandler=(FupsCloseDeviceHandler)GetProcAddress(hlib,"upsCloseDeviceHandler");
+		}
+		if(0==getUPSState){
+			getUPSState=(FgetUPSState)GetProcAddress(hlib,"getUPSState");
+		}
+		if(0==isUPSConnected){
+			isUPSConnected=(FisUPSConnected)GetProcAddress(hlib,"isUPSConnected");
+		}
+		if(upsOpenDeviceHandler){
+			static int done=0;
+			if(!done){
+				debug_print("open dev handler\n");
+				upsOpenDeviceHandler(1000);
+				atexit(close_ups);
+				done=1;
+				Sleep(500);
+				open_ups_ready=1;
+			}
+		}
+	}
+}
+static void load_lib()
+{
+	static int start_thread=0;
+	if(!start_thread){
+		extern unsigned long __cdecl _beginthread(void (__cdecl *) (void *),unsigned, void *);
+		start_thread=1;
+		_beginthread(load_lib_thread,0,0);
+	}
 }
 static void check_battery_status(struct mainvars *mvp)
 {
@@ -350,23 +417,46 @@ static void check_battery_status(struct mainvars *mvp)
 	{
 		static int last_flag=-1;
 		SYSTEM_POWER_STATUS ps={0};
-		GetSystemPowerStatus(&ps);
-		if((BATTERY_FLAG_UNKNOWN==ps.BatteryFlag)||(BATTERY_FLAG_NO_BATTERY==ps.BatteryFlag)){
-			debug_print("battery unknown\n");
-			return;
+		load_lib();
+		if(getUPSState && isUPSConnected && open_ups_ready){
+			if(isUPSConnected()){
+				static int last_state=-1;
+				int state=getUPSState(); //1=battery,2=Vin
+				debug_print("ups_state=%i\n",state);
+				if(state!=last_state){
+					last_state=state;
+					if(1==state){ //battery
+						debug_print("BATTERY\n");
+						toggle_play(mvp->aui,1);
+					}else if(2==state){ //VIN
+						debug_print("VIN\n");
+						toggle_play(mvp->aui,0);
+					}
+				}
+			}
 		}
-		if(AC_LINE_UNKNOWN==ps.ACLineStatus){
-			debug_print("ac status unknown\n");
-			return;
-		}
-		if(ps.ACLineStatus!=last_flag){
-			last_flag=ps.ACLineStatus;
-			if((AC_LINE_OFFLINE==ps.ACLineStatus)||(AC_LINE_BACKUP_POWER==ps.ACLineStatus)){
-				debug_print("AC OFF\n");
-				toggle_play(mvp->aui,1);
-			}else{
-				debug_print("AC ON\n");
-				toggle_play(mvp->aui,0);
+		if(0)
+		{
+			GetSystemPowerStatus(&ps);
+			//debug_print("status=%i\n",ps.ACLineStatus);
+			//debug_print("battery=%i\n",ps.BatteryFlag);
+			if((BATTERY_FLAG_UNKNOWN==ps.BatteryFlag)||(BATTERY_FLAG_NO_BATTERY==ps.BatteryFlag)){
+				debug_print("battery unknown\n");
+				return;
+			}
+			if(AC_LINE_UNKNOWN==ps.ACLineStatus){
+				debug_print("ac status unknown\n");
+				return;
+			}
+			if(ps.ACLineStatus!=last_flag){
+				last_flag=ps.ACLineStatus;
+				if((AC_LINE_OFFLINE==ps.ACLineStatus)||(AC_LINE_BACKUP_POWER==ps.ACLineStatus)){
+					debug_print("AC OFF\n");
+					toggle_play(mvp->aui,1);
+				}else{
+					debug_print("AC ON\n");
+					toggle_play(mvp->aui,0);
+				}
 			}
 		}
 
